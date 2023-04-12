@@ -1,0 +1,63 @@
+import { config } from "../../../../../config";
+import db from "../../../../db";
+import { ApiKey } from "../../../../key";
+import { DefaultCommand, HandlerParams } from "../../abstract/command";
+import { KeyData } from "../../../api/key";
+
+const keyTool = new ApiKey(config.encrypt_key);
+
+export default class extends DefaultCommand {
+    public id = 'createApiKey'
+    public regexp = /^(!|\/)createApi(Key|Token)/i
+    public payload = null;
+    public adminOnly: boolean = true;
+
+    handler({ context }: HandlerParams) {
+        const args = context.text.split(' ');
+
+        const service: string | undefined = args[1];
+        const fromId: string | undefined = args[2];
+        let limit: string | undefined = args[3];
+
+        if (!service || !fromId) {
+            return context.send([
+                'Создать апи токен:',
+                `${args[0]} <service> <fromId> [limit]`,
+            ].join('\n'));
+        }
+
+        if (!limit) {
+            limit = String(2);
+        }
+
+        const _key: KeyData = db.prepare('SELECT * FROM `api` WHERE `service` = ? AND `fromId` = ?').get(service, fromId);
+
+        let recreate: boolean;
+        let id: number
+        if (_key) {
+            recreate = true;
+            id = _key.id
+            limit = String(_key.limitPerSec)
+        } else {
+            recreate = false;
+
+            const res = db.prepare(
+                'INSERT INTO `api` (`service`, `fromId`, `limitPerSec`) VALUES (?, ?, ?)'
+            ).run(service, fromId, limit);
+
+            id = Number(res.lastInsertRowid)
+        }
+
+        const key = keyTool.createKey(id);
+
+        db.prepare('UPDATE `api` SET `iv` = ? WHERE `id` = ?').run(key.iv, id);
+
+        return context.send([
+            `Апи токен создан (${recreate ? 'пересоздан' : 'новый'})`,
+            `ID: ${id}`,
+            `Ключ: ${key.key}`,
+            `Лимит: ${limit}`,
+            `IV: ${key.iv}`
+        ].join('\n'));
+    }
+}

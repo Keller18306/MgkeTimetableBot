@@ -1,0 +1,19 @@
+import { defines } from "../../../../defines";
+import { DefaultCommand, HandlerParams } from "../../abstract/command";
+
+export default class extends DefaultCommand {
+    public id = 'modeGuest'
+
+    public regexp = /^(👀\s)?Гость$/i
+    public payload = null;
+    public scene?: string | null = 'setup';
+
+    async handler({ context, chat, keyboard, service }: HandlerParams) {
+        chat.mode = 'guest'
+        chat.scene = null;
+
+        context.send(defines[`${service}.message.about`], {
+            keyboard: keyboard.MainMenu
+        })
+    }
+}

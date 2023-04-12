@@ -1,0 +1,213 @@
+--
+-- Файл сгенерирован с помощью SQLiteStudio v3.2.1 в чт март 30 13:03:45 2023
+--
+-- Использованная кодировка текста: System
+--
+PRAGMA foreign_keys = off;
+BEGIN TRANSACTION;
+
+-- Таблица: alice_users
+CREATE TABLE alice_users (
+    id      INTEGER PRIMARY KEY,
+    userId  STRING  UNIQUE,
+    mode    STRING,
+    [group] STRING,
+    teacher STRING
+);
+
+
+-- Таблица: api
+CREATE TABLE api (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    service     STRING,
+    fromId      STRING,
+    limitPerSec INT     NOT NULL,
+    iv          STRING,
+    last_time   BIGINT
+);
+
+
+-- Таблица: students
+CREATE TABLE students (
+    id         BIGINT      PRIMARY KEY,
+    p          INTEGER,
+    peerId     INTEGER     REFERENCES vk_bot_chats (peerId),
+    vk_id      INTEGER,
+    name       TEXT (1024) NOT NULL,
+    skip_count INTEGER     DEFAULT (0),
+    has_access BOOLEAN     DEFAULT (0),
+    skip       BOOLEAN     DEFAULT (0),
+    [ignore]   BOOLEAN     DEFAULT (0) 
+);
+
+
+-- Таблица: tg_bot_chats
+CREATE TABLE tg_bot_chats (
+    id                       INTEGER      PRIMARY KEY AUTOINCREMENT,
+    peerId                   STRING       UNIQUE
+                                          NOT NULL,
+    domain                   STRING,
+    firstName                STRING,
+    lastName                 STRING,
+    ref                      STRING (255),
+    accepted                 BOOLEAN      DEFAULT (0),
+    scene                    STRING,
+    mode                     STRING (16),
+    [group]                  STRING (3),
+    teacher                  STRING (255),
+    noticeChanges            BOOLEAN      DEFAULT (0),
+    showAbout                BOOLEAN      DEFAULT (1),
+    showDaily                BOOLEAN      DEFAULT (1),
+    showWeekly               BOOLEAN      DEFAULT (1),
+    showCalls                BOOLEAN      DEFAULT (1),
+    showFastGroup            BOOLEAN      DEFAULT (1),
+    showFastTeacher          BOOLEAN      DEFAULT (1),
+    removePastDays           BOOLEAN      DEFAULT (1),
+    deleteLastMsg            BOOLEAN      DEFAULT (0),
+    lastMsgId                INTEGER,
+    lastMsgTime              BIGINT       DEFAULT (0),
+    deleteUserMsg            BOOLEAN      DEFAULT (0),
+    allowSendMess            BOOLEAN      DEFAULT (1),
+    subscribeMess            BOOLEAN      DEFAULT (1),
+    needUpdateButtons        BOOLEAN      DEFAULT (0),
+    showParserTime           BOOLEAN      DEFAULT (0),
+    eula                     BOOLEAN      DEFAULT (0),
+    deactivateSecondaryCheck BOOLEAN      DEFAULT (0),
+    lang                     STRING
+);
+
+
+-- Таблица: viber_bot_chats
+CREATE TABLE viber_bot_chats (
+    id                       INTEGER      PRIMARY KEY AUTOINCREMENT,
+    peerId                   STRING       UNIQUE
+                                          NOT NULL,
+    name                     STRING,
+    device_os                STRING,
+    device_type              STRING,
+    accepted                 BOOLEAN      DEFAULT (0),
+    ref                      STRING (255),
+    scene                    STRING,
+    mode                     STRING (16),
+    [group]                  STRING (3),
+    teacher                  STRING (255),
+    noticeChanges            BOOLEAN      DEFAULT (0),
+    theme                    STRING       DEFAULT white,
+    showAbout                BOOLEAN      DEFAULT (1),
+    showDaily                BOOLEAN      DEFAULT (1),
+    showWeekly               BOOLEAN      DEFAULT (1),
+    showCalls                BOOLEAN      DEFAULT (1),
+    showFastGroup            BOOLEAN      DEFAULT (1),
+    showFastTeacher                       DEFAULT (1),
+    removePastDays           BOOLEAN      DEFAULT (1),
+    deleteLastMsg            BOOLEAN      DEFAULT (0),
+    lastMsgId                INTEGER,
+    lastMsgTime              BIGINT       DEFAULT (0),
+    deleteUserMsg            BOOLEAN      DEFAULT (0),
+    allowSendMess            BOOLEAN      DEFAULT (1),
+    subscribeMess            BOOLEAN      DEFAULT (1),
+    needUpdateButtons        BOOLEAN      DEFAULT (0),
+    showParserTime           BOOLEAN      DEFAULT (0),
+    eula                     BOOLEAN      DEFAULT (0),
+    deactivateSecondaryCheck BOOLEAN      DEFAULT (0),
+    lastUpdateDI             BIGINT       DEFAULT (0),
+    viber_version            STRING
+);
+
+
+-- Таблица: vk_app_users
+CREATE TABLE vk_app_users (
+    id             INTEGER      PRIMARY KEY AUTOINCREMENT,
+    user_id        BIGINT       UNIQUE
+                                NOT NULL,
+    accepted       BOOLEAN      DEFAULT (0) 
+                                NOT NULL,
+    ref            STRING (255),
+    [group]        STRING (3),
+    teacher        STRING (255),
+    theme_id       INT          DEFAULT (0),
+    adblock        BOOLEAN      DEFAULT (0),
+    firstPage      STRING (16),
+    insert_time    BIGINT       NOT NULL,
+    last_time      BIGINT       NOT NULL,
+    allowBotAccept BOOLEAN      DEFAULT (1) 
+);
+
+
+-- Таблица: vk_bot_chats
+CREATE TABLE vk_bot_chats (
+    id                       INTEGER      PRIMARY KEY,
+    peerId                   INTEGER      UNIQUE
+                                          NOT NULL,
+    accepted                 BOOLEAN      DEFAULT (0),
+    ref                      STRING (255),
+    scene                    STRING,
+    mode                     STRING (16),
+    [group]                  STRING (3),
+    teacher                  STRING (255),
+    noticeChanges            BOOLEAN      DEFAULT (0),
+    showAbout                BOOLEAN      DEFAULT (1),
+    showDaily                BOOLEAN      DEFAULT (1),
+    showWeekly               BOOLEAN      DEFAULT (1),
+    showCalls                BOOLEAN      DEFAULT (1),
+    showFastGroup            BOOLEAN      DEFAULT (1),
+    showFastTeacher          BOOLEAN      DEFAULT (1),
+    removePastDays           BOOLEAN      DEFAULT (1),
+    deleteLastMsg            BOOLEAN      DEFAULT (0),
+    lastMsgId                INTEGER,
+    lastMsgTime              BIGINT       DEFAULT (0),
+    deleteUserMsg            BOOLEAN      DEFAULT (0),
+    duty_student             INTEGER,
+    allowSendMess            BOOLEAN      DEFAULT (1),
+    subscribeMess            BOOLEAN      DEFAULT (1),
+    allowVkAppAccept         BOOLEAN      DEFAULT (1),
+    needUpdateButtons        BOOLEAN      DEFAULT (0),
+    showParserTime           BOOLEAN      DEFAULT (0),
+    eula                     BOOLEAN      DEFAULT (0),
+    deactivateSecondaryCheck BOOLEAN      DEFAULT (0) 
+);
+
+
+-- Индекс: api_index
+CREATE INDEX api_index ON api (
+    service,
+    fromId
+);
+
+
+-- Индекс: peer_Id
+CREATE INDEX peer_Id ON students (
+    peerId
+);
+
+
+-- Индекс: viber_bot_chats_index
+CREATE INDEX viber_bot_chats_index ON viber_bot_chats (
+    accepted,
+    "group",
+    teacher,
+    noticeChanges,
+    allowSendMess,
+    subscribeMess
+);
+
+
+-- Индекс: vk_bot_chats_index
+CREATE INDEX vk_bot_chats_index ON vk_bot_chats (
+    accepted,
+    "group",
+    teacher,
+    noticeChanges,
+    allowSendMess,
+    subscribeMess
+);
+
+
+-- Индекс: vk_id
+CREATE INDEX vk_id ON students (
+    vk_id
+);
+
+
+COMMIT TRANSACTION;
+PRAGMA foreign_keys = on;

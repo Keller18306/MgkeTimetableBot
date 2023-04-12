@@ -1,0 +1,29 @@
+{
+    "compilerOptions": {
+        "target": "ESNext",
+        "moduleResolution": "Node",
+        "module": "CommonJS",
+        "strict": true,
+        "strictNullChecks": true,
+        "esModuleInterop": true,
+        "forceConsistentCasingInFileNames": true,
+        "outDir": "./build/",
+        "removeComments": true,
+        "skipLibCheck": true,
+        "lib": [
+            "DOM",
+            "ESNext"
+        ],
+        "importHelpers": true,
+        "sourceMap": true,
+        "types": [
+            "node",
+            "./src/@types/viber-bot"
+        ]
+    },
+    "exclude": [
+        "build",
+        "node_modules",
+        "@types"
+    ]
+}
