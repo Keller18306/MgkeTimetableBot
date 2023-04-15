@@ -35,6 +35,7 @@ export default class extends DefaultCommand {
         chat.mode = 'teacher';
         chat.group = null;
         chat.scene = null;
+        chat.deactivateSecondaryCheck = false;
 
         context.send(defines[`${service}.message.about`], {
             keyboard: keyboard.MainMenu

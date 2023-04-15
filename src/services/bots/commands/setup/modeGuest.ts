@@ -11,6 +11,7 @@ export default class extends DefaultCommand {
     async handler({ context, chat, keyboard, service }: HandlerParams) {
         chat.mode = 'guest'
         chat.scene = null;
+        chat.deactivateSecondaryCheck = false;
 
         context.send(defines[`${service}.message.about`], {
             keyboard: keyboard.MainMenu
