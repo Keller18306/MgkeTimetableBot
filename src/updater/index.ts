@@ -5,7 +5,7 @@ import { loadCache, raspCache, saveCache } from "./raspCache"
 import updateGroups from "./updateGroups"
 import updateTeachers from "./updateTeachers"
 
-function delay(ms: number) {
+function createDelayPromise(ms: number) {
     return new Promise<void>((resolve) => setTimeout(resolve, ms))
 }
 
@@ -19,7 +19,7 @@ export class Updater {
     }
 
     private logsLimit: number = 30;
-    private logs: [Date, string][] = [];
+    private logs: { date: Date, result: string | Error}[] = [];
 
     public getLogs() {
         return this.logs.slice()
@@ -59,6 +59,19 @@ export class Updater {
         return max
     }
 
+    public isHasErrors(need: number = 3): boolean {
+        const logs = this.logs.slice(0, need);
+
+        let errorsCount: number = 0;
+        for (const log of logs) {
+            if (log.result instanceof Error) {
+                errorsCount++
+            }
+        }
+
+        return errorsCount === need;
+    }
+
     private async run() {
         while (true) {
             try {
@@ -73,7 +86,7 @@ export class Updater {
             } catch (e: any) {
                 raspCache.successUpdate = false
 
-                this.log(e?.toString() || e)
+                this.log(e)
 
                 console.error('update error', e)
 
@@ -85,14 +98,14 @@ export class Updater {
     }
 
     private delayTime(error: boolean = false): Promise<void> {
-        if (error) return delay(config.updater.update_interval.error * 1e3)
+        if (error) return createDelayPromise(config.updater.update_interval.error * 1e3)
 
         const date = new Date()
         const hour = date.getHours()
 
         //в воскресенье не нужно часто
         if (date.getDay() !== 0 && config.updater.activity[0] <= hour && hour <= config.updater.activity[1]) {
-            return delay(config.updater.update_interval.activity * 1e3)
+            return createDelayPromise(config.updater.update_interval.activity * 1e3)
         }
 
         //фикс для убирания задержки во время активности
@@ -106,20 +119,20 @@ export class Updater {
                 endTime.setSeconds(0)
                 endTime.setMilliseconds(0)
 
-                return delay(
+                return createDelayPromise(
                     Math.max(0, endTime.getTime() - date.getTime())
                 )
             }
         }
 
-        return delay(config.updater.update_interval.default * 1e3)
+        return createDelayPromise(config.updater.update_interval.default * 1e3)
     }
 
-    private log(log: string) {
-        this.logs.push([
-            new Date(),
-            log
-        ])
+    private log(log: string | Error) {
+        this.logs.push({
+            date: new Date(),
+            result: log
+        })
     }
 
     private async update() {
@@ -138,7 +151,7 @@ export class Updater {
                 await clearOldImages()
 
                 if (!res[0] || !res[1]) {
-                    throw new Error(`group count is zero {day:${res[0]},week:${res[1]}}`)
+                    throw new Error(`timetable is empty {groups:${res[0]},teachers:${res[1]}}`)
                 }
 
                 ms = updateTime - startTime

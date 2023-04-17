@@ -1,4 +1,5 @@
 import { config } from '../../config';
+import { Updater } from '../updater';
 import { GroupDay, GroupLesson, GroupLessonExplain, TeacherDay, TeacherLesson } from '../updater/parser/types';
 import { raspCache } from '../updater/raspCache';
 import { formatSeconds } from "./seconds2times";
@@ -160,7 +161,7 @@ export function buildGroupTextRasp(group: string | number, days: GroupDay[], ano
         daysTexts.push(`Информация была загружена ${formatSeconds(Math.ceil((Date.now() - raspCache.groups.update) / 1e3))} назад`)
     }
 
-    if (!raspCache.successUpdate) {
+    if (Updater.getInstance().isHasErrors()) {
         daysTexts.push('⚠️ В последний раз при получении расписания с сайта произошла ошибка. Есть вероятность, что расписание не актуальное. Если проблема не исчезнет - сообщите разработчику.')
     }
 
@@ -182,7 +183,7 @@ export function buildTeacherTextRasp(teacher: string, days: TeacherDay[], anothe
         daysTexts.push(`Информация была загружена ${formatSeconds(Math.ceil((Date.now() - raspCache.teachers.update) / 1e3))} назад`)
     }
 
-    if (!raspCache.successUpdate) {
+    if (Updater.getInstance().isHasErrors()) {
         daysTexts.push('⚠️ В последний раз при получении расписания с сайта произошла ошибка. Есть вероятность, что расписание не актуальное. Если проблема не исчезнет - сообщите разработчику.')
     }
 

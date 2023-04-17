@@ -26,8 +26,8 @@ export default class extends DefaultCommand {
         for (const i in logs) {
             const log = logs[i]
             message.push(
-                `${+i + 1}. [${formatTime(log[0], true)}]: ` +
-                log[1]
+                `${+i + 1}. [${formatTime(log.date, true)}]: ` +
+                ((log.result instanceof Error) ? log.result.stack : log.result)
             )
         }
 
