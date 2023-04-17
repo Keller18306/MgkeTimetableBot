@@ -27,11 +27,10 @@ export default class extends DefaultCommand {
             const log = logs[i]
             message.push(
                 `${+i + 1}. [${formatTime(log.date, true)}]: ` +
-                ((log.result instanceof Error) ? log.result.stack : log.result)
+                ((log.result instanceof Error) ? log.result.stack?.replaceAll(process.cwd(), '') : log.result)
             )
         }
 
-
-        context.send(message.join('\n'))
+        return context.send(message.join('\n').slice(0, 4096))
     }
 }
