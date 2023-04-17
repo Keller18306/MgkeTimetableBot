@@ -5,8 +5,31 @@ import { loadCache, raspCache, saveCache } from "./raspCache"
 import updateGroups from "./updateGroups"
 import updateTeachers from "./updateTeachers"
 
-function createDelayPromise(ms: number) {
-    return new Promise<void>((resolve) => setTimeout(resolve, ms))
+type Delay = {
+    promise: Promise<void>,
+    resolve: () => void
+}
+
+function createDelayPromise(ms: number): Delay {
+    let resolveFunc: (() => void) | undefined;
+
+    const promise = new Promise<void>((resolve) => {
+        const timeout = setTimeout(resolve, ms);
+
+        resolveFunc = () => {
+            clearTimeout(timeout);
+            resolve()
+        }
+    });
+
+    if (!resolveFunc) {
+        throw new Error('something went wrong')
+    };
+
+    return {
+        promise,
+        resolve: resolveFunc
+    }
 }
 
 export class Updater {
@@ -18,8 +41,9 @@ export class Updater {
         return this.instance
     }
 
-    private logsLimit: number = 30;
-    private logs: { date: Date, result: string | Error}[] = [];
+    private logsLimit: number = 10;
+    private logs: { date: Date, result: string | Error }[] = [];
+    private delayPromise?: Delay;
 
     public getLogs() {
         return this.logs.slice()
@@ -72,32 +96,40 @@ export class Updater {
         return errorsCount === need;
     }
 
+    public forceParse() {
+        this.delayPromise?.resolve();
+    }
+
     private async run() {
         while (true) {
-            try {
-                const [ms] = await Promise.all([
-                    this.update(),
-                    this.delayTime(false)
-                ])
-
-                raspCache.successUpdate = true
-
-                this.log(`success: ${ms}ms`)
-            } catch (e: any) {
-                raspCache.successUpdate = false
-
-                this.log(e)
-
-                console.error('update error', e)
-
-                await this.delayTime(true)
-            }
-
-            this.removeOldLogs()
+            await this.runParse()
         }
     }
 
-    private delayTime(error: boolean = false): Promise<void> {
+    private async runParse() {
+        let error: boolean = false;
+
+        try {
+            const ms = await this.update();
+
+            raspCache.successUpdate = true
+
+            this.log(`success: ${ms}ms`)
+        } catch (e: any) {
+            raspCache.successUpdate = false
+            error = true;
+
+            console.error('update error', e)
+            this.log(e)
+        }
+
+        this.removeOldLogs()
+
+        this.delayPromise = this.getDelayTime(error);
+        await this.delayPromise.promise;
+    }
+
+    private getDelayTime(error: boolean = false): Delay {
         if (error) return createDelayPromise(config.updater.update_interval.error * 1e3)
 
         const date = new Date()
