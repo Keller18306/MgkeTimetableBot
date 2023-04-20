@@ -91,7 +91,7 @@ abstract class AbstractChat {
     
     protected abstract db_table: string;
     protected _cache: { [key: string]: any } = {};
-    protected defaultAllowSendMess: boolean = false;
+    protected defaultAllowSendMess: boolean = true;
 
     public abstract get isAdmin(): boolean;
     public abstract get isChat(): boolean;
