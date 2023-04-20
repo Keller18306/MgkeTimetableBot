@@ -1,4 +1,5 @@
 import db from "../../db";
+import { addslashes } from "../../utils";
 
 interface IAliceUserFields {
     id: string;
@@ -39,13 +40,11 @@ class AliceUser {
             },
             set: (target: this, p: string, value: any, receiver: any) => {
                 if (Object.keys(this.data).includes(p)) {
-                    //UNSAFE
-                    //TODO SPLASHES
                     if (typeof value === 'boolean') {
                         value = Number(value)
                     }
 
-                    db.prepare('UPDATE ' + AliceUser._tableName + ' SET `' + p + '` = ? WHERE `id` = ?').run(value, this.data.id)
+                    db.prepare('UPDATE ' + AliceUser._tableName + ' SET `' + addslashes(p) + '` = ? WHERE `id` = ?').run(value, this.data.id)
                     this.data[p] = value;
 
                     return true;
@@ -59,4 +58,4 @@ class AliceUser {
 
 interface AliceUser extends IAliceUserFields { };
 
-export { AliceUser }
+export { AliceUser };

@@ -1,5 +1,6 @@
 import { config } from "../../../../config";
 import db from "../../../db";
+import { addslashes } from "../../../utils";
 
 export type ChatMode = 'student' | 'teacher' | 'parent' | 'guest'
 
@@ -114,13 +115,11 @@ abstract class AbstractChat {
             },
             set: (target: this, p: string, value: any, receiver: any) => {
                 if (Object.keys(this._cache).includes(p)) {
-                    //UNSAFE
-                    //TODO SPLASHES
                     if (typeof value === 'boolean') {
                         value = Number(value)
                     }
 
-                    db.prepare('UPDATE ' + this.db_table + ' SET `' + p + '` = ? WHERE `peerId` = ?').run(value, this.peerId)
+                    db.prepare('UPDATE ' + this.db_table + ' SET `' + addslashes(p) + '` = ? WHERE `peerId` = ?').run(value, this.peerId)
                     this._cache[p] = value;
 
                     return true;
@@ -152,4 +151,4 @@ abstract class AbstractChat {
 
 interface AbstractChat extends DbChat { };
 
-export { AbstractChat }
+export { AbstractChat };
