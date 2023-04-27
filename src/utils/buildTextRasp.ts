@@ -54,7 +54,12 @@ function buildGroupLessonLine(lesson: GroupLessonExplain, options?: GroupLessonL
 }
 
 export function buildGroupsDaysText(lessons: GroupLesson[], skipEmptyLessons: boolean = true): string {
-    const text: string[] = []
+    if (!lessons.length) {
+        return 'Пар нет';
+    }
+
+    const text: string[] = [];
+
 
     for (const i in lessons) {
         const lesson = lessons[i]
@@ -65,7 +70,7 @@ export function buildGroupsDaysText(lessons: GroupLesson[], skipEmptyLessons: bo
         ]
 
         if (!lesson) {
-            text.push(cab.join(''))
+            text.push(cab.join(''));
             continue;
         }
 
@@ -91,8 +96,8 @@ export function buildGroupsDaysText(lessons: GroupLesson[], skipEmptyLessons: bo
             return [key, !value]
         })) as GroupLessonLineOptions;
 
-        cab.push(buildGroupLessonLine(subs[0], options))
-        text.push(cab.join(' '))
+        cab.push(buildGroupLessonLine(subs[0], options));
+        text.push(cab.join(' '));
 
         if (isSubs) {
             const lines: string[] = subs.map((lesson: GroupLessonExplain, i: number): string => {
@@ -107,7 +112,7 @@ export function buildGroupsDaysText(lessons: GroupLesson[], skipEmptyLessons: bo
                 return line;
             });
 
-            text.push(...lines)
+            text.push(...lines);
         }
     }
 
@@ -115,6 +120,10 @@ export function buildGroupsDaysText(lessons: GroupLesson[], skipEmptyLessons: bo
 }
 
 export function buildTeacherDaysText(lessons: TeacherLesson[], skipEmptyLessons: boolean = true): string {
+    if (!lessons.length) {
+        return 'Пар нет';
+    }
+
     const text: string[] = []
 
     for (const i in lessons) {
@@ -123,24 +132,24 @@ export function buildTeacherDaysText(lessons: TeacherLesson[], skipEmptyLessons:
 
         const cab: string[] = [
             `${+i + 1}.`
-        ]
+        ];
 
         if (lesson) {
-            const value = `${lesson.group}-${lesson.lesson} (${lesson.type})`
-            cab.push(value)
+            const value = `${lesson.group}-${lesson.lesson} (${lesson.type})`;
+            cab.push(value);
 
             if (lesson.cabinet != null) {
-                cab.push(`{${lesson.cabinet}}`)
+                cab.push(`{${lesson.cabinet}}`);
             }
 
             if (lesson.comment) {
-                cab.push(`// ${lesson.comment}`)
+                cab.push(`// ${lesson.comment}`);
             }
         }
 
         text.push(
             cab.join(' ')
-        )
+        );
     }
 
     return text.join('\n')
