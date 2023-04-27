@@ -4,9 +4,20 @@ import db from "../../../db";
 import { AbstractChat, DbChat } from "../abstract/chat";
 
 export type TgDb = DbChat & {
+    /** ID чата в Telegram */
     chatId: number;
+
+    /** Юзернейм */
     domain: string | null;
-    name: string;
+
+    /** Отображаемое имя */
+    firstName: string;
+
+    /** Отображаемая фамилия */
+    lastName: string;
+
+    /** Язык пользователя в Telegram */
+    lang: string;
 }
 
 class TgChat extends AbstractChat {

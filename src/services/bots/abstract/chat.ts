@@ -6,85 +6,85 @@ export type ChatMode = 'student' | 'teacher' | 'parent' | 'guest'
 
 export type DbChat = {
     /** Внутренний идентификатор чата в БД */
-    id: number,
+    id: number;
 
     /** Идентификатор чата в соцсети */
-    peerId: number | string,
+    peerId: number | string;
 
     /** Есть ли доступ к боту */
-    accepted: boolean,
+    accepted: boolean;
 
     /** Откуда пришёл юзер */
-    ref: string | null,
+    ref: string | null;
 
     /** Текущая сцена */
-    scene: string | null,
+    scene: string | null;
 
     /** Режим чата (ученик, учитель, родитель) */
-    mode: ChatMode | null,
+    mode: ChatMode | null;
 
     /** Выбранная группа для ученика */
-    group: number | null,
+    group: number | null;
 
     /** Выбранное имя для учителя */
-    teacher: string | null,
+    teacher: string | null;
 
     /** Оповещать ли о добавлении дней */
-    noticeChanges: boolean,
+    noticeChanges: boolean;
 
     /** Показывать ли кнопку "О боте" */
-    showAbout: boolean,
+    showAbout: boolean;
 
     /** Показывать ли кнопку "На день" */
-    showDaily: boolean,
+    showDaily: boolean;
 
     /** Показывать ли кнопку "На неделю" */
-    showWeekly: boolean,
+    showWeekly: boolean;
 
     /** Показывать ли кнопку "Звонки" */
-    showCalls: boolean,
+    showCalls: boolean;
 
     /** Показывать ли кнопку "Группа" для быстрого получения группы */
-    showFastGroup: boolean,
+    showFastGroup: boolean;
 
     /** Показывать ли кнопку "Преподаватель" для быстрого получения учителя */
-    showFastTeacher: boolean,
+    showFastTeacher: boolean;
 
     /** Убирать ли прошедшие дни в расписаннии */
-    removePastDays: boolean,
+    removePastDays: boolean;
 
     /** Удалять ли последнее сообщение в чате от бота */
-    deleteLastMsg: boolean,
+    deleteLastMsg: boolean;
 
     /** Последний ID сообщения бота с расписанием */
-    lastMsgId: number | null,
+    lastMsgId: number | null;
 
     /** Время последнего сообщения к боту */
-    lastMsgTime: number,
+    lastMsgTime: number;
 
     /** Удалять ли сообщение человека в чате после вызова расписания */
-    deleteUserMsg: boolean,
+    deleteUserMsg: boolean;
 
     /** Разрешено ли отправлять сообщения */
-    allowSendMess: boolean,
+    allowSendMess: boolean;
 
     /** Подписка на рассылку */
-    subscribeMess: boolean,
+    subscribeMess: boolean;
 
     /** Нужно ли принудительно обновить кнопки */
-    needUpdateButtons: boolean,
+    needUpdateButtons: boolean;
 
     /** Нужно ли отображать время последнего обновления расписания */
-    showParserTime: boolean,
+    showParserTime: boolean;
 
     /** Было ли показано сообщение о еуле */
-    eula: boolean,
+    eula: boolean;
 
     /**
      * Отключить проверку по текущему режиму для оповещений о добавлении дней.
      * Если указана группа/учитель, то будут всё равно приходить оповещения, даже если не выбран режим
     */
-    deactivateSecondaryCheck: boolean
+    deactivateSecondaryCheck: boolean;
 }
 
 abstract class AbstractChat {

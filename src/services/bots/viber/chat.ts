@@ -4,13 +4,25 @@ import { AbstractChat, DbChat } from "../abstract/chat";
 import { Theme } from "./keyboardBuilder";
 
 export type ViberDb = DbChat & {
-    peerId: string,
-    theme: Theme,
-    lastUpdateDI: number,
-    name: string | null,
-    device_os: string | null,
-    viber_version: string | null,
-    device_type: string | null
+    peerId: string; //Переопределение как строка
+    
+    /** Тема кнопок в Viber (цвет: бело-розовые, тёмно-синие, серо-чёрные) */
+    theme: Theme;
+
+    /** Время последнего обновления Device Info */
+    lastUpdateDI: number;
+
+    /** Имя юзера в Viber */
+    name: string | null;
+
+    /** Операционная система пользователя (Android, IOS, ... + version) */
+    device_os: string | null;
+
+    /** Полная модель телефона */
+    device_type: string | null;
+
+    /** Версия Viber */
+    viber_version: string | null;
 }
 
 class ViberChat extends AbstractChat {

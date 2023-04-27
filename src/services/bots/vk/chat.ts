@@ -2,8 +2,10 @@ import { config } from "../../../../config";
 import { AbstractChat, DbChat } from "../abstract/chat";
 
 export type VkDb = DbChat & {
-    peerId: number;
-    allowVkAppAccept: boolean
+    peerId: number; //переопределение как число
+
+    /** Разрешено ли юзеру подтвердить себе приложение ВК, если оно не было подтверждено */
+    allowVkAppAccept: boolean;
 }
 
 class VkChat extends AbstractChat {
