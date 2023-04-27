@@ -3,8 +3,7 @@ import { AbstractChat, DbChat } from "../abstract/chat";
 
 export type VkDb = DbChat & {
     peerId: number;
-    duty_student: number | null,
-    allowVkAppAccept: boolean,
+    allowVkAppAccept: boolean
 }
 
 class VkChat extends AbstractChat {

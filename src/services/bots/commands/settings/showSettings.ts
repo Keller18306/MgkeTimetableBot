@@ -30,7 +30,6 @@ export default class extends DefaultCommand {
             `Режим чата: ${chat.mode} (deactivateSecondaryCheck: ${chat.deactivateSecondaryCheck ? 'да' : 'нет'})`,
             `ID последнего сообщения: ${chat.lastMsgId}`,
             `Время последенего сообщения: ${chat.lastMsgTime}`,
-            `Система дежурных: ${(service === 'vk' && chat.duty_student) !== null ? 'да' : 'нет'} (deprecated)`,
             `Разрешено ли отправлять боту сообщения: ${chat.allowSendMess ? 'да' : 'нет'}`,
             `Подписка на рассыку: ${chat.subscribeMess ? 'да' : 'нет'}`,
             `Разрешено ли одобрить VK приложение: ${(service === 'vk' && chat.allowVkAppAccept) ? 'да' : 'нет (возможно уже использовано)'}`,
