@@ -16,6 +16,8 @@ export default class TeacherParser extends AbstractParser {
             this.parseTeacher(table, h2)
         }
 
+        this.clearSundays(this.teachers);
+
         for (const teacher in this.teachers) {
             for (const day of this.teachers[teacher].days) {
                 this.processDay(day)
@@ -139,7 +141,7 @@ export default class TeacherParser extends AbstractParser {
             const lesson: TeacherLesson = day.lessons[i];
             if (!lesson || Array.isArray(lesson)) continue;
 
-            //фикс факультативов
+            // фикс факультативов, то есть из двух факультативов делается один с пометкой "2 часа"
             if (lesson.type === 'ф-в' && lesson.comment == null) {
                 let simmilarIndex: number | null = null;
 

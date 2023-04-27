@@ -1,6 +1,6 @@
 import { DOMWindow } from "jsdom";
-import { GroupLesson, GroupLessonExplain } from "./types/group";
-import { TeacherLesson } from "./types/teacher";
+import { GroupLesson, Groups } from "./types/group";
+import { TeacherLesson, Teachers } from "./types/teacher";
 
 export abstract class AbstractParser {
     protected readonly window: Window | DOMWindow;
@@ -78,6 +78,25 @@ export abstract class AbstractParser {
         }
 
         lessons.splice(lessons.length - toClear, toClear)
+    }
+
+    /**
+     * @description Удаляет все пустые дни "Воскресенья"
+     */
+    protected clearSundays<T extends Groups | Teachers>(rasp: T): void {
+        for (const key in rasp) {
+            const { days } = rasp[key];
+
+            const sundayIndex = days.findIndex((day): boolean => {
+                return day.weekday.toLowerCase() === 'воскресенье';
+            });
+            if (sundayIndex === -1) continue;
+
+            const sunday = days[sundayIndex];
+            if (sunday.lessons.length > 0) continue;
+
+            days.splice(sundayIndex, 1);
+        }
     }
 
     abstract run(): object

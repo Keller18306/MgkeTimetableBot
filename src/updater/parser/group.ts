@@ -32,12 +32,14 @@ export default class StudentParser extends AbstractParser {
 
             this.parseGroup(table, h2)
         }
+        
+        this.clearSundays(this.groups);
 
         for (const group in this.groups) {
             for (const day of this.groups[group].days) {
                 this.processDay(day)
             }
-        }
+        }   
 
         return this.groups
     }
@@ -234,7 +236,7 @@ export default class StudentParser extends AbstractParser {
                 lesson = [lesson]
             }
 
-            //фикс факультативов
+            // фикс факультативов, то есть из двух факультативов делается один с пометкой "2 часа"
             if (lesson.every(_ => _.type === 'ф-в' && _.comment == null)) {
                 let simmilarIndex: number | null = null;
 
