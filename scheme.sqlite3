@@ -1,5 +1,5 @@
 --
--- Файл сгенерирован с помощью SQLiteStudio v3.2.1 в чт апр. 27 13:24:57 2023
+-- Файл сгенерирован с помощью SQLiteStudio v3.2.1 в сб май 27 00:12:14 2023
 --
 -- Использованная кодировка текста: System
 --
@@ -135,14 +135,14 @@ CREATE INDEX api_index ON api (
 
 -- Индекс: options_indexes
 CREATE INDEX options_indexes ON chat_options (
-    accepted,
     mode,
     "group",
     teacher,
     noticeChanges,
     allowSendMess,
-    subscribeMess,
-    deactivateSecondaryCheck
+    accepted,
+    deactivateSecondaryCheck,
+    subscribeMess
 );
 
 
