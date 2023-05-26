@@ -30,7 +30,7 @@ export default class TeacherParser extends AbstractParser {
     protected parseTeacher(table: HTMLTableElement, h2: HTMLHeadingElement) {
         const h2Line = h2.textContent?.trim();
         const teacherName = h2Line?.split('-')[1].trim()
-        if (teacherName == undefined) throw new Error('can not get teacher name')
+        if (teacherName == undefined) throw new Error('Невозможно получить имя учителя')
 
         const rows = Array.from(table.rows)
 
@@ -75,7 +75,7 @@ export default class TeacherParser extends AbstractParser {
             const cell = cells[cell_i]
 
             const day = cell.textContent?.replaceAll('\n', '')
-            if (day == undefined) throw new Error('cannot get weekday name');
+            if (day == undefined) throw new Error('Невозможно получить название дня недели');
 
             days.push(day)
         }
@@ -106,7 +106,7 @@ export default class TeacherParser extends AbstractParser {
         let cabinet: string | undefined | null = cabinetCell.textContent?.trim();
 
         if (lessonData == undefined || cabinet == undefined) {
-            throw new Error('lesson or cabinet is undefined')
+            throw new Error('Урок или кабинет не определены')
         }
 
         lessonData = this.setNullIfEmpty(lessonData === '-' ? '' : lessonData)
@@ -120,16 +120,13 @@ export default class TeacherParser extends AbstractParser {
             .from(lessonCell.childNodes)
             .filter(_ => _.nodeType === _.TEXT_NODE)
             .map(_ => _.textContent!);
-        const type = data[1].match(/\((.+)\)/)?.slice(1)[0]
+        const type = data[1]?.match(/\((.+)\)/)?.slice(1)[0]
         const group = data[0].split('-', 2)[0]
         const lesson = data[0].split('-', 2)[1]
-        if (!type) {
-            throw new Error('group type match error')
-        }
 
         return {
             lesson: lesson,
-            type: type,
+            type: type || null,
             group: group,
             cabinet: cabinet,
             comment: null

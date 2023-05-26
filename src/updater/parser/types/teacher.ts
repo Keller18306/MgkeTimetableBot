@@ -17,7 +17,7 @@ export type TeacherLesson = TeacherLessonExplain | null
 
 export type TeacherLessonExplain = {
     lesson: string,
-    type: string,
+    type: string | null,
     group: string,
     cabinet: string | null,
     comment: string | null

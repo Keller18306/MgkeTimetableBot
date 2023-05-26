@@ -38,7 +38,7 @@ function buildGroupLessonLine(lesson: GroupLessonExplain, options?: GroupLessonL
         line.push(`(${lesson.type})`);
     }
 
-    if (options.showTeacher) {
+    if (options.showTeacher && lesson.teacher) {
         line.push(lesson.teacher);
     }
 

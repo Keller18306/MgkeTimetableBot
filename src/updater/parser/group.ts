@@ -47,7 +47,7 @@ export default class StudentParser extends AbstractParser {
     protected parseGroup(table: HTMLTableElement, h2: HTMLHeadingElement) {
         const group = h2.textContent?.split('-', 2)[1]?.trim();
         const groupNumber = this.parseGroupNumber(group);
-        if (!group || !groupNumber) throw new Error('can not get group number')
+        if (!group || !groupNumber) throw new Error('Невозможно получить номер группы')
 
         const rows = Array.from(table.rows)
 
@@ -90,7 +90,7 @@ export default class StudentParser extends AbstractParser {
             const cell = cells[cell_i]
 
             const day = cell.textContent?.replaceAll('\n', '')
-            if (day == undefined) throw new Error('cannot get weekday name');
+            if (day == undefined) throw new Error('Невозможно получить название дня недели');
 
             days.push(day)
         }
@@ -121,7 +121,7 @@ export default class StudentParser extends AbstractParser {
         let cabinet: string | undefined | null = cabinetCell.textContent?.trim();
 
         if (lesson == undefined || cabinet == undefined) {
-            throw new Error('lesson or cabinet is undefined')
+            throw new Error('Урок или кабинет не определён')
         }
 
         lesson = this.setNullIfEmpty(lesson)
@@ -153,15 +153,15 @@ export default class StudentParser extends AbstractParser {
             .from(lessonCell.childNodes)
             .filter(_ => _.nodeType === _.TEXT_NODE)
             .map(_ => _.textContent!);
-        const matchType = group[1].match(/\((.+)\)/)?.slice(1)[0]
-        if (!matchType) {
-            throw new Error('group type match error')
-        }
+        const matchType = group[1]?.match(/\((.+)\)/)?.slice(1)[0]
+        // if (!matchType) {
+        //     throw new Error('Тип урока не был получен')
+        // }
 
         return {
             lesson: group[0],
-            type: matchType,
-            teacher: group[2],
+            type: matchType || null,
+            teacher: group[2] || null,
             cabinet: cabinet,
             comment: null
         }
@@ -182,7 +182,7 @@ export default class StudentParser extends AbstractParser {
         }
 
         if (cabinets.length !== 1 && subGroups.length > cabinets.length) {
-            throw new Error('subgroups and cabinets not equal');
+            throw new Error('Подгруппы и кабинеты не совпадают');
         }
 
         const parsed: GroupLessonExplain[] = [];
@@ -192,7 +192,7 @@ export default class StudentParser extends AbstractParser {
             const matchName = subGroup[0].match(/(\d+)\.\s?(.+)/)?.slice(1)
             const matchType = subGroup[1].match(/\((.+)\)/)?.slice(1)[0]
             if (!matchName || !matchType) {
-                throw new Error('group name or group type match error')
+                throw new Error('Название урока или тип урока не были получены для подгруппы')
             }
 
             const sgNumber: number = Number(matchName[0]);
@@ -203,7 +203,7 @@ export default class StudentParser extends AbstractParser {
             } else {
                 if (subGroups.length < cabinets.length) {
                     if (sgNumber > cabinets.length) {
-                        throw new Error('cabinet is not exists for subgroup')
+                        throw new Error('Кабинет не существует для подгруппы')
                     }
 
                     cabinet = cabinets[sgNumber - 1];
