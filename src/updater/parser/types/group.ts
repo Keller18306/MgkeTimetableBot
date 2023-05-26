@@ -18,8 +18,8 @@ export type GroupLesson = GroupLessonExplain | GroupLessonExplain[] | null
 export type GroupLessonExplain = {
     subgroup?: number
     lesson: string,
-    type: string,
-    teacher: string,
+    type: string | null,
+    teacher: string | null,
     cabinet: string | null,
     comment: string | null
 }

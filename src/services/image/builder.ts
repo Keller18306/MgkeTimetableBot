@@ -204,9 +204,9 @@ export class ImageBuilder {
                     lesson: lesson.map((_: GroupLessonExplain): string => {
                         return `${_.subgroup}. ${_.lesson}`;
                     }).join('\n'),
-                    type: lesson.map((_: GroupLessonExplain): string => _.type).join('\n'),
+                    type: lesson.map((_: GroupLessonExplain): string | null => _.type).join('\n'),
                     cabinet: lesson.map((_: GroupLessonExplain): string => _.cabinet || '-').join('\n'),
-                    teacher: lesson.map((_: GroupLessonExplain): string => _.teacher).join('\n'),
+                    teacher: lesson.map((_: GroupLessonExplain): string | null => _.teacher).join('\n'),
                     comment: null
                 } : lesson;
 

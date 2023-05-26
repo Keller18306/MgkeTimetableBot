@@ -15,11 +15,11 @@ export class DefaultScheduleFormatter extends ScheduleFormatter {
             line.push(this.Lesson(lesson.lesson));
         }
 
-        if (options.showType) {
+        if (options.showType && lesson.type) {
             line.push(this.Type(lesson.type));
         }
 
-        if (options.showTeacher) {
+        if (options.showTeacher && lesson.teacher) {
             line.push(this.Teacher(lesson.teacher));
         }
 
@@ -41,8 +41,10 @@ export class DefaultScheduleFormatter extends ScheduleFormatter {
             `${this.Group(lesson.group)}${this.Lesson(lesson.lesson)}`
         );
 
-        line.push(this.Type(lesson.type));
-
+        if (lesson.type) {
+            line.push(this.Type(lesson.type));
+        }
+        
         if (lesson.cabinet != null) {
             line.push(this.Cabinet(lesson.cabinet));
         }
