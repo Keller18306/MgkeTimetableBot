@@ -4,9 +4,6 @@ import db from "../../../db";
 import { AbstractChat, DbChat } from "../abstract/chat";
 
 export type TgDb = DbChat & {
-    /** ID чата в Telegram */
-    chatId: number;
-
     /** Юзернейм */
     domain: string | null;
 
@@ -22,7 +19,12 @@ export type TgDb = DbChat & {
 
 class TgChat extends AbstractChat {
     public peerId: number;
-    protected db_table: string = 'tg_bot_chats';
+
+    public db_table: string = 'tg_bot_chats';
+    protected service: string = 'tg';
+    protected columns: string[] = [
+        'domain', 'firstName', 'lastName', 'lang'
+    ];
 
     constructor(peerId: number) {
         super()

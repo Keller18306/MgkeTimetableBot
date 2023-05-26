@@ -1,7 +1,7 @@
 import { TelegramBotCommand } from "puregram/generated";
 import { raspCache } from "../../../../updater";
 import { randArray } from "../../../../utils";
-import { buildGroupTextRasp, getDayRasp } from "../../../../utils/buildTextRasp";
+import { getDayRasp } from "../../../../utils/buildTextRasp";
 import { DefaultCommand, HandlerParams } from "../../abstract/command";
 import { StaticKeyboard } from "../../keyboard";
 
@@ -16,7 +16,7 @@ export default class extends DefaultCommand {
     };
     public scene?: string | null = null;
 
-    async handler({ context, chat, keyboard }: HandlerParams) {
+    async handler({ context, keyboard, scheduleFormatter }: HandlerParams) {
         if (Object.keys(raspCache.groups.timetable).length == 0) {
             return context.send('Данные с сервера ещё не загружены, ожидайте...');
         }
@@ -41,7 +41,10 @@ export default class extends DefaultCommand {
         }
 
         const groupRasp = raspCache.groups.timetable[group];
-        const message = buildGroupTextRasp(group, getDayRasp(groupRasp.days), true, chat.showParserTime);
+        const message = scheduleFormatter.formatGroupFull(String(group), {
+            showHeader: true,
+            days: getDayRasp(groupRasp.days)
+        })
 
         return context.send(message);
     }

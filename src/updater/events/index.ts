@@ -1,13 +1,16 @@
 import { config } from "../../../config";
 import db from "../../db";
 import { DbChat } from "../../services/bots/abstract/chat";
-import { buildGroupTextRasp, buildTeacherTextRasp, getDayNext, getTodayDate, strDateToNumber } from "../../utils";
+import { Service } from "../../services/bots/abstract/command";
+import { getDayNext, getTodayDate, strDateToNumber } from "../../utils";
+import { createScheduleFormatter } from "../../utils/";
 import { GroupDay, TeacherDay } from "../parser/types";
 import { raspCache } from "../raspCache";
 import { EventController } from "./controller";
 
 export abstract class AbstractEventListener<T extends DbChat = DbChat> {
     protected abstract _tableName: string;
+    protected abstract service: Service;
 
     constructor(enabled: boolean) {
         if (!enabled) return;
@@ -31,7 +34,7 @@ export abstract class AbstractEventListener<T extends DbChat = DbChat> {
         if (!Array.isArray(groups)) groups = [groups];
 
         const chats: T[] = db.prepare(
-            "SELECT * FROM `" + this._tableName + "` WHERE `group` IN (" + Array(groups.length).fill('?') + ") AND (`deactivateSecondaryCheck` = 1 OR `mode` = 'student' OR `mode` = 'parent') AND `accepted` = 1 AND `noticeChanges` = 1 AND `allowSendMess` = 1"
+            "SELECT * FROM chat_options JOIN `" + this._tableName + "` ON chat_options.id = " + this._tableName + ".id WHERE `group` IN (" + Array(groups.length).fill('?') + ") AND (`deactivateSecondaryCheck` = 1 OR `mode` = 'student' OR `mode` = 'parent') AND `accepted` = 1 AND `noticeChanges` = 1 AND `allowSendMess` = 1"
         ).all(...groups);
 
         return chats;
@@ -41,7 +44,7 @@ export abstract class AbstractEventListener<T extends DbChat = DbChat> {
         if (!Array.isArray(teachers)) teachers = [teachers];
 
         const chats: T[] = db.prepare(
-            "SELECT * FROM `" + this._tableName + "` WHERE `teacher` IN (" + Array(teachers.length).fill('?') + ") AND (`deactivateSecondaryCheck` = 1 OR `mode` = 'teacher') AND `accepted` = 1 AND `noticeChanges` = 1 AND `allowSendMess` = 1"
+            "SELECT * FROM chat_options JOIN `" + this._tableName + "` ON chat_options.id = " + this._tableName + ".id WHERE `teacher` IN (" + Array(teachers.length).fill('?') + ") AND (`deactivateSecondaryCheck` = 1 OR `mode` = 'teacher') AND `accepted` = 1 AND `noticeChanges` = 1 AND `allowSendMess` = 1"
         ).all(...teachers);
 
         return chats;
@@ -85,12 +88,19 @@ export abstract class AbstractEventListener<T extends DbChat = DbChat> {
             const day = getDayNext(raspCache.groups.timetable[group].days);
             if (!day) continue;
 
-            const message: string = [
-                '📢 Расписание на следующий день\n',
-                buildGroupTextRasp(group, [day], false, false)
-            ].join('\n')
+            for (const chat of chats) {
+                const formatter = createScheduleFormatter(this.service, raspCache);
 
-            await this.sendMessages(chats, message)
+                const message: string = [
+                    '📢 Расписание на следующий день\n',
+                    formatter.formatGroupFull(group, {
+                        showHeader: false,
+                        days: [day]
+                    })
+                ].join('\n')
+
+                await this.sendMessage(chat, message)
+            }
         }
     }
 
@@ -98,12 +108,19 @@ export abstract class AbstractEventListener<T extends DbChat = DbChat> {
         const chats: T[] = this.getGroupsChats(group);
         if (chats.length === 0) return;
 
-        const message: string = [
-            '🆕 Изменено расписание на день\n',
-            buildGroupTextRasp(group, [day], false, false)
-        ].join('\n')
+        for (const chat of chats) {
+            const formatter = createScheduleFormatter(this.service, raspCache);
 
-        await this.sendMessages(chats, message)
+            const message: string = [
+                '📢 Расписание на следующий день\n',
+                formatter.formatGroupFull(group, {
+                    showHeader: false,
+                    days: [day]
+                })
+            ].join('\n')
+
+            await this.sendMessage(chat, message)
+        }
     }
 
     // public async nextTeacherDay({ day, teacher }: { day: TeacherDay, teacher: string }) {
@@ -156,12 +173,19 @@ export abstract class AbstractEventListener<T extends DbChat = DbChat> {
             const day = getDayNext(raspCache.teachers.timetable[teacher].days);
             if (!day) continue;
 
-            const message: string = [
-                '📢 Расписание на следующий день\n',
-                buildTeacherTextRasp(teacher, [day], false, false)
-            ].join('\n')
+            for (const chat of chats) {
+                const formatter = createScheduleFormatter(this.service, raspCache);
 
-            await this.sendMessages(chats, message)
+                const message: string = [
+                    '📢 Расписание на следующий день\n',
+                    formatter.formatTeacherFull(teacher, {
+                        showHeader: false,
+                        days: [day]
+                    })
+                ].join('\n')
+
+                await this.sendMessage(chat, message)
+            }
         }
     }
 
@@ -169,17 +193,24 @@ export abstract class AbstractEventListener<T extends DbChat = DbChat> {
         const chats: T[] = this.getTeachersChats(teacher);
         if (chats.length === 0) return;
 
-        const message: string = [
-            '🆕 Изменено расписание на день\n',
-            buildTeacherTextRasp(teacher, [day], false, false)
-        ].join('\n')
+        for (const chat of chats) {
+            const formatter = createScheduleFormatter(this.service, raspCache);
 
-        await this.sendMessages(chats, message)
+            const message: string = [
+                '🆕 Изменено расписание на день\n',
+                formatter.formatTeacherFull(teacher, {
+                    showHeader: false,
+                    days: [day]
+                })
+            ].join('\n')
+
+            await this.sendMessage(chat, message)
+        }
     }
 
     public async sendDistribution(message: string) {
         const chats: T[] = db.prepare(
-            "SELECT * FROM `" + this._tableName + "` WHERE `accepted` = 1 AND `allowSendMess` = 1"
+            "SELECT * FROM chat_options JOIN `" + this._tableName + "` ON chat_options.id = " + this._tableName + ".id WHERE `accepted` = 1 AND `allowSendMess` = 1"
         ).all();
 
         return this.sendMessages(chats, message);

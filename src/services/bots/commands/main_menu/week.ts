@@ -1,7 +1,8 @@
 import { TelegramBotCommand } from 'puregram/generated';
 import { raspCache } from '../../../../updater';
 import { GroupDay, TeacherDay } from '../../../../updater/parser/types';
-import { buildGroupTextRasp, buildTeacherTextRasp, removePastDays } from "../../../../utils/buildTextRasp";
+import { removePastDays } from "../../../../utils/buildTextRasp";
+import { ScheduleFormatter } from '../../../../utils/formatters/abstract';
 import { randArray } from "../../../../utils/rand";
 import { AbstractAction } from "../../abstract/action";
 import { AbstractChat } from "../../abstract/chat";
@@ -17,19 +18,19 @@ export default class extends DefaultCommand {
         description: 'Ваше расписание на неделю'
     };
 
-    async handler({ context, chat, actions }: HandlerParams) {
+    async handler({ context, chat, actions, scheduleFormatter }: HandlerParams) {
         if (Object.keys(raspCache.groups.timetable).length == 0 &&
             Object.keys(raspCache.teachers.timetable).length == 0) {
             return context.send('Данные с сервера ещё не загружены, ожидайте...');
         }
 
-        if (chat.mode == 'student' || chat.mode == 'parent') return this.groupRasp(context, chat, actions);
-        if (chat.mode == 'teacher') return this.teacherRasp(context, chat, actions);
+        if (chat.mode == 'student' || chat.mode == 'parent') return this.groupRasp(context, chat, actions, scheduleFormatter);
+        if (chat.mode == 'teacher') return this.teacherRasp(context, chat, actions, scheduleFormatter);
 
         return context.send('Первоначальная настройка ещё не была произведена');
     }
 
-    private async groupRasp(context: AbstractCommandContext, chat: AbstractChat, actions: AbstractAction) {
+    private async groupRasp(context: AbstractCommandContext, chat: AbstractChat, actions: AbstractAction, scheduleFormatter: ScheduleFormatter) {
         if (chat.group == null) {
             const randGroup = randArray(Object.keys(raspCache.groups.timetable));
 
@@ -51,7 +52,10 @@ export default class extends DefaultCommand {
 
         actions.deleteLastMsg();
 
-        const message = buildGroupTextRasp(chat.group, days, false, chat.showParserTime);
+        const message = scheduleFormatter.formatGroupFull(String(chat.group), {
+            showHeader: false,
+            days: days
+        })
         //const image = await ImageBuilder.getGroupImage(group);
 
         actions.deleteUserMsg();
@@ -64,7 +68,7 @@ export default class extends DefaultCommand {
         //return context.sendPhoto(image, { reply_to: id })
     }
 
-    private async teacherRasp(context: AbstractCommandContext, chat: AbstractChat, actions: AbstractAction) {
+    private async teacherRasp(context: AbstractCommandContext, chat: AbstractChat, actions: AbstractAction, scheduleFormatter: ScheduleFormatter) {
         if (chat.teacher == null) {
             const randTeacher = randArray(Object.keys(raspCache.teachers.timetable));
 
@@ -86,7 +90,10 @@ export default class extends DefaultCommand {
 
         actions.deleteLastMsg();
 
-        const message: string = buildTeacherTextRasp(chat.teacher, days, false, chat.showParserTime);
+        const message = scheduleFormatter.formatTeacherFull(chat.teacher, {
+            showHeader: false,
+            days: days
+        })
 
         actions.deleteUserMsg();
 

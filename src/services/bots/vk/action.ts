@@ -34,7 +34,7 @@ export class VkBotAction extends AbstractAction {
             return false;
         }
 
-        db.prepare('UPDATE `vk_bot_chats` SET `lastMsgId` = ? WHERE `peerId` = ?').run(null, this.context.peerId)
+        this.chat.lastMsgId = null;
 
         return true;
     }
@@ -53,7 +53,7 @@ export class VkBotAction extends AbstractAction {
                 if (err.message.includes('(admin message)')) return false;
 
                 if (!await this._context.isAdmin()) {
-                    db.prepare('UPDATE `vk_bot_chats` SET `deleteUserMsg` = 0 WHERE `peerId` = ?').run(this.context.peerId)
+                    this.chat.deleteUserMsg = false;
                     await this.context.send('Удаление сообщений при нажатии кнопки выключено.\nПричина: нет прав администратора')
                     return false
                 }
@@ -74,7 +74,7 @@ export class VkBotAction extends AbstractAction {
         if (!this.chat.deleteLastMsg) return false;
         if (!context.conversationMessageId) return false;
 
-        db.prepare('UPDATE `vk_bot_chats` SET `lastMsgId` = ? WHERE `peerId` = ?').run(context.conversationMessageId, this.context.peerId)
+        this.chat.lastMsgId = context.conversationMessageId;
 
         return true;
     }

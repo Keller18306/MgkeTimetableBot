@@ -52,7 +52,7 @@ export default class VkAppAcceptKeyMethod extends VKAppDefaultMethod {
             }
         }
         
-        db.prepare('UPDATE `vk_bot_chats` SET `accepted` = 1 WHERE `peer_id` = ?').run(user.vk_id)
+        db.prepare('UPDATE chat_options SET `accepted` = 1 WHERE (SELECT id FROM `vk_bot_chats` WHERE `peerId` = ?)').run(user.vk_id)
         user.allowBotAccept = false
 
         return {

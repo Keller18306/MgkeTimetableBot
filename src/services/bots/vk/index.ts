@@ -5,6 +5,8 @@ import { ContextDefaultState, MessageContext, MessageEventContext, VK, getRandom
 import { config } from '../../../../config';
 import { defines } from '../../../defines';
 import { FromType, InputRequestKey } from '../../../key';
+import { raspCache } from '../../../updater';
+import { createScheduleFormatter } from '../../../utils/';
 import { AbstractBot } from '../abstract/bot';
 import { AdvancedContext, DefaultCommand, HandlerParams } from '../abstract/command';
 import { FileCache } from '../abstract/fileCache';
@@ -170,7 +172,8 @@ export class VkBot extends AbstractBot<VkCommandContext> {
                     actions: new VkBotAction(context, chat, this.input, this.cache),
                     keyboard,
                     service: 'vk',
-                    realContext: context
+                    realContext: context,
+                    scheduleFormatter: createScheduleFormatter('vk', raspCache, chat)
                 }
 
                 if (!cmd.preHandle(params)) {

@@ -1,6 +1,6 @@
 import { TelegramBotCommand } from "puregram/generated";
 import { raspCache } from "../../../../updater";
-import { buildTeacherTextRasp, getDayRasp } from "../../../../utils/buildTextRasp";
+import { getDayRasp } from "../../../../utils/buildTextRasp";
 import { randArray } from "../../../../utils/rand";
 import { DefaultCommand, HandlerParams } from "../../abstract/command";
 import { StaticKeyboard } from "../../keyboard";
@@ -16,7 +16,7 @@ export default class extends DefaultCommand {
     };
     public scene?: string | null = null;
 
-    async handler({ context, chat, keyboard }: HandlerParams) {
+    async handler({ context, chat, keyboard, scheduleFormatter }: HandlerParams) {
         if (Object.keys(raspCache.teachers.timetable).length == 0) {
             return context.send('Данные с сервера ещё не загружены, ожидайте...');
         }
@@ -46,7 +46,10 @@ export default class extends DefaultCommand {
         }
 
         const teacherRasp = raspCache.teachers.timetable[teacher];
-        const message = buildTeacherTextRasp(teacher, getDayRasp(teacherRasp.days), true, chat.showParserTime);
+        const message = scheduleFormatter.formatTeacherFull(teacher, {
+            showHeader: true,
+            days: getDayRasp(teacherRasp.days)
+        })
 
         return context.send(message);
     }

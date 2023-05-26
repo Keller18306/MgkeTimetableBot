@@ -6,5 +6,6 @@ export function addslashes(string: string): string {
         replace(/\f/g, '\\f').
         replace(/\r/g, '\\r').
         replace(/'/g, '\\\'').
-        replace(/"/g, '\\"');
+        replace(/"/g, '\\"').
+        replace(/`/g, '\\`');
 }

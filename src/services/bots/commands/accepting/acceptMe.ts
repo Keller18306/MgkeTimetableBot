@@ -38,12 +38,8 @@ export default class extends DefaultCommand {
             return context.send('Неверный ключ')
         }
 
-        db.prepare('UPDATE `vk_app_users` SET `accepted` = 1 WHERE `user_id` = ?').run([
-            context.userId
-        ])
-        db.prepare('UPDATE `vk_bot_chats` SET `allowVkAppAccept` = 0 WHERE `id` = ?').run([
-            chat.id
-        ])
+        db.prepare('UPDATE `vk_app_users` SET `accepted` = 1 WHERE `user_id` = ?').run(context.userId)
+        db.prepare('UPDATE `vk_bot_chats` SET `allowVkAppAccept` = 0 WHERE `peerId` = ?').run(context.userId)
 
         return context.send('Вы успешно активировали приложение в ВК!')
     }

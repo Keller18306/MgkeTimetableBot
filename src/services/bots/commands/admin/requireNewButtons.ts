@@ -14,9 +14,8 @@ export default class extends DefaultCommand {
     };
 
     handler({ context, chat, keyboard }: HandlerParams) {
-        db.prepare('UPDATE `vk_bot_chats` SET `needUpdateButtons` = 1 WHERE `accepted` = 1').run()
-        db.prepare('UPDATE `tg_bot_chats` SET `needUpdateButtons` = 1 WHERE `accepted` = 1').run()
+        db.prepare("UPDATE chat_options SET `needUpdateButtons` = 1 WHERE `accepted` = 1 AND `service` IN ('vk', 'tg')").run();
 
-        context.send('ok')
+        return context.send('ok')
     }
 }

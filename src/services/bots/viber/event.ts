@@ -1,12 +1,14 @@
 import { Bot, Message } from 'viber-bot';
 import { config } from "../../../../config";
 import { AbstractEventListener } from "../../../updater/events";
+import { Service } from '../abstract/command';
 import { Keyboard } from "../keyboard";
 import { ViberDb } from "./chat";
 import { convertAbstractToViber } from './keyboard';
 
 export class ViberEventListener extends AbstractEventListener<ViberDb> {
     protected _tableName: string = 'viber_bot_chats';
+    protected service: Service = 'viber';
 
     private bot: Bot
 
@@ -25,7 +27,7 @@ export class ViberEventListener extends AbstractEventListener<ViberDb> {
                 chat.allowSendMess = false;
                 return;
             }
-            
+
             console.error('Viber send event error', err)
         })
     }

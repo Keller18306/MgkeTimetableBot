@@ -9,13 +9,12 @@ export default class extends DefaultCommand {
 
     public adminOnly: boolean = true;
 
-    handler({ context, chat }: HandlerParams) {
+    handler({ context, chat, service }: HandlerParams) {
         let id: string | undefined | number = context.text?.replace(this.regexp, '').trim()
         if (id == undefined || id === '') id = context.peerId
+        if (isNaN(+id)) return context.send('это не число');
 
-        if (isNaN(+id)) return context.send('это не число')
-
-        db.prepare('UPDATE `' + chat.db_table + '` SET `accepted` = 1 WHERE `peerId` = ?').run(id)
+        db.prepare(`UPDATE chat_options SET accepted = 1 WHERE service = ? AND id = (SELECT id FROM ${chat.db_table} WHERE peerId = ?)`).run(service, id);
 
         return context.send(`ok ${id}`)
     }

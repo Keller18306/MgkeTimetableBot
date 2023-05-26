@@ -4,6 +4,8 @@ import { Bot, Events, ReceivedTextMessage, Response } from 'viber-bot';
 import { config } from '../../../../config';
 import { defines } from '../../../defines';
 import { FromType, InputRequestKey } from '../../../key/index';
+import { raspCache } from '../../../updater';
+import { createScheduleFormatter } from '../../../utils/';
 import { AbstractBot } from '../abstract/bot';
 import { AdvancedContext, DefaultCommand, HandlerParams } from '../abstract/command';
 import { CommandController } from '../command';
@@ -152,7 +154,8 @@ export class ViberBot extends AbstractBot<ViberCommandContext> {
             chatData: chat.resync(),
             actions: new ViberAction(context, chat),
             keyboard: keyboard,
-            service: 'viber'
+            service: 'viber',
+            scheduleFormatter: createScheduleFormatter('viber', raspCache, chat)
         };
 
         (async () => {

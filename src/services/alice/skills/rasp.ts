@@ -1,7 +1,7 @@
 import { IContext, Reply } from "@keller18306/yandex-dialogs-sdk";
 import { raspCache } from "../../../updater";
 import { GroupDay, TeacherDay } from "../../../updater/parser/types";
-import { buildGroupsDaysText, buildTeacherDaysText, closestJaroWinkler, getDayRasp, getFullSubjectName, getTodayDate } from "../../../utils";
+import { closestJaroWinkler, getDayRasp, getFullSubjectName, getTodayDate } from "../../../utils";
 import { AliceSkill } from "../skill";
 import { AliceUser } from "../user";
 
@@ -137,7 +137,7 @@ export default class extends AliceSkill {
 
         const text: string[] = [];
         text.push(`Расписание на ${day.weekday}, ${day.day}${showGroup ? ` для ${group}-ей группы` : ''}:`);
-        text.push(buildGroupsDaysText(day.lessons));
+        //text.push(buildGroupsDaysText(day.lessons));
 
         return Reply.text(text.join('\n'), {
             tts: tts.join('. ')
@@ -189,7 +189,7 @@ export default class extends AliceSkill {
 
         const text: string[] = [];
         text.push(`Расписание на ${day.weekday}, ${day.day}${showTeacher ? ` для преподавателя "${teacher}"` : ''}:`);
-        text.push(buildTeacherDaysText(day.lessons));
+        //text.push(buildTeacherDaysText(day.lessons));
 
         return Reply.text(text.join('\n'), {
             tts: tts.join('. ')

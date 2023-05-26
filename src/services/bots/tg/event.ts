@@ -2,12 +2,14 @@ import { APIError, Telegram } from "puregram";
 import StatusCode from "status-code-enum";
 import { config } from "../../../../config";
 import { AbstractEventListener } from "../../../updater/events";
+import { Service } from "../abstract/command";
 import { Keyboard } from '../keyboard';
 import { TgDb } from './chat';
 import { convertAbstractToTg } from "./keyboard";
 
 export class TgEventListener extends AbstractEventListener<TgDb> {
     protected _tableName: string = 'tg_bot_chats';
+    protected service: Service = 'tg';
 
     public enabled: boolean = config.vk.bot.noticer;
 

@@ -1,6 +1,8 @@
 import { MessageContext as TgMessageContext } from 'puregram';
 import { TelegramBotCommand } from 'puregram/generated';
 import { ContextDefaultState, MessageContext as VkMessageContext } from 'vk-io';
+import { raspCache } from '../../../updater';
+import { ScheduleFormatter } from '../../../utils/formatters/abstract';
 import { ImageFile } from '../../image/builder';
 import { BotInput } from '../input';
 import { Keyboard, StaticKeyboard } from '../keyboard';
@@ -13,7 +15,6 @@ import { VkCommandContext } from '../vk/context';
 import { AbstractAction } from './action';
 import { AbstractChat, DbChat } from './chat';
 import { KeyboardBuilder } from './keyboardBuilder';
-import { raspCache } from '../../../updater';
 
 export type Service = 'tg' | 'vk' | 'viber';
 
@@ -32,7 +33,8 @@ export type HandlerParams = {
     chatData: DbChat,
     actions: AbstractAction,
     keyboard: Keyboard,
-    service: Service
+    service: Service,
+    scheduleFormatter: ScheduleFormatter
 } & ({
     service: 'vk',
     context: VkCommandContext,

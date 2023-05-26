@@ -5,7 +5,7 @@ import { Theme } from "./keyboardBuilder";
 
 export type ViberDb = DbChat & {
     peerId: string; //Переопределение как строка
-    
+
     /** Тема кнопок в Viber (цвет: бело-розовые, тёмно-синие, серо-чёрные) */
     theme: Theme;
 
@@ -27,7 +27,12 @@ export type ViberDb = DbChat & {
 
 class ViberChat extends AbstractChat {
     public peerId: string;
+
     public db_table: string = 'viber_bot_chats';
+    protected service: string = 'viber';
+    protected columns: string[] = [
+        'theme', 'lastUpdateDI', 'name', 'device_os', 'device_type', 'viber_version'
+    ];
 
     private updateDITime: number = 12 * 60 * 60 * 1000;
     protected defaultAllowSendMess: boolean = false;

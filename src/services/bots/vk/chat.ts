@@ -10,7 +10,12 @@ export type VkDb = DbChat & {
 
 class VkChat extends AbstractChat {
     public peerId: number;
+
     public db_table: string = 'vk_bot_chats';
+    protected service: string = 'vk';
+    protected columns: string[] = [
+        'allowVkAppAccept'
+    ];
 
     constructor(peerId: number) {
         super()

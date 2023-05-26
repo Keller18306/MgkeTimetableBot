@@ -3,6 +3,8 @@ import { APIError, CallbackQueryContext, ChatMemberContext, MessageContext, Tele
 import StatusCode from 'status-code-enum';
 import { config } from '../../../../config';
 import { FromType, InputRequestKey } from '../../../key';
+import { raspCache } from '../../../updater';
+import { createScheduleFormatter } from '../../../utils/';
 import { AbstractBot } from '../abstract/bot';
 import { AdvancedContext, DefaultCommand, HandlerParams } from '../abstract/command';
 import { FileCache } from '../abstract/fileCache';
@@ -166,7 +168,8 @@ export class TgBot extends AbstractBot<TgCommandContext> {
                     actions: new TgBotAction(context, chat, this.input, this.cache),
                     keyboard,
                     service: 'tg',
-                    realContext: context
+                    realContext: context,
+                    scheduleFormatter: createScheduleFormatter('tg', raspCache, chat)
                 }
 
                 if (!cmd.preHandle(params)) return this.notFound(_context, keyboard.MainMenu, selfMention);

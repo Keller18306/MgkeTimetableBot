@@ -1,7 +1,6 @@
 import { TelegramBotCommand } from "puregram/generated";
 import { raspCache } from "../../../../updater";
 import { randArray } from "../../../../utils";
-import { buildGroupTextRasp } from "../../../../utils/buildTextRasp";
 import { DefaultCommand, HandlerParams } from "../../abstract/command";
 import { StaticKeyboard } from "../../keyboard";
 
@@ -15,7 +14,7 @@ export default class extends DefaultCommand {
         description: 'Узнать расписание на неделю указанной группы (не зависит от текущего вашего)'
     };
 
-    async handler({ context, chat, keyboard }: HandlerParams) {
+    async handler({ context, chat, keyboard, scheduleFormatter }: HandlerParams) {
         if (Object.keys(raspCache.groups.timetable).length == 0) {
             return context.send('Данные с сервера ещё не загружены, ожидайте...')
         }
@@ -39,8 +38,9 @@ export default class extends DefaultCommand {
             break;
         }
 
-        const groupRasp = raspCache.groups.timetable[group];
-        const message = buildGroupTextRasp(group, groupRasp.days, true, chat.showParserTime)
+        const message = scheduleFormatter.formatGroupFull(String(group), {
+            showHeader: true
+        })
 
         return context.send(message)
     }

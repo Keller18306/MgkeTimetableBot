@@ -10,13 +10,8 @@ export abstract class AbstractBot<Context extends AbstractCommandContext> {
     public abstract run(): void
     protected abstract _getAcceptKeyParams(context: Context): InputRequestKey;
 
-    protected readonly acceptTool: RequestKey;
-    protected readonly input: BotInput;
-
-    constructor() {
-        this.acceptTool = new RequestKey(config.encrypt_key)
-        this.input = new BotInput()
-    }
+    protected readonly acceptTool: RequestKey = new RequestKey(config.encrypt_key);
+    protected readonly input: BotInput = new BotInput();
 
     protected notFound(context: Context, keyboard: any, selfMention: boolean = true) {
         return context.send('Команда не найдена', {
