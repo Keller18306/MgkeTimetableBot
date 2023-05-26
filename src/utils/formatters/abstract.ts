@@ -148,26 +148,26 @@ export abstract class ScheduleFormatter {
                 cab.push(mainLessons);
             }
 
+            text.push(cab.join(' '));
+
             if (isSubs) {
                 const lines: string[] = subs.map((lesson: GroupLessonExplain, i: number): string => {
                     let line: string = this.formatGroupLesson(lesson, reversedOptions)
 
-                    // if (i === subs.length - 1) {
-                    //     line = '\n└── ' + line;
-                    // } else {
-                    //     line = '\n├── ' + line;
-                    // }
-                    if (i > 0) {
-                        line = '\n' + line;
+                    if (i === subs.length - 1) {
+                        line = '└── ' + line;
+                    } else {
+                        line = '├── ' + line;
                     }
+                    // if (i > 0) {
+                    //     line = '\n' + line;
+                    // }
 
                     return line;
                 });
 
-                cab.push(lines.join('\n'));
+                text.push(lines.join('\n'));
             }
-
-            text.push(cab.join('\n'));
         }
 
         return text.join('\n')

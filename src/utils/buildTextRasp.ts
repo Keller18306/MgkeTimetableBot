@@ -14,7 +14,7 @@ export function createScheduleFormatter(service: Service, raspCache: RaspCache, 
     }
 
     //TODO
-    return new VisualScheduleFormatter(service, raspCache, chat);
+    return new DefaultScheduleFormatter(service, raspCache, chat);
 }
 
 export function removePastDays<T extends GroupDay | TeacherDay>(days: T[]): T[] {
