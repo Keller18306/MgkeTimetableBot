@@ -15,7 +15,7 @@ export default class extends DefaultCommand {
     public scene?: string | null = null;
 
     async handler({ context }: HandlerParams) {
-        if (Object.keys(raspCache.groups.timetable).length == 0) {
+        if (Object.keys(raspCache.teachers.timetable).length == 0) {
             return context.send('Данные с сервера ещё не загружены, ожидайте...');
         }
 
