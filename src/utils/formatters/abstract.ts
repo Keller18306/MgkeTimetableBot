@@ -112,8 +112,8 @@ export abstract class ScheduleFormatter {
             if (lesson == null) continue;
 
             const cab: string[] = [
-                this.LessonHeader(+i + 1)
-            ]
+                this.LessonHeader(+i)
+            ];
 
             if (!lesson) {
                 text.push(cab.join(''));
