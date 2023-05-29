@@ -185,7 +185,7 @@ export abstract class ScheduleFormatter {
             if (lesson == null) continue;
 
             text.push([
-                this.LessonHeader(+i + 1),
+                this.LessonHeader(+i),
                 this.formatTeacherLesson(lesson)
             ].join(''));
         }
