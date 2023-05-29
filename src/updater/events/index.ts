@@ -34,8 +34,8 @@ export abstract class AbstractEventListener<T extends DbChat = DbChat> {
         if (!Array.isArray(groups)) groups = [groups];
 
         const chats: T[] = db.prepare(
-            "SELECT * FROM chat_options JOIN `" + this._tableName + "` ON chat_options.id = " + this._tableName + ".id WHERE `group` IN (" + Array(groups.length).fill('?') + ") AND (`deactivateSecondaryCheck` = 1 OR `mode` = 'student' OR `mode` = 'parent') AND `accepted` = 1 AND `noticeChanges` = 1 AND `allowSendMess` = 1"
-        ).all(...groups);
+            "SELECT * FROM chat_options JOIN `" + this._tableName + "` ON chat_options.id = " + this._tableName + ".id WHERE `service` = ? AND `group` IN (" + Array(groups.length).fill('?') + ") AND (`deactivateSecondaryCheck` = 1 OR `mode` = 'student' OR `mode` = 'parent') AND `accepted` = 1 AND `noticeChanges` = 1 AND `allowSendMess` = 1"
+        ).all(this.service, ...groups);
 
         return chats;
     }
@@ -44,8 +44,8 @@ export abstract class AbstractEventListener<T extends DbChat = DbChat> {
         if (!Array.isArray(teachers)) teachers = [teachers];
 
         const chats: T[] = db.prepare(
-            "SELECT * FROM chat_options JOIN `" + this._tableName + "` ON chat_options.id = " + this._tableName + ".id WHERE `teacher` IN (" + Array(teachers.length).fill('?') + ") AND (`deactivateSecondaryCheck` = 1 OR `mode` = 'teacher') AND `accepted` = 1 AND `noticeChanges` = 1 AND `allowSendMess` = 1"
-        ).all(...teachers);
+            "SELECT * FROM chat_options JOIN `" + this._tableName + "` ON chat_options.id = " + this._tableName + ".id WHERE `service` = ? AND `teacher` IN (" + Array(teachers.length).fill('?') + ") AND (`deactivateSecondaryCheck` = 1 OR `mode` = 'teacher') AND `accepted` = 1 AND `noticeChanges` = 1 AND `allowSendMess` = 1"
+        ).all(this.service, ...teachers);
 
         return chats;
     }
@@ -210,8 +210,8 @@ export abstract class AbstractEventListener<T extends DbChat = DbChat> {
 
     public async sendDistribution(message: string) {
         const chats: T[] = db.prepare(
-            "SELECT * FROM chat_options JOIN `" + this._tableName + "` ON chat_options.id = " + this._tableName + ".id WHERE `accepted` = 1 AND `allowSendMess` = 1"
-        ).all();
+            "SELECT * FROM chat_options JOIN `" + this._tableName + "` ON chat_options.id = " + this._tableName + ".id WHERE `service` = ? AND `accepted` = 1 AND `allowSendMess` = 1"
+        ).all(this.service);
 
         return this.sendMessages(chats, message);
     }
