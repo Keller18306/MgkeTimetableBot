@@ -17,7 +17,7 @@ export default class extends DefaultCommand {
         const fromId: string = String(context.peerId);
         let limit: string | undefined = String(2);
 
-        const _key: KeyData = db.prepare('SELECT * FROM `api` WHERE `service` = ? AND `fromId` = ?').get(service, fromId);
+        const _key: KeyData = db.prepare('SELECT * FROM `api` WHERE `service` = ? AND `fromId` = ?').get(service, fromId) as any;
 
         let recreate: boolean;
         let id: number

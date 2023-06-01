@@ -24,7 +24,7 @@ export default class extends DefaultCommand {
 
         if (!chat.allowVkAppAccept) return context.send('Вы уже активировали приложение')
 
-        const app_user: UserData | undefined = db.prepare('SELECT * FROM `vk_app_users` WHERE `user_id` = ?').get(context.userId)
+        const app_user: UserData | undefined = db.prepare('SELECT * FROM `vk_app_users` WHERE `user_id` = ?').get(context.userId) as any
         if (app_user === undefined) return context.send('Вы ещё ниразу не использовали приложение');
         if (app_user.accepted) return context.send('Приложение уже активировано');
 

@@ -35,7 +35,7 @@ export abstract class AbstractEventListener<T extends DbChat = DbChat> {
 
         const chats: T[] = db.prepare(
             "SELECT * FROM chat_options JOIN `" + this._tableName + "` ON chat_options.id = " + this._tableName + ".id WHERE `service` = ? AND `group` IN (" + Array(groups.length).fill('?') + ") AND (`deactivateSecondaryCheck` = 1 OR `mode` = 'student' OR `mode` = 'parent') AND `accepted` = 1 AND `noticeChanges` = 1 AND `allowSendMess` = 1"
-        ).all(this.service, ...groups);
+        ).all(this.service, ...groups) as any;
 
         return chats;
     }
@@ -45,7 +45,7 @@ export abstract class AbstractEventListener<T extends DbChat = DbChat> {
 
         const chats: T[] = db.prepare(
             "SELECT * FROM chat_options JOIN `" + this._tableName + "` ON chat_options.id = " + this._tableName + ".id WHERE `service` = ? AND `teacher` IN (" + Array(teachers.length).fill('?') + ") AND (`deactivateSecondaryCheck` = 1 OR `mode` = 'teacher') AND `accepted` = 1 AND `noticeChanges` = 1 AND `allowSendMess` = 1"
-        ).all(this.service, ...teachers);
+        ).all(this.service, ...teachers) as any;
 
         return chats;
     }
@@ -211,7 +211,7 @@ export abstract class AbstractEventListener<T extends DbChat = DbChat> {
     public async sendDistribution(message: string) {
         const chats: T[] = db.prepare(
             "SELECT * FROM chat_options JOIN `" + this._tableName + "` ON chat_options.id = " + this._tableName + ".id WHERE `service` = ? AND `accepted` = 1 AND `allowSendMess` = 1"
-        ).all(this.service);
+        ).all(this.service) as any;
 
         return this.sendMessages(chats, message);
     }

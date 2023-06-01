@@ -57,7 +57,7 @@ export class VKAppUser {
     }
 
     get(doNotCreate: boolean = false): UserData {
-        const data = db.prepare('SELECT * FROM `vk_app_users` WHERE `user_id` = ?').get(this.vk_id);
+        const data: any = db.prepare('SELECT * FROM `vk_app_users` WHERE `user_id` = ?').get(this.vk_id);
 
         if (!doNotCreate && data == undefined) {
             db.prepare('INSERT INTO `vk_app_users` (`user_id`, `accepted`, `insert_time`, `last_time`) VALUES (?, ?, ?, ?)').run(

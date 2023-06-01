@@ -51,11 +51,11 @@ export default class extends DefaultCommand {
         const { size: bdSize } = fs.statSync('./sqlite3.db')
 
         //TO DO AL CHATS COUNT
-        const vk_bot_chats = db.prepare('SELECT COUNT(*) as `count` FROM `vk_bot_chats`').get().count
-        const vk_app_users = db.prepare('SELECT COUNT(*) as `count` FROM `vk_app_users`').get().count
-        const viber_bot_chats = db.prepare('SELECT COUNT(*) as `count` FROM `viber_bot_chats`').get().count
-        const api_keys = db.prepare('SELECT COUNT(*) as `count` FROM `api`').get().count
-        const tg_bot_chats = db.prepare('SELECT COUNT(*) as `count` FROM `tg_bot_chats`').get().count
+        const vk_bot_chats = (db.prepare('SELECT COUNT(*) as `count` FROM `vk_bot_chats`').get() as any).count
+        const vk_app_users = (db.prepare('SELECT COUNT(*) as `count` FROM `vk_app_users`').get() as any).count
+        const viber_bot_chats = (db.prepare('SELECT COUNT(*) as `count` FROM `viber_bot_chats`').get() as any).count
+        const api_keys = (db.prepare('SELECT COUNT(*) as `count` FROM `api`').get() as any).count
+        const tg_bot_chats = (db.prepare('SELECT COUNT(*) as `count` FROM `tg_bot_chats`').get() as any).count
 
         context.send([
             '-- Система --',
