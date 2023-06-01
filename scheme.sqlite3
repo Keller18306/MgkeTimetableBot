@@ -1,5 +1,5 @@
 --
--- Файл сгенерирован с помощью SQLiteStudio v3.2.1 в сб май 27 00:12:14 2023
+-- Файл сгенерирован с помощью SQLiteStudio v3.4.4 в чт июнь 1 13:40:24 2023
 --
 -- Использованная кодировка текста: System
 --
@@ -53,6 +53,10 @@ CREATE TABLE chat_options (
     subscribeMess            BOOLEAN      DEFAULT (1),
     needUpdateButtons        BOOLEAN      DEFAULT (0),
     showParserTime           BOOLEAN      DEFAULT (0),
+    historyGroup             STRING       DEFAULT "[]"
+                                          NOT NULL,
+    historyTeacher           STRING       DEFAULT "[]"
+                                          NOT NULL,
     eula                     BOOLEAN      DEFAULT (0),
     deactivateSecondaryCheck BOOLEAN      DEFAULT (0) 
 );
@@ -68,7 +72,7 @@ CREATE TABLE students (
     skip_count INTEGER     DEFAULT (0),
     has_access BOOLEAN     DEFAULT (0),
     skip       BOOLEAN     DEFAULT (0),
-    [ignore]   BOOLEAN     DEFAULT (0) 
+    ignore     BOOLEAN     DEFAULT (0) 
 );
 
 
