@@ -47,7 +47,7 @@ export class Key {
     get(): KeyData {
         if (this._id == null) throw new Error('key is not valid')
         
-        const data = db.prepare('SELECT * FROM `api` WHERE `id` = ?').get(this._id);
+        const data: any = db.prepare('SELECT * FROM `api` WHERE `id` = ?').get(this._id);
 
         db.prepare('UPDATE `api` SET `last_time` = ? WHERE `id` = ?').run(Date.now(), this._id)
 

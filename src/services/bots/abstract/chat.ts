@@ -151,7 +151,7 @@ abstract class AbstractChat {
     }
 
     public resync(doNotCreate: boolean = false): this {
-        const chat = db.prepare(`SELECT * FROM ${this.db_table} JOIN chat_options ON ${this.db_table}.id = chat_options.id AND chat_options.service = ? WHERE ${this.db_table}.peerId = ?`).get(this.service, this.peerId);
+        const chat: any = db.prepare(`SELECT * FROM ${this.db_table} JOIN chat_options ON ${this.db_table}.id = chat_options.id AND chat_options.service = ? WHERE ${this.db_table}.peerId = ?`).get(this.service, this.peerId);
 
         if (!doNotCreate && chat == undefined) {
             const { lastInsertRowid } = db.prepare(`INSERT INTO ${this.db_table} (peerId) VALUES (?)`).run(this.peerId);
