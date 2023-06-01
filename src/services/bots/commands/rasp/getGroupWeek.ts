@@ -2,7 +2,7 @@ import { TelegramBotCommand } from "puregram/generated";
 import { raspCache } from "../../../../updater";
 import { randArray } from "../../../../utils";
 import { DefaultCommand, HandlerParams } from "../../abstract/command";
-import { StaticKeyboard } from "../../keyboard";
+import { withCancelButton } from "../../keyboard";
 
 export default class extends DefaultCommand {
     public id = 'get_week_by_group'
@@ -24,12 +24,12 @@ export default class extends DefaultCommand {
             const randGroup = randArray(Object.keys(raspCache.groups.timetable))
 
             group = await context.input(`Введите номер группы, которой хотите узнать расписание на день (например, ${randGroup})`, {
-                keyboard: StaticKeyboard.Cancel
+                keyboard: withCancelButton(keyboard.GroupHistory)
             });
         }
 
         while (true) {
-            group = await this.findGroup(context, group, keyboard.MainMenu)
+            group = await this.findGroup(context, keyboard, group, keyboard.MainMenu)
 
             if (!group) {
                 return;
@@ -38,6 +38,7 @@ export default class extends DefaultCommand {
             break;
         }
 
+        chat.appendGroupSearchHistory(String(group));
         const message = scheduleFormatter.formatGroupFull(String(group), {
             showHeader: true
         })

@@ -23,7 +23,7 @@ export default class extends DefaultCommand {
         });
 
         while (true) {
-            group = await this.findGroup(context, group)
+            group = await this.findGroup(context, keyboard, group)
 
             if (!group) {
                 group = await context.waitInput()

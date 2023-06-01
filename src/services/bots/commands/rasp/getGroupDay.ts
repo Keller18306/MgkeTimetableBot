@@ -3,7 +3,7 @@ import { raspCache } from "../../../../updater";
 import { randArray } from "../../../../utils";
 import { getDayRasp } from "../../../../utils/buildTextRasp";
 import { DefaultCommand, HandlerParams } from "../../abstract/command";
-import { StaticKeyboard } from "../../keyboard";
+import { withCancelButton } from "../../keyboard";
 
 export default class extends DefaultCommand {
     public id = 'get_day_by_group';
@@ -16,7 +16,7 @@ export default class extends DefaultCommand {
     };
     public scene?: string | null = null;
 
-    async handler({ context, keyboard, scheduleFormatter }: HandlerParams) {
+    async handler({ context, chat, keyboard, scheduleFormatter }: HandlerParams) {
         if (Object.keys(raspCache.groups.timetable).length == 0) {
             return context.send('Данные с сервера ещё не загружены, ожидайте...');
         }
@@ -26,12 +26,12 @@ export default class extends DefaultCommand {
             const randGroup = randArray(Object.keys(raspCache.groups.timetable))
 
             group = await context.input(`Введите номер группы, которой хотите узнать расписание на день (например, ${randGroup})`, {
-                keyboard: StaticKeyboard.Cancel
+                keyboard: withCancelButton(keyboard.GroupHistory)
             });
         }
 
         while (true) {
-            group = await this.findGroup(context, group, keyboard.MainMenu)
+            group = await this.findGroup(context, keyboard, group, keyboard.MainMenu)
 
             if (!group) {
                 return;
@@ -40,6 +40,7 @@ export default class extends DefaultCommand {
             break;
         }
 
+        chat.appendGroupSearchHistory(String(group));
         const groupRasp = raspCache.groups.timetable[group];
         const message = scheduleFormatter.formatGroupFull(String(group), {
             showHeader: true,

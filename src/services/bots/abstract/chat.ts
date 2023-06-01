@@ -1,6 +1,7 @@
 import { config } from "../../../../config";
 import db from "../../../db";
 import { addslashes } from "../../../utils";
+import { arrayUnique } from "../../../utils/arrayUnique";
 
 export type ChatMode = 'student' | 'teacher' | 'parent' | 'guest'
 
@@ -80,12 +81,20 @@ export type DbChat = {
     /** Было ли показано сообщение о еуле */
     eula: boolean;
 
+    /** История поиска групп (JSON) */
+    historyGroup: string;
+
+    /** История поиска учителей (JSON) */
+    historyTeacher: string;
+
     /**
      * Отключить проверку по текущему режиму для оповещений о добавлении дней.
      * Если указана группа/учитель, то будут всё равно приходить оповещения, даже если не выбран режим
     */
     deactivateSecondaryCheck: boolean;
 }
+
+const SEARCH_HISTORY_LENGTH: number = 3;
 
 abstract class AbstractChat {
     public abstract peerId: number | string;
@@ -159,6 +168,43 @@ abstract class AbstractChat {
 
         return this;
     }
+
+    public get groupSearchHistory(): string[] {
+        try {
+            return JSON.parse(this.historyGroup).slice(0, SEARCH_HISTORY_LENGTH);
+        } catch (e) {
+            return [];
+        }
+    }
+
+    public set groupSearchHistory(value: string[]) {
+        this.historyGroup = JSON.stringify(arrayUnique(value).slice(0, SEARCH_HISTORY_LENGTH));
+    }
+
+    public appendGroupSearchHistory(value: string) {
+        const history = this.groupSearchHistory;
+        history.unshift(value);
+        this.groupSearchHistory = history;
+    }
+
+    public get teacherSearchHistory(): string[] {
+        try {
+            return JSON.parse(this.historyTeacher).slice(0, SEARCH_HISTORY_LENGTH);
+        } catch (e) {
+            return [];
+        }
+    }
+
+    public set teacherSearchHistory(value: string[]) {
+        this.historyTeacher = JSON.stringify(arrayUnique(value).slice(0, SEARCH_HISTORY_LENGTH));
+    }
+
+    public appendTeacherSearchHistory(value: string) {
+        const history = this.teacherSearchHistory;
+        history.unshift(value);
+        this.teacherSearchHistory = history;
+    }
+
 }
 
 interface AbstractChat extends DbChat { };

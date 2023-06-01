@@ -52,6 +52,7 @@ export default class extends DefaultCommand {
 
         teacher = matched[0];
 
+        chat.appendTeacherSearchHistory(teacher);
         const teacherRasp = raspCache.teachers.timetable[teacher];
         const image: ImageFile = await ImageBuilder.getTeacherImage(teacherRasp);
 

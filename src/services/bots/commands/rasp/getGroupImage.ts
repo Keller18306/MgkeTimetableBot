@@ -14,7 +14,7 @@ export default class extends DefaultCommand {
         description: 'Сгенерировать фотографию расписания группы (не зависит от текущего вашего)'
     };
 
-    async handler({ context }: HandlerParams) {
+    async handler({ context, chat }: HandlerParams) {
         if (Object.keys(raspCache.groups.timetable).length == 0) {
             return context.send('Данные с сервера ещё не загружены, ожидайте...');
         }
@@ -32,6 +32,7 @@ export default class extends DefaultCommand {
             );
         }
 
+        chat.appendGroupSearchHistory(String(group));
         const groupRasp = raspCache.groups.timetable[group];
         if (groupRasp === undefined) {
             return context.send('Данной учебной группы не существует');

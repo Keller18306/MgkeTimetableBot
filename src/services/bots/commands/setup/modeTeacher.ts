@@ -21,7 +21,7 @@ export default class extends DefaultCommand {
         })
 
         while (true) {
-            teacher = await this.findTeacher(context, teacher)
+            teacher = await this.findTeacher(context, keyboard, teacher)
 
             if (!teacher) {
                 teacher = await context.waitInput()

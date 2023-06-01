@@ -3,7 +3,7 @@ import { raspCache } from "../../../../updater";
 import { getDayRasp } from "../../../../utils/buildTextRasp";
 import { randArray } from "../../../../utils/rand";
 import { DefaultCommand, HandlerParams } from "../../abstract/command";
-import { StaticKeyboard } from "../../keyboard";
+import { withCancelButton } from "../../keyboard";
 
 export default class extends DefaultCommand {
     public id = 'find_teacher_day';
@@ -26,12 +26,12 @@ export default class extends DefaultCommand {
             const randTeacher = randArray(Object.keys(raspCache.teachers.timetable))
 
             teacher = await context.input(`Введите фамилию учителя, которого хотите узнать расписание на день (например, ${randTeacher})`, {
-                keyboard: StaticKeyboard.Cancel
+                keyboard: withCancelButton(keyboard.TeacherHistory)
             });
         }
 
         while (true) {
-            teacher = await this.findTeacher(context, teacher, keyboard.MainMenu);
+            teacher = await this.findTeacher(context, keyboard, teacher, keyboard.MainMenu);
 
             if (!teacher) {
                 if (teacher === undefined) {
@@ -45,6 +45,7 @@ export default class extends DefaultCommand {
             break;
         }
 
+        chat.appendTeacherSearchHistory(teacher);
         const teacherRasp = raspCache.teachers.timetable[teacher];
         const message = scheduleFormatter.formatTeacherFull(teacher, {
             showHeader: true,

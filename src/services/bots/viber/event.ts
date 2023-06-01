@@ -3,7 +3,7 @@ import { config } from "../../../../config";
 import { AbstractEventListener } from "../../../updater/events";
 import { Service } from '../abstract/command';
 import { Keyboard } from "../keyboard";
-import { ViberDb } from "./chat";
+import { ViberChat, ViberDb } from "./chat";
 import { convertAbstractToViber } from './keyboard';
 
 export class ViberEventListener extends AbstractEventListener<ViberDb> {
@@ -17,7 +17,7 @@ export class ViberEventListener extends AbstractEventListener<ViberDb> {
         this.bot = bot
     }
 
-    protected async sendMessage(chat: ViberDb, message: string) {
+    protected async sendMessage(chat: ViberChat, message: string) {
         const keyboard = new Keyboard(undefined, chat)
 
         return this.bot.sendMessage({ id: chat.peerId }, [

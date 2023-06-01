@@ -1,14 +1,14 @@
-import { InlineKeyboardBuilder, KeyboardBuilder as TgKeyboardBuilder } from 'puregram';
+import { InlineKeyboardBuilder as TgInlineKeyboardBuilder, KeyboardBuilder as TgKeyboardBuilder } from 'puregram';
 import { KeyboardBuilder } from '../abstract/keyboardBuilder';
 
-export function convertAbstractToTg(aKeyboard?: KeyboardBuilder): TgKeyboardBuilder | InlineKeyboardBuilder | undefined {
+export function convertAbstractToTg(aKeyboard?: KeyboardBuilder): TgKeyboardBuilder | TgInlineKeyboardBuilder | undefined {
     if (!aKeyboard) {
         return;
     }
 
-    let keyboard: InlineKeyboardBuilder | TgKeyboardBuilder;
+    let keyboard: TgInlineKeyboardBuilder | TgKeyboardBuilder;
     if (aKeyboard.isInline) {
-        keyboard = new InlineKeyboardBuilder();
+        keyboard = new TgInlineKeyboardBuilder();
 
         for (const row of aKeyboard.buttons) {
             for (const button of row) {

@@ -5,7 +5,7 @@ import { raspCache } from '../../../updater';
 import { ScheduleFormatter } from '../../../utils/formatters/abstract';
 import { ImageFile } from '../../image/builder';
 import { BotInput } from '../input';
-import { Keyboard, StaticKeyboard } from '../keyboard';
+import { Keyboard, StaticKeyboard, withCancelButton } from '../keyboard';
 import { TgChat, TgDb } from '../tg/chat';
 import { TgCommandContext } from '../tg/context';
 import { ViberChat, ViberDb } from '../viber/chat';
@@ -85,7 +85,7 @@ export abstract class DefaultCommand {
 
     public abstract handler(params: HandlerParams): any | Promise<any>
 
-    protected async findGroup(context: AbstractCommandContext, group: string | undefined, errorKeyboard: KeyboardBuilder | undefined = StaticKeyboard.Cancel): Promise<false | number> {
+    protected async findGroup(context: AbstractCommandContext, keyboard: Keyboard, group: string | undefined, errorKeyboard: KeyboardBuilder | undefined = StaticKeyboard.Cancel): Promise<false | number> {
         if (!group || isNaN(+group)) {
             await context.send('Это не число', {
                 keyboard: errorKeyboard
@@ -113,7 +113,7 @@ export abstract class DefaultCommand {
         return Number(group);
     }
 
-    protected async findTeacher(context: AbstractCommandContext, teacher: string | undefined, errorKeyboard: KeyboardBuilder | undefined = StaticKeyboard.Cancel): Promise<false | undefined | string> {
+    protected async findTeacher(context: AbstractCommandContext, keyboard: Keyboard, teacher: string | undefined, errorKeyboard: KeyboardBuilder | undefined = StaticKeyboard.Cancel): Promise<false | undefined | string> {
         if (!teacher || teacher.length < 3) {
             await context.send('Фамилия введена некорректно', {
                 keyboard: errorKeyboard
@@ -157,7 +157,7 @@ export abstract class DefaultCommand {
                 'Найдено несколько учителей.\n' +
                 'Какой именно нужен?\n\n' +
                 matched.join('\n'), {
-                keyboard: StaticKeyboard.Cancel
+                keyboard: withCancelButton(keyboard.generateVerticalKeyboard(matched))
             })
 
             return undefined;

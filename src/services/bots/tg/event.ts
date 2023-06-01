@@ -4,7 +4,7 @@ import { config } from "../../../../config";
 import { AbstractEventListener } from "../../../updater/events";
 import { Service } from "../abstract/command";
 import { Keyboard } from '../keyboard';
-import { TgDb } from './chat';
+import { TgChat, TgDb } from './chat';
 import { convertAbstractToTg } from "./keyboard";
 
 export class TgEventListener extends AbstractEventListener<TgDb> {
@@ -20,7 +20,7 @@ export class TgEventListener extends AbstractEventListener<TgDb> {
         this.tg = tg
     }
 
-    public async sendMessage(chat: TgDb, message: string) {
+    public async sendMessage(chat: TgChat, message: string) {
         const keyboard = new Keyboard(undefined, chat)
 
         return this.tg.api.sendMessage({

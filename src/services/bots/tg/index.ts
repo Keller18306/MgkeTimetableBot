@@ -43,8 +43,8 @@ export class TgBot extends AbstractBot<TgCommandContext> {
 
         this.tg.updates.on('message', (context, next) => this.messageHandler(context, next))
         this.tg.updates.on('my_chat_member', (context, next) => this.myChatMember(context, next))
+        this.tg.updates.on('callback_query', (context, next) => this.callbackHandler(context, next))
         //this.tg.updates.on('my_chat_member', (context, next) => this.inviteUser(context, next))
-        //this.tg.updates.on('callback_query', (context, next) => this.callbackHandler(context, next))
 
         new TgEventListener(this.tg)
     }
@@ -190,24 +190,43 @@ export class TgBot extends AbstractBot<TgCommandContext> {
         })()
     }
 
-    private callbackHandler(context: CallbackQueryContext, next: NextMiddleware) {
+    private async callbackHandler(context: CallbackQueryContext, next: NextMiddleware) {
         if (context.from?.isBot()) return next();
 
-        let payload: { [key: string]: any };
-        if (context.data) {
-            payload = context.queryPayload as any;
-
-            if (typeof payload !== 'object' || payload.action == null) {
-                return;
-            }
-        } else {
+        let payload: string | undefined = context.queryPayload as any;
+        if (!payload || !context.message) {
             return;
         }
 
-        const chat = new TgChat(context.from.id)
-        //const keyboard = new TgKeyboard(context)
+        const chat = new TgChat(context.from.id);
 
+        if (payload === 'cancel') {
+            this.input.cancel(String(context.message.chatId));
+            chat.scene = null;
 
+            // await context.message.editMessageReplyMarkup({
+            //     inline_keyboard: []
+            // }).catch(() => {});
+            await context.answerCallbackQuery({
+                text: 'Ввод был отменён'
+            }).catch(() => { });
+
+            await context.message.delete().catch(() => { });
+
+            return;
+        }
+        
+        if (payload.startsWith('answer:')) {
+            const text: string = payload.replace(/answer:/i, '');
+
+            if (chat.accepted && this.input.has(String(context.message.chatId))) {
+                this.input.resolve(String(context.message.chatId), text);
+            }
+
+            return context.answerCallbackQuery({
+                text: `Выбрано: "${text}"`
+            }).catch(() => {});
+        }
     }
 
     protected _getAcceptKeyParams(context: TgCommandContext): InputRequestKey {

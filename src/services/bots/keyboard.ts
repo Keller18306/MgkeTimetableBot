@@ -1,12 +1,12 @@
-import { DbChat } from './abstract/chat';
+import { AbstractChat } from './abstract/chat';
 import { AbstractCommandContext } from './abstract/command';
 import { KeyboardBuilder, KeyboardColor } from './abstract/keyboardBuilder';
 
 export class Keyboard {
     private context?: AbstractCommandContext;
-    private chat: DbChat;
+    private chat: AbstractChat;
 
-    constructor(context: AbstractCommandContext | undefined, chat: DbChat) {
+    constructor(context: AbstractCommandContext | undefined, chat: AbstractChat) {
         this.context = context;
         this.chat = chat;
     }
@@ -29,10 +29,7 @@ export class Keyboard {
                 color: KeyboardColor.PRIMARY_COLOR
             }).row()
         } else {
-            let newRow: boolean = false;
-
             if (this.chat.showDaily) {
-                newRow = true;
                 keyboard.add({
                     text: '📄 На день',
                     color: KeyboardColor.PRIMARY_COLOR
@@ -40,7 +37,6 @@ export class Keyboard {
             }
 
             if (this.chat.showWeekly) {
-                newRow = true;
                 keyboard.add({
                     text: '📑 На неделю',
                     color: KeyboardColor.PRIMARY_COLOR
@@ -140,6 +136,45 @@ export class Keyboard {
             color: KeyboardColor.SECONDARY_COLOR
         })
     }
+
+    public get GroupHistory() {
+        const keyboard: KeyboardBuilder = new KeyboardBuilder('GroupHistory', true);
+
+        for (const group of this.chat.groupSearchHistory) {
+            keyboard.add({
+                text: group,
+                payload: `answer:${group}`
+            });
+        }
+
+        return keyboard;
+    }
+
+    public get TeacherHistory() {
+        const keyboard: KeyboardBuilder = new KeyboardBuilder('TeacherHistory', true);
+
+        for (const teacher of this.chat.teacherSearchHistory) {
+            keyboard.add({
+                text: teacher,
+                payload: `answer:${teacher}`
+            })
+        }
+
+        return keyboard;
+    }
+
+    public generateVerticalKeyboard(values: string[]) {
+        const keyboard: KeyboardBuilder = new KeyboardBuilder('WithVerticalValues', true);
+
+        for (const value of values) {
+            keyboard.add({
+                text: value,
+                payload: `answer:${value}`
+            }).row()
+        }
+
+        return keyboard;
+    }
 }
 
 export class StaticKeyboard {
@@ -214,4 +249,16 @@ export class StaticKeyboard {
             color: KeyboardColor.NEGATIVE_COLOR
         });
     }
+}
+
+export function withCancelButton(keyboard: KeyboardBuilder) {
+    keyboard.withCancelButton = true;
+
+    keyboard.row().add({
+        text: 'Отмена',
+        payload: 'cancel',
+        color: KeyboardColor.NEGATIVE_COLOR
+    });
+
+    return keyboard;
 }

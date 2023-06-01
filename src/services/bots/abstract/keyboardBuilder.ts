@@ -23,6 +23,7 @@ export class KeyboardBuilder {
     public buttons: KeyboardButton[][] = [];
 
     public isInline: boolean;
+    public withCancelButton: boolean = false;
 
     constructor(keyboardName: string, inline?: boolean) {
         this.name = keyboardName;
