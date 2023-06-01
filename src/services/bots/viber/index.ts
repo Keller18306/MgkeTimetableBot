@@ -64,7 +64,7 @@ export class ViberBot extends AbstractBot<ViberCommandContext> {
 
         this.bot.getBotProfile().then((res) => {
             this.domain = res.uri
-            console.log(`[VIBER] Бот '${res.name}' авторизован. Сообщения отправляются от '${config.viber.name}'`)
+            console.log(`[VIBER] Бот '${res.name.trim()}' авторизован. Сообщения отправляются от '${config.viber.name}'`)
             this.app.use(this.REDIRECT_URL, (request, response) => this.redirect(request, response));
         }, (err) => {
             console.error('[VIBER] Не удалось получить информацию о боте. Вероятно невалидный токен.', err)
