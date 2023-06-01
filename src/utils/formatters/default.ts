@@ -61,7 +61,7 @@ export class DefaultScheduleFormatter extends ScheduleFormatter {
     }
 
     protected TeacherHeader(teacher: string): string {
-        return `- Учитель '${teacher}' -`;
+        return `- Преподаватель '${teacher}' -`;
     }
 
     protected DayHeader(day: string, weekday: string): string {

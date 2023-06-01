@@ -179,7 +179,7 @@ export class ImageBuilder {
         ctx.fillStyle = 'black';
         ctx.textAlign = 'center';
         ctx.font = `${30 * this.devicePixelRatio}px sans-serif`;
-        ctx.fillText(`Учитель - ${teacher.teacher}`, width / 2, 45 * this.devicePixelRatio);
+        ctx.fillText(`Преподаватель - ${teacher.teacher}`, width / 2, 45 * this.devicePixelRatio);
 
         return canvas.toBuffer('image/png');
     }

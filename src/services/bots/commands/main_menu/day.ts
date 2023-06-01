@@ -59,8 +59,8 @@ export default class extends DefaultCommand {
             const randTeacher = randArray(Object.keys(raspCache.teachers.timetable))
 
             return context.send(
-                'Имя учителя не выбрано\n\n' +
-                'Выбрать группу можно командой /setTacher <teacher>\n' +
+                'Имя преподавателя не выбрано\n\n' +
+                'Выбрать преподвателя можно командой /setTeacher <teacher>\n' +
                 'Пример:\n' +
                 `/setTeacher ${randTeacher}`
             )

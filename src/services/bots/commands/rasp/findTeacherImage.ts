@@ -42,7 +42,7 @@ export default class extends DefaultCommand {
             if (matched.length > matchLimit) break;
         }
 
-        if (matched.length === 0) return context.send('Данный учитель не найден');
+        if (matched.length === 0) return context.send('Данный преподаватель не найден');
         if (matched.length > matchLimit) return context.send('Слишком много результатов для выборки.');
         if (matched.length > 1) return context.send(
             'Найдено несколько учиетелей.\n' +

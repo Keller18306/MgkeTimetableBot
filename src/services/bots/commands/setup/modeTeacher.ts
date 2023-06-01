@@ -16,7 +16,7 @@ export default class extends DefaultCommand {
 
         const randTeacher = randArray(Object.keys(raspCache.teachers.timetable))
 
-        let teacher: string | null | false | undefined = await context.input(`Введите фамилию учителя (например, ${randTeacher})`, {
+        let teacher: string | null | false | undefined = await context.input(`Введите фамилию преподавателя (например, ${randTeacher})`, {
             keyboard: StaticKeyboard.Cancel
         })
 

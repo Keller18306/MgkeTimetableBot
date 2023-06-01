@@ -36,10 +36,10 @@ export default class extends DefaultCommand {
             if (matched.length > matchLimit) break;
         }
 
-        if (matched.length === 0) return context.send('Данный учитель не найден')
+        if (matched.length === 0) return context.send('Данный преподаватель не найден')
         if (matched.length > matchLimit) return context.send('Слишком много результатов для выборки.')
         if (matched.length > 1) return context.send(
-            'Найдено несколько учителей.\n' +
+            'Найдено несколько преподавателей.\n' +
             'Какой именно нужен?\n\n' +
             matched.join('\n')
         )
@@ -49,7 +49,7 @@ export default class extends DefaultCommand {
         chat.teacher = teacher
         chat.mode = 'teacher'
 
-        return context.send(`Учитель этого чата был успешно изменен на '${teacher}'`, {
+        return context.send(`Преподвателя этого чата был успешно изменен на '${teacher}'`, {
             keyboard: keyboard.MainMenu
         })
     }

@@ -50,7 +50,7 @@ export default class extends AliceSkill {
 
     public controller(ctx: IContext, user: AliceUser, matched: MatchResult) {
         if (matched.group && matched.teacher) {
-            return Reply.text('Скажите пожалуйста что-то одно. Я не могу сразу назвать расписание для группы и для учителя.');
+            return Reply.text('Скажите пожалуйста что-то одно. Я не могу сразу назвать расписание для группы и для преподавателя.');
         }
 
         if (!matched.group && !matched.teacher) {
@@ -147,7 +147,7 @@ export default class extends AliceSkill {
     private teacherRasp(teacher: string, matched: string | undefined, showTeacher: boolean) {
         const result = closestJaroWinkler(teacher, Object.keys(raspCache.teachers.timetable), 0.6);
         if (!result) {
-            return Reply.text('Простите, но я не нашла в базе такого учителя. Попробуйтся сказать медленнее и чётче.');
+            return Reply.text('Простите, но я не нашла в базе такого преподавателя. Попробуйтся сказать медленнее и чётче.');
         }
 
         console.log(teacher, result);

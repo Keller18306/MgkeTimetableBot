@@ -139,7 +139,7 @@ export abstract class DefaultCommand {
         }
 
         if (matched.length === 0) {
-            await context.send('Данный учитель не найден', {
+            await context.send('Данный преподаватель не найден', {
                 keyboard: errorKeyboard
             });
 
@@ -154,7 +154,7 @@ export abstract class DefaultCommand {
         }
         if (matched.length > 1) {
             await context.send(
-                'Найдено несколько учителей.\n' +
+                'Найдено несколько преподавателей.\n' +
                 'Какой именно нужен?\n\n' +
                 matched.join('\n'), {
                 keyboard: withCancelButton(keyboard.generateVerticalKeyboard(matched))

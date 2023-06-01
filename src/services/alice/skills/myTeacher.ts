@@ -19,7 +19,7 @@ export default class extends AliceSkill {
     public controller(ctx: IContext, user: AliceUser, match: string) {
         const result = closestJaroWinkler(match, Object.keys(raspCache.teachers.timetable), 0.6);
         if (!result) {
-            return Reply.text('Простите, но я не нашла в базе такого учителя. Попробуйтся сказать медленнее и чётче.');
+            return Reply.text('Простите, но я не нашла в базе такого преподавателя. Попробуйтся сказать медленнее и чётче.');
         }
 
         const teacher = result.value;

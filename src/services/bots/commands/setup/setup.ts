@@ -9,7 +9,7 @@ export default class extends DefaultCommand {
     public payload = null;
     public tgCommand: TelegramBotCommand = {
         command: 'setup',
-        description: 'Сменить группу или учителя'
+        description: 'Сменить группу или преподавателя'
     };
 
     handler({ context, chat }: HandlerParams) {

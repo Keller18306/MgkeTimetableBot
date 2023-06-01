@@ -23,7 +23,7 @@ export default class extends DefaultCommand {
         if (teacher == '' || teacher == undefined || teacher.length < 3) {
             const randTeacher = randArray(Object.keys(raspCache.teachers.timetable))
 
-            teacher = await context.input(`Введите фамилию учителя, которого хотите узнать расписание на неделю (например, ${randTeacher})`, {
+            teacher = await context.input(`Введите фамилию преподавателя, которого хотите узнать расписание на неделю (например, ${randTeacher})`, {
                 keyboard: withCancelButton(keyboard.TeacherHistory)
             });
         }

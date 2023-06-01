@@ -11,7 +11,7 @@ export default class VkAppAuthMethod extends VKAppDefaultMethod {
 
         if (body.teacher == null) {
             response.status(StatusCode.ClientErrorBadRequest).send({
-                error: 'Не указан учитель'
+                error: 'Не указан преподаватель'
             })
 
             return 

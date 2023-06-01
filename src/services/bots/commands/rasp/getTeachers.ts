@@ -24,7 +24,7 @@ export default class extends DefaultCommand {
         })
 
         context.send([
-            '__ Учителя в кэше __\n',
+            '__ Преподаватели в кэше __\n',
             teachers.join('\n'),
             `\nЗагружено: ${formatSeconds(Math.ceil((Date.now() - raspCache.teachers.update) / 1e3))} назад\n`
         ].join('\n'))

@@ -73,15 +73,15 @@ export default class extends DefaultCommand {
             const randTeacher = randArray(Object.keys(raspCache.teachers.timetable));
 
             return context.send(
-                'Имя учителя не выбрано\n\n' +
-                'Выбрать группу можно командой /setTacher <teacher>\n' +
+                'Имя преподавателя не выбрано\n\n' +
+                'Выбрать преподавателя можно командой /setTeacher <teacher>\n' +
                 'Пример:\n' +
                 `/setTeacher ${randTeacher}`
             );
         }
 
         const teacher = raspCache.teachers.timetable[chat.teacher];
-        if (teacher === undefined) return context.send('Данного учителя не существует');
+        if (teacher === undefined) return context.send('Данного преподавателя не существует');
 
         let days: TeacherDay[] = teacher.days;
         if (chat.removePastDays) {

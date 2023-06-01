@@ -53,6 +53,6 @@ export class LitolaxScheduleFormatter extends ScheduleFormatter {
     }
 
     protected teacherHeader(teacher: string): string {
-        return `Учитель: ${this.b(teacher)}`;
+        return `Преподаватель: ${this.b(teacher)}`;
     }
 }
