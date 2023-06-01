@@ -20,7 +20,7 @@
     "jsdom": "^21.1.1",
     "lodash": "^4.17.21",
     "natural": "^6.2.0",
-    "puregram": "^2.10.2",
+    "puregram": "^2.11.0",
     "status-code-enum": "^1.0.0",
     "systeminformation": "^5.17.12",
     "viber-bot": "^1.0.18",
