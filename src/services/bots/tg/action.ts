@@ -1,7 +1,5 @@
 import { MessageContext } from "puregram";
-import { AbstractAction } from "../abstract/action";
-import { AbstractCommandContext } from "../abstract/command";
-import { FileCache } from "../abstract/fileCache";
+import { AbstractAction, AbstractCommandContext, FileCache } from "../abstract";
 import { BotInput } from "../input";
 import { TgChat } from "./chat";
 import { TgCommandContext } from "./context";

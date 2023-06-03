@@ -1,7 +1,7 @@
 import { TelegramBotCommand } from "puregram/generated";
 import { raspCache } from "../../../../updater";
 import { formatSeconds } from "../../../../utils/seconds2times";
-import { DefaultCommand, HandlerParams } from "../../abstract/command";
+import { DefaultCommand, HandlerParams } from "../../abstract";
 
 export default class extends DefaultCommand {
     public id = 'get_groups'

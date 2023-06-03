@@ -1,7 +1,7 @@
 import { config } from "../../../../../config";
 import db from "../../../../db";
 import { FromType, RequestKey } from "../../../../key";
-import { DefaultCommand, HandlerParams, Service } from "../../abstract/command";
+import { DefaultCommand, HandlerParams, Service } from "../../abstract";
 import { UserData } from '../../../vk_app/user';
 
 const acceptTool = new RequestKey(config.encrypt_key)

@@ -2,7 +2,7 @@ import { TelegramBotCommand } from "puregram/generated";
 import { config } from "../../../../../config";
 import { raspCache } from "../../../../updater";
 import { nowInTime } from "../../../../utils";
-import { DefaultCommand, HandlerParams } from "../../abstract/command";
+import { DefaultCommand, HandlerParams } from "../../abstract";
 
 export default class extends DefaultCommand {
     public id = 'get_calls'

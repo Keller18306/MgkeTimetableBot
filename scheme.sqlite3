@@ -1,5 +1,5 @@
 --
--- Файл сгенерирован с помощью SQLiteStudio v3.4.4 в чт июнь 1 13:46:51 2023
+-- Файл сгенерирован с помощью SQLiteStudio v3.4.4 в сб июнь 3 14:08:51 2023
 --
 -- Использованная кодировка текста: System
 --
@@ -59,6 +59,15 @@ CREATE TABLE chat_options (
                                           DEFAULT "[]",
     eula                     BOOLEAN      DEFAULT (0),
     deactivateSecondaryCheck BOOLEAN      DEFAULT (0) 
+);
+
+
+-- Таблица: storage
+CREATE TABLE storage (
+    storage STRING NOT NULL,
+    key     STRING NOT NULL,
+    value   STRING,
+    time    INT
 );
 
 
@@ -160,6 +169,13 @@ CREATE UNIQUE INDEX options_key ON chat_options (
 -- Индекс: peer_Id
 CREATE INDEX peer_Id ON students (
     peerId
+);
+
+
+-- Индекс: storage_index
+CREATE UNIQUE INDEX storage_index ON storage (
+    storage,
+    key
 );
 
 

@@ -5,9 +5,7 @@ import { config } from '../../../../config';
 import { FromType, InputRequestKey } from '../../../key';
 import { raspCache } from '../../../updater';
 import { createScheduleFormatter } from '../../../utils/';
-import { AbstractBot } from '../abstract/bot';
-import { AdvancedContext, DefaultCommand, HandlerParams } from '../abstract/command';
-import { FileCache } from '../abstract/fileCache';
+import { AbstractBot, AdvancedContext, DefaultCommand, FileCache, HandlerParams } from '../abstract';
 import { CommandController } from '../command';
 import { InputCancel } from '../input';
 import { Keyboard } from '../keyboard';
@@ -219,13 +217,17 @@ export class TgBot extends AbstractBot<TgCommandContext> {
         if (payload.startsWith('answer:')) {
             const text: string = payload.replace(/answer:/i, '');
 
+            await context.answerCallbackQuery({
+                text: `Выбрано: "${text}"`
+            }).catch(() => { });
+
             if (chat.accepted && this.input.has(String(context.message.chatId))) {
                 this.input.resolve(String(context.message.chatId), text);
+
+                await context.message.delete().catch(() => { });
             }
 
-            return context.answerCallbackQuery({
-                text: `Выбрано: "${text}"`
-            }).catch(() => {});
+            return;
         }
     }
 

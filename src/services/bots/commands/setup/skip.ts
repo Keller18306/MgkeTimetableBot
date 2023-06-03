@@ -1,5 +1,5 @@
 import { defines } from "../../../../defines";
-import { DefaultCommand, HandlerParams } from "../../abstract/command";
+import { DefaultCommand, HandlerParams } from "../../abstract";
 
 export default class extends DefaultCommand {
     public id = 'modeSkip'

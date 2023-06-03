@@ -1,5 +1,5 @@
 import { Keyboard, KeyboardButton } from 'viber-bot';
-import { KeyboardBuilder, KeyboardColor } from '../abstract/keyboardBuilder';
+import { KeyboardBuilder, KeyboardColor } from '../abstract';
 import { KeyboardBuilder as ViberKeyboardBuilder } from './keyboardBuilder';
 
 function convertColor(keyboard: ViberKeyboardBuilder, color?: KeyboardColor): string {

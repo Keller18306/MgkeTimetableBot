@@ -1,4 +1,4 @@
-import { AbstractAction } from "../abstract/action";
+import { AbstractAction } from "../abstract";
 import { ViberChat } from "./chat";
 import { ViberCommandContext } from "./context";
 

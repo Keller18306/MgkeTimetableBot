@@ -1,8 +1,8 @@
+import fs from 'fs';
 import { TelegramBotCommand } from 'puregram/generated';
-import { DefaultCommand, HandlerParams } from "../../abstract/command";
-import fs from 'fs'
 import db from '../../../../db';
 import { formatBytes } from '../../../../utils';
+import { DefaultCommand, HandlerParams } from "../../abstract";
 
 export default class extends DefaultCommand {
     public id = 'admin_vacuum'

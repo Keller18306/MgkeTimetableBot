@@ -5,7 +5,7 @@ import { cpuTemperature } from 'systeminformation';
 import db from "../../../../db";
 import { formatBytes } from "../../../../utils/bytes";
 import { formatSeconds } from '../../../../utils/seconds2times';
-import { DefaultCommand, HandlerParams } from "../../abstract/command";
+import { DefaultCommand, HandlerParams } from "../../abstract";
 import { TelegramBotCommand } from 'puregram/generated';
 
 let latestUsage = cpuUsage()

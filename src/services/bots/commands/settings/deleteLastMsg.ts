@@ -1,4 +1,4 @@
-import { DefaultCommand, HandlerParams, Service } from "../../abstract/command";
+import { DefaultCommand, HandlerParams, Service } from "../../abstract";
 
 export default class extends DefaultCommand {
     public id = 'settings_deleteLastMsg'

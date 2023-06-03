@@ -4,9 +4,7 @@ import { GroupDay, TeacherDay } from '../../../../updater/parser/types';
 import { removePastDays } from "../../../../utils/buildTextRasp";
 import { ScheduleFormatter } from '../../../../utils/formatters/abstract';
 import { randArray } from "../../../../utils/rand";
-import { AbstractAction } from "../../abstract/action";
-import { AbstractChat } from "../../abstract/chat";
-import { AbstractCommandContext, DefaultCommand, HandlerParams } from "../../abstract/command";
+import { AbstractAction, AbstractChat, AbstractCommandContext, DefaultCommand, HandlerParams } from "../../abstract";
 
 export default class extends DefaultCommand {
     public id = 'get_raspweek'

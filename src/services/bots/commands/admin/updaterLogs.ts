@@ -1,7 +1,7 @@
 import { TelegramBotCommand } from "puregram/generated";
 import { Updater } from "../../../../updater";
 import { formatTime } from "../../../../utils/time";
-import { DefaultCommand, HandlerParams } from "../../abstract/command";
+import { DefaultCommand, HandlerParams } from "../../abstract";
 
 export default class extends DefaultCommand {
     public id = 'updater_logs'

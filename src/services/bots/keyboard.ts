@@ -1,6 +1,4 @@
-import { AbstractChat } from './abstract/chat';
-import { AbstractCommandContext } from './abstract/command';
-import { KeyboardBuilder, KeyboardColor } from './abstract/keyboardBuilder';
+import { AbstractChat, AbstractCommandContext, KeyboardBuilder, KeyboardColor } from './abstract';
 
 export class Keyboard {
     private context?: AbstractCommandContext;

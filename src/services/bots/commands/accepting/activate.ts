@@ -1,4 +1,4 @@
-import { DefaultCommand, HandlerParams } from "../../abstract/command";
+import { DefaultCommand, HandlerParams } from "../../abstract";
 
 //const activateTool = new ActivateKey(config.encrypt_key)
 

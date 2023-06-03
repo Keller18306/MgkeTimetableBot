@@ -1,5 +1,5 @@
 import { TelegramBotCommand } from "puregram/generated";
-import { DefaultCommand, HandlerParams } from "../../abstract/command";
+import { DefaultCommand, HandlerParams } from "../../abstract";
 import { StaticKeyboard } from "../../keyboard";
 
 export default class extends DefaultCommand {

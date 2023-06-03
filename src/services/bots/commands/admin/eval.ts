@@ -3,7 +3,7 @@ import * as fs from 'fs';
 import { runInNewContext } from 'vm';
 import db from '../../../../db';
 import { raspCache } from "../../../../updater";
-import { DefaultCommand, HandlerParams } from "../../abstract/command";
+import { DefaultCommand, HandlerParams } from "../../abstract";
 import { CommandController } from "../../command";
 import { VkBot } from "../../vk";
 import { TelegramBotCommand } from 'puregram/generated';

@@ -1,4 +1,4 @@
-import { DefaultCommand } from "../../abstract/command";
+import { DefaultCommand } from "../../abstract";
 
 export default class extends DefaultCommand {
     public id = 'error'

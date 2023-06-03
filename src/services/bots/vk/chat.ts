@@ -1,5 +1,5 @@
 import { config } from "../../../../config";
-import { AbstractChat, DbChat } from "../abstract/chat";
+import { AbstractChat, DbChat } from "../abstract";
 
 export type VkDb = DbChat & {
     peerId: number; //переопределение как число
@@ -36,3 +36,4 @@ class VkChat extends AbstractChat {
 interface VkChat extends VkDb { };
 
 export { VkChat };
+

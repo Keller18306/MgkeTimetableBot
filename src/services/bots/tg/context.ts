@@ -1,8 +1,7 @@
 import { MediaInput, MediaSourceType, MessageContext, PhotoAttachment, Telegram } from "puregram";
 import { TgBot } from ".";
 import { ImageFile } from "../../image/builder";
-import { AbstractCommandContext, MessageOptions } from "../abstract/command";
-import { FileCache } from "../abstract/fileCache";
+import { AbstractCommandContext, FileCache, MessageOptions } from "../abstract";
 import { BotInput } from "../input";
 import { StaticKeyboard } from "../keyboard";
 import { convertAbstractToTg } from "./keyboard";

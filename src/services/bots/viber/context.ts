@@ -1,7 +1,6 @@
 import { Message, ReceivedTextMessage, Response } from "viber-bot";
 import { ImageFile } from "../../image/builder";
-import { AbstractCommandContext, MessageOptions } from "../abstract/command";
-import { KeyboardBuilder } from '../abstract/keyboardBuilder';
+import { AbstractCommandContext, KeyboardBuilder, MessageOptions } from "../abstract";
 import { BotInput } from "../input";
 import { Keyboard } from "../keyboard";
 import { ViberChat } from "./chat";

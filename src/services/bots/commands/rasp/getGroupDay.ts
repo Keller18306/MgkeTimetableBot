@@ -2,7 +2,7 @@ import { TelegramBotCommand } from "puregram/generated";
 import { raspCache } from "../../../../updater";
 import { randArray } from "../../../../utils";
 import { getDayRasp } from "../../../../utils/buildTextRasp";
-import { DefaultCommand, HandlerParams } from "../../abstract/command";
+import { DefaultCommand, HandlerParams } from "../../abstract";
 import { withCancelButton } from "../../keyboard";
 
 export default class extends DefaultCommand {

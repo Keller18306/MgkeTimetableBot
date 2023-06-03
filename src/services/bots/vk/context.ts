@@ -2,8 +2,7 @@ import { ContextDefaultState, MessageContext, VK } from "vk-io";
 import { VkBot } from ".";
 import { config } from "../../../../config";
 import { ImageFile } from "../../image/builder";
-import { AbstractCommandContext, MessageOptions } from "../abstract/command";
-import { FileCache } from "../abstract/fileCache";
+import { AbstractCommandContext, FileCache, MessageOptions } from "../abstract";
 import { BotInput } from "../input";
 import { convertAbstractToVK } from "./keyboard";
 

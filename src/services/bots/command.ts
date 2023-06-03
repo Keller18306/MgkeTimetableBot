@@ -1,8 +1,7 @@
 import { readdirSync, statSync } from "fs";
 import path from "path";
-import { BotCommand } from "puregram";
 import { TelegramBotCommand } from "puregram/generated";
-import { DefaultCommand } from "./abstract/command";
+import { DefaultCommand } from "./abstract";
 
 const cmdsPath = path.join(__dirname, 'commands');
 type CommandValue = {

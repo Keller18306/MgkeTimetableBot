@@ -1,6 +1,6 @@
 import { TelegramBotCommand } from 'puregram/generated';
 import { Updater } from '../../../../updater';
-import { DefaultCommand, HandlerParams } from "../../abstract/command";
+import { DefaultCommand, HandlerParams } from "../../abstract";
 
 export default class extends DefaultCommand {
     public id = 'admin_foce_parse'

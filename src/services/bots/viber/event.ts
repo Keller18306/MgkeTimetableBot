@@ -1,7 +1,7 @@
 import { Bot, Message } from 'viber-bot';
 import { config } from "../../../../config";
 import { AbstractEventListener } from "../../../updater/events";
-import { Service } from '../abstract/command';
+import { Service } from '../abstract';
 import { Keyboard } from "../keyboard";
 import { ViberChat, ViberDb } from "./chat";
 import { convertAbstractToViber } from './keyboard';

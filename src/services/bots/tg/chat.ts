@@ -1,7 +1,7 @@
 import { Chat, User } from "puregram";
 import { config } from "../../../../config";
 import db from "../../../db";
-import { AbstractChat, DbChat } from "../abstract/chat";
+import { AbstractChat, DbChat } from "../abstract";
 
 export type TgDb = DbChat & {
     /** Юзернейм */
@@ -67,4 +67,4 @@ class TgChat extends AbstractChat {
 
 interface TgChat extends TgDb { };
 
-export { TgChat }
+export { TgChat };

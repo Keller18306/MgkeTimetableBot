@@ -1,6 +1,6 @@
 import { config } from "../../../../config";
 import db from "../../../db";
-import { AbstractChat, DbChat } from "../abstract/chat";
+import { AbstractChat, DbChat } from "../abstract";
 import { Theme } from "./keyboardBuilder";
 
 export type ViberDb = DbChat & {

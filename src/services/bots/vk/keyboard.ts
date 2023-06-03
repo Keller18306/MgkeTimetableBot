@@ -1,5 +1,5 @@
 import { ButtonColor, Keyboard, KeyboardBuilder as VKKeyboardBuilder } from 'vk-io';
-import { ButtonType, KeyboardBuilder, KeyboardColor } from '../abstract/keyboardBuilder';
+import { ButtonType, KeyboardBuilder, KeyboardColor } from '../abstract';
 
 function convertColor(color: KeyboardColor | undefined): ButtonColor {
     switch (color) {

@@ -2,7 +2,7 @@ import { config } from "../../../../config";
 import db from "../../../db";
 import { ApiKey } from "../../../key";
 import { KeyData } from "../../api/key";
-import { DefaultCommand, HandlerParams } from "../abstract/command";
+import { DefaultCommand, HandlerParams } from "../abstract";
 
 const keyTool = new ApiKey(config.encrypt_key);
 

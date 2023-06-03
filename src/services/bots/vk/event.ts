@@ -2,7 +2,7 @@ import { APIError, getRandomId, VK } from "vk-io";
 import { config } from "../../../../config";
 import { AbstractEventListener } from "../../../updater/events";
 import { VkDb } from './chat';
-import { Service } from "../abstract/command";
+import { Service } from "../abstract";
 
 export class VkEventListener extends AbstractEventListener<VkDb> {
     protected _tableName: string = 'vk_bot_chats';

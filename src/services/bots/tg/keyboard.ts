@@ -1,5 +1,5 @@
 import { InlineKeyboardBuilder as TgInlineKeyboardBuilder, KeyboardBuilder as TgKeyboardBuilder } from 'puregram';
-import { KeyboardBuilder } from '../abstract/keyboardBuilder';
+import { KeyboardBuilder } from '../abstract';
 
 export function convertAbstractToTg(aKeyboard?: KeyboardBuilder): TgKeyboardBuilder | TgInlineKeyboardBuilder | undefined {
     if (!aKeyboard) {

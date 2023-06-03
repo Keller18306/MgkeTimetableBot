@@ -1,8 +1,5 @@
 import { ContextDefaultState, MessageContext } from "vk-io";
-import db from "../../../db";
-import { AbstractAction } from "../abstract/action";
-import { AbstractCommandContext } from "../abstract/command";
-import { FileCache } from "../abstract/fileCache";
+import { AbstractAction, AbstractCommandContext, FileCache } from "../abstract";
 import { BotInput } from "../input";
 import { VkChat } from "./chat";
 import { VkCommandContext } from "./context";

@@ -2,7 +2,7 @@ import { format } from "util";
 import { config } from "../../../../../config";
 import { defines } from "../../../../defines";
 import { FromType, RequestKey } from "../../../../key";
-import { DefaultCommand, HandlerParams, Service } from "../../abstract/command";
+import { DefaultCommand, HandlerParams, Service } from "../../abstract";
 import { StaticKeyboard } from "../../keyboard";
 
 const acceptTool = new RequestKey(config.encrypt_key)

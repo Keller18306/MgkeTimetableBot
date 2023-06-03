@@ -1,6 +1,6 @@
 import { TelegramBotCommand } from 'puregram/generated';
-import { DefaultCommand, HandlerParams } from "../../abstract/command";
 import { EventController } from '../../../../updater/events/controller';
+import { DefaultCommand, HandlerParams } from "../../abstract";
 
 export default class extends DefaultCommand {
     public id = 'admin_send'

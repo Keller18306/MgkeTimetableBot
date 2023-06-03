@@ -1,7 +1,7 @@
 import { defines } from "../../../../defines";
 import { raspCache } from "../../../../updater";
 import { randArray } from "../../../../utils";
-import { DefaultCommand, HandlerParams } from "../../abstract/command";
+import { DefaultCommand, HandlerParams } from "../../abstract";
 import { StaticKeyboard } from "../../keyboard";
 
 export default class extends DefaultCommand {

@@ -1,7 +1,7 @@
 import { config } from "../../../../../config";
 import { RequestKey, appType } from "../../../../key";
 import { formatTime } from "../../../../utils";
-import { DefaultCommand, HandlerParams } from "../../abstract/command";
+import { DefaultCommand, HandlerParams } from "../../abstract";
 
 const acceptTool = new RequestKey(config.encrypt_key)
 

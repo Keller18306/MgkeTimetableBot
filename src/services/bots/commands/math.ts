@@ -1,5 +1,5 @@
 import { runInNewContext } from 'vm';
-import { DefaultCommand, HandlerParams } from '../abstract/command';
+import { DefaultCommand, HandlerParams } from '../abstract';
 
 export default class extends DefaultCommand {
     public id = 'math'

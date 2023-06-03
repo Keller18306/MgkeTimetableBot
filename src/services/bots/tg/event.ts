@@ -2,7 +2,7 @@ import { APIError, Telegram } from "puregram";
 import StatusCode from "status-code-enum";
 import { config } from "../../../../config";
 import { AbstractEventListener } from "../../../updater/events";
-import { Service } from "../abstract/command";
+import { Service } from "../abstract";
 import { Keyboard } from '../keyboard';
 import { TgChat, TgDb } from './chat';
 import { convertAbstractToTg } from "./keyboard";

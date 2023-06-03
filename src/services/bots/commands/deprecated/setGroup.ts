@@ -1,6 +1,6 @@
 import { raspCache } from "../../../../updater";
 import { randArray } from "../../../../utils";
-import { DefaultCommand, HandlerParams } from "../../abstract/command";
+import { DefaultCommand, HandlerParams } from "../../abstract";
 
 export default class extends DefaultCommand {
     public id = 'set_group'
