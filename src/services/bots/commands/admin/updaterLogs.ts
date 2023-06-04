@@ -16,12 +16,12 @@ export default class extends DefaultCommand {
     public adminOnly: boolean = true;
 
     handler({ context }: HandlerParams) {
-        let logs = Updater.getInstance().getLogs()
+        let logs = Updater.getInstance().getLogs();
+        if (logs.length == 0) {
+            return context.send('Логов нет');
+        }
 
-        if (logs.length == 0) return context.send('Логов нет')
-
-        logs = logs.reverse()
-        const message: string[] = []
+        const message: string[] = [];
 
         for (const i in logs) {
             const log = logs[i]
@@ -31,6 +31,6 @@ export default class extends DefaultCommand {
             )
         }
 
-        return context.send(message.join('\n').slice(0, 4096))
+        return context.send(message.join('\n').slice(0, 4096));
     }
 }

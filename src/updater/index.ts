@@ -1,9 +1,13 @@
 import { config } from "../../config"
 import { clearOldImages } from "../services/image/clear"
+import { EventController } from "./events/controller"
 import { NextDayUpdater } from "./nextDay"
 import { loadCache, raspCache, saveCache } from "./raspCache"
 import updateGroups from "./updateGroups"
 import updateTeachers from "./updateTeachers"
+
+const MAX_LOG_LIMIT: number = 10;
+const LOG_COUNT_SEND: number = 3;
 
 type Delay = {
     promise: Promise<void>,
@@ -41,12 +45,11 @@ export class Updater {
         return this.instance
     }
 
-    private logsLimit: number = 10;
     private logs: { date: Date, result: string | Error }[] = [];
     private delayPromise?: Delay;
 
     public getLogs() {
-        return this.logs.slice()
+        return this.logs.slice();
     }
 
     public clearAllLogs() {
@@ -54,11 +57,13 @@ export class Updater {
     }
 
     public removeOldLogs() {
-        if (this.logs.length <= this.logsLimit) return false;
+        if (this.logs.length <= MAX_LOG_LIMIT) {
+            return false;
+        }
 
-        this.logs.splice(0, this.logs.length - this.logsLimit)
+        this.logs.splice(MAX_LOG_LIMIT, this.logs.length - MAX_LOG_LIMIT)
 
-        return true
+        return true;
     }
 
     public start() {
@@ -161,10 +166,42 @@ export class Updater {
     }
 
     private log(log: string | Error) {
-        this.logs.push({
+        this.logs.unshift({
             date: new Date(),
             result: log
-        })
+        });
+
+        if (this.isHasErrors()) {
+            this.logNoticer()
+        }
+    }
+
+    private logNoticer() {
+        let hits: number = 0;
+
+        let val: string | undefined;
+        for (const log of this.logs.slice(0, LOG_COUNT_SEND)) {
+            if (!(log instanceof Error)) {
+                return;
+            }
+
+            const current: string = log.result.toString();
+            if (!val) {
+                val = current
+            }
+
+            if (val === current) {
+                hits++
+            }
+        }
+
+        if (!val) {
+            return;
+        }
+
+        if (hits === LOG_COUNT_SEND) {
+            EventController.sendError(val);
+        }
     }
 
     private async update() {
