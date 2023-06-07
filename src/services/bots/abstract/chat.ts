@@ -50,8 +50,8 @@ export type DbChat = {
     /** Показывать ли кнопку "Преподаватель" для быстрого получения преподавателя */
     showFastTeacher: boolean;
 
-    /** Убирать ли прошедшие дни в расписаннии */
-    removePastDays: boolean;
+    /** Скрывать ли прошедшие дни в расписаннии на неделю */
+    hidePastDays: boolean;
 
     /** Удалять ли последнее сообщение в чате от бота */
     deleteLastMsg: boolean;

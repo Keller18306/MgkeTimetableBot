@@ -43,7 +43,7 @@ export default class extends DefaultCommand {
         if (group === undefined) return context.send('Данной учебной группы не существует');
 
         let days: GroupDay[] = group.days;
-        if (chat.removePastDays) {
+        if (chat.hidePastDays) {
             days = removePastDays(days);
         }
 
@@ -81,7 +81,7 @@ export default class extends DefaultCommand {
         if (teacher === undefined) return context.send('Данного преподавателя не существует');
 
         let days: TeacherDay[] = teacher.days;
-        if (chat.removePastDays) {
+        if (chat.hidePastDays) {
             days = removePastDays(days);
         }
 

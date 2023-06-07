@@ -17,7 +17,8 @@ export function createScheduleFormatter(service: Service, raspCache: RaspCache, 
     return new DefaultScheduleFormatter(service, raspCache, chat);
 }
 
-export function removePastDays<T extends GroupDay | TeacherDay>(days: T[]): T[] {
+export function removePastDays<T extends GroupDay | TeacherDay>(days: T[], processAutoskip: boolean = true): T[] {
+    const isSaturday: boolean = getIsSaturday();
     const todayDate: number = getTodayDate();
 
     const dayIndex: number = days.findIndex(_ => {
@@ -28,15 +29,7 @@ export function removePastDays<T extends GroupDay | TeacherDay>(days: T[]): T[] 
         throw new Error('nearest day not found')
     }
 
-    return days.slice(dayIndex);
-}
-
-export function getDayRasp<T extends GroupDay | TeacherDay>(days: T[], processAutoskip: boolean = true): T[] {
-    const isSaturday: boolean = getIsSaturday();
-    const todayDate: number = getTodayDate();
-    const showDays: T[] = [];
-
-    const nextDays: T[] = removePastDays(days);
+    const nextDays: T[] = days.slice(dayIndex);
 
     if (processAutoskip) {
         //current day ended
@@ -57,7 +50,15 @@ export function getDayRasp<T extends GroupDay | TeacherDay>(days: T[], processAu
         }
     }
 
+    return nextDays;
+}
+
+export function getDayRasp<T extends GroupDay | TeacherDay>(days: T[], processAutoskip: boolean = true): T[] {
+    const nextDays: T[] = removePastDays(days, processAutoskip);
+    const showDays: T[] = [];
+
     showDays.push(nextDays[0]);
+
     if (nextDays.length > 1) {
         showDays.push(nextDays[1]);
     }

@@ -118,8 +118,8 @@ export class Keyboard {
             text: noYesSmile(this.chat.showFastTeacher, 'Кнопка "👩‍🏫 Преподаватель"'),
             color: noYesColor(this.chat.showFastTeacher)
         }).row().add({
-            text: noYesSmile(this.chat.removePastDays, 'Удалять прошедшие дни'),
-            color: noYesColor(this.chat.removePastDays)
+            text: noYesSmile(this.chat.hidePastDays, 'Скрывать прошедшие дни'),
+            color: noYesColor(this.chat.hidePastDays)
         }).row().add({
             text: noYesSmile(this.chat.showParserTime, 'Время последней загрузки расписания'),
             color: noYesColor(this.chat.showParserTime)

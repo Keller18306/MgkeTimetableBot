@@ -1,17 +1,17 @@
 import { DefaultCommand, HandlerParams } from "../../abstract";
 
 export default class extends DefaultCommand {
-    public id = 'settings_removePastDays'
+    public id = 'settings_hidePastDays'
 
-    public regexp = /^(✅|🚫)\sУдалять прошедшие дни$/i
+    public regexp = /^(✅|🚫)\sСкрывать прошедшие дни$/i
     public payload = null;
     public scene?: string | null = 'settings';
 
     handler({ context, chat, keyboard }: HandlerParams) {
-        chat.removePastDays = !chat.removePastDays;
+        chat.hidePastDays = !chat.hidePastDays;
 
         return context.send(
-            `Удалять прошедшие дни? Установлено: '${chat.removePastDays ? 'да' : 'нет'}'`,
+            `Скрывать прошедшие дни? Установлено: '${chat.hidePastDays ? 'да' : 'нет'}'`,
             {
                 keyboard: keyboard.Settings
             }
