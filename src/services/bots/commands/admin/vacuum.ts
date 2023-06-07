@@ -21,7 +21,7 @@ export default class extends DefaultCommand {
 
         const { size: bdSize_after } = fs.statSync('./sqlite3.db')
 
-        const bdSize_delta: number = bdSize_after - bdSize_before
+        const bdSize_delta: number = bdSize_after - bdSize_before;
 
         return context.send(`Бд сжата (${formatBytes(bdSize_delta)}): ${formatBytes(bdSize_before)} -> ${formatBytes(bdSize_after)}`);
     }
