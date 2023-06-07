@@ -5,8 +5,8 @@ import { config } from '../../../../config';
 import { defines } from '../../../defines';
 import { FromType, InputRequestKey } from '../../../key/index';
 import { raspCache } from '../../../updater';
-import { createScheduleFormatter } from '../../../utils/';
-import { AbstractBot, AdvancedContext, DefaultCommand, HandlerParams } from '../abstract';
+import { createScheduleFormatter } from '../../../utils';
+import { AbstractBot, DefaultCommand, HandlerParams } from '../abstract';
 import { CommandController } from '../command';
 import { InputCancel } from '../input';
 import { Keyboard, StaticKeyboard } from '../keyboard';
@@ -14,6 +14,10 @@ import { ViberAction } from './action';
 import { ViberChat } from './chat';
 import { ViberCommandContext, ViberContext } from './context';
 import { ViberEventListener } from './event';
+
+const REDIRECT_URL: string = config.viber.url;
+const WEBHOOK_URL: string = config.viber.url + '/webhook';
+const AVATAR_URL: string = config.viber.url + '/avatar.png';
 
 export class ViberBot extends AbstractBot<ViberCommandContext> {
     private static _instance?: ViberBot;
@@ -32,10 +36,6 @@ export class ViberBot extends AbstractBot<ViberCommandContext> {
         return this._instance;
     }
 
-    private REDIRECT_URL = config.viber.url
-    private WEBHOOK_URL = config.viber.url + '/webhook'
-    private AVATAR_URL = config.viber.url + '/avatar.png'
-
     private bot: Bot;
     private domain?: string;
     private app: Application;
@@ -48,7 +48,7 @@ export class ViberBot extends AbstractBot<ViberCommandContext> {
         this.bot = new Bot({
             authToken: config.viber.token,
             name: config.viber.name,
-            avatar: `https://${config.http.servername}${this.AVATAR_URL}`,
+            avatar: `https://${config.http.servername}${AVATAR_URL}`,
             registerToEvents: ['message', 'subscribed', 'unsubscribed', 'conversation_started']
         });
 
@@ -59,12 +59,12 @@ export class ViberBot extends AbstractBot<ViberCommandContext> {
     }
 
     public run() {
-        this.app.use(this.WEBHOOK_URL, this.bot.middleware());
+        this.app.use(WEBHOOK_URL, this.bot.middleware());
 
         this.bot.getBotProfile().then((res) => {
             this.domain = res.uri
             console.log(`[VIBER] Бот '${res.name.trim()}' авторизован. Сообщения отправляются от '${config.viber.name}'`)
-            this.app.use(this.REDIRECT_URL, (request, response) => this.redirect(request, response));
+            this.app.use(REDIRECT_URL, (request, response) => this.redirect(request, response));
         }, (err) => {
             console.error('[VIBER] Не удалось получить информацию о боте. Вероятно невалидный токен.', err)
         })
@@ -74,7 +74,7 @@ export class ViberBot extends AbstractBot<ViberCommandContext> {
     }
 
     private async setupWebhook() {
-        const URL = `https://${config.http.servername}${this.WEBHOOK_URL}`
+        const URL = `https://${config.http.servername}${WEBHOOK_URL}`
 
         this.bot.setWebhook(URL).then((res) => {
             console.log(`[VIBER] Webhook set to ${URL}`)
@@ -98,11 +98,7 @@ export class ViberBot extends AbstractBot<ViberCommandContext> {
             cmd = CommandController.searchCommandByMessage(message.text, chat.scene)
         }
 
-        const adv_context: AdvancedContext = {
-            hasMention: false,
-            selfMention: false,
-            mentionId: 0,
-        }
+        const selfMention: boolean = true;
         const keyboard = new Keyboard(context, chat.resync())
 
         if (chat.needUpdateDeviceInfo()) {
@@ -133,14 +129,6 @@ export class ViberBot extends AbstractBot<ViberCommandContext> {
             }
         }
 
-        if (cmd.adminOnly && !chat.isAdmin) {
-            return this.notFound(context, keyboard.MainMenu);
-        }
-
-        if (!cmd.services.includes('viber')) {
-            return this.notFound(context, keyboard.MainMenu);
-        }
-
         const real_context: ViberContext = {
             message, response
         }
@@ -148,9 +136,7 @@ export class ViberBot extends AbstractBot<ViberCommandContext> {
         const params: HandlerParams = {
             context: context,
             realContext: real_context,
-            adv_context: adv_context,
             chat: chat,
-            chatData: chat.resync(),
             actions: new ViberAction(context, chat),
             keyboard: keyboard,
             service: 'viber',
@@ -160,14 +146,16 @@ export class ViberBot extends AbstractBot<ViberCommandContext> {
         (async () => {
             try {
                 if (cmd.acceptRequired && !chat.accepted) {
-                    if (context.isChat && !adv_context.selfMention) return;
+                    if (context.isChat && !selfMention) return;
 
                     return this.notAccepted(context)
                 }
 
                 chat.lastMsgTime = Date.now()
 
-                if (!cmd.preHandle(params)) return this.notFound(context, keyboard.MainMenu);
+                if (!cmd.preHandle(params)) {
+                    return this.notFound(context, keyboard.MainMenu);
+                }
 
                 await cmd.handler(params)
             } catch (e: any) {

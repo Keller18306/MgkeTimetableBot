@@ -1,6 +1,6 @@
 import { TelegramBotCommand } from "puregram/generated";
 import { raspCache } from "../../../../updater";
-import { randArray } from "../../../../utils/rand";
+import { randArray } from "../../../../utils";
 import { ImageBuilder, ImageFile } from "../../../image/builder";
 import { DefaultCommand, HandlerParams } from "../../abstract";
 

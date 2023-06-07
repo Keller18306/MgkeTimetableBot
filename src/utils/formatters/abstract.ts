@@ -3,7 +3,7 @@ import { Service } from "../../services/bots/abstract/command";
 import { Updater } from "../../updater";
 import { GroupDay, GroupLesson, GroupLessonExplain, TeacherDay, TeacherLesson, TeacherLessonExplain } from "../../updater/parser/types";
 import { RaspCache, RaspGroupCache, RaspTeacherCache } from "../../updater/raspCache";
-import { formatSeconds } from "../seconds2times";
+import { formatSeconds } from "../time";
 
 export type InputFormatGroupOptions = {
     showHeader?: boolean,

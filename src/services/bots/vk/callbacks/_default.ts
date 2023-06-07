@@ -3,8 +3,7 @@ import { VkChat, VkDb } from '../chat';
 
 export type HandlerParams = {
     context: MessageEventContext<ContextDefaultState>,
-    chat: VkChat,
-    chatData: VkDb
+    chat: VkChat
 }
 
 export abstract class DefaultCallback {

@@ -12,6 +12,6 @@ export default class extends DefaultCommand {
     };
 
     handler({ context }: HandlerParams) {
-        context.send('pong')
+        return context.send('pong')
     }
 }

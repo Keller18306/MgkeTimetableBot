@@ -1,12 +1,11 @@
 import * as fs from 'fs';
 import { arch, freemem, loadavg, uptime as osUptime, platform, release, totalmem } from 'os';
 import { uptime as botUptime, cpuUsage, memoryUsage, pid, resourceUsage, version, versions } from 'process';
+import { TelegramBotCommand } from 'puregram/generated';
 import { cpuTemperature } from 'systeminformation';
 import db from "../../../../db";
-import { formatBytes } from "../../../../utils/bytes";
-import { formatSeconds } from '../../../../utils/seconds2times';
+import { formatBytes, formatSeconds } from "../../../../utils";
 import { DefaultCommand, HandlerParams } from "../../abstract";
-import { TelegramBotCommand } from 'puregram/generated';
 
 let latestUsage = cpuUsage()
 let latestTime = Date.now()

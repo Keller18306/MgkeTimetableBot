@@ -1,6 +1,5 @@
 import { JSDOM } from "jsdom";
-import { getTodayDate, strDateToNumber } from "../utils";
-import { doCombine } from "../utils/combineRasp";
+import { doCombine, getTodayDate, strDateToNumber } from "../utils";
 import TeacherParser from "./parser/teacher";
 import { RaspTeacherCache } from "./raspCache";
 

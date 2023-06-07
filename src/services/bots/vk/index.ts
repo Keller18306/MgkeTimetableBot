@@ -6,8 +6,8 @@ import { config } from '../../../../config';
 import { defines } from '../../../defines';
 import { FromType, InputRequestKey } from '../../../key';
 import { raspCache } from '../../../updater';
-import { createScheduleFormatter } from '../../../utils/';
-import { AbstractBot, AdvancedContext, DefaultCommand, FileCache, HandlerParams } from '../abstract';
+import { createScheduleFormatter } from '../../../utils';
+import { AbstractBot, DefaultCommand, FileCache, HandlerParams } from '../abstract';
 import { CommandController } from '../command';
 import { InputCancel } from '../input';
 import { Keyboard } from '../keyboard';
@@ -97,13 +97,6 @@ export class VkBot extends AbstractBot<VkCommandContext> {
         let selfMention = false
         if (hasMention && mentionId == config.vk.bot.id) selfMention = true
 
-        const adv_context: AdvancedContext = {
-            hasMention,
-            mentionId,
-            mentionMessage,
-            selfMention
-        }
-
         const text = mentionMessage || context.text;
         const _context = new VkCommandContext(context, this.input, this.cache);
         const chat = new VkChat(context.peerId);
@@ -144,14 +137,6 @@ export class VkBot extends AbstractBot<VkCommandContext> {
             return;
         }
 
-        if (cmd.adminOnly && !chat.isAdmin) {
-            return this.notFound(_context, keyboard.MainMenu, selfMention);
-        }
-
-        if (!cmd.services.includes('vk')) {
-            return this.notFound(_context, keyboard.MainMenu, selfMention);
-        }
-
         (async () => {
             try {
                 if (cmd.acceptRequired && !chat.accepted) {
@@ -164,9 +149,7 @@ export class VkBot extends AbstractBot<VkCommandContext> {
 
                 const params: HandlerParams = {
                     context: _context,
-                    adv_context,
                     chat: chat,
-                    chatData: chat.resync(),
                     actions: new VkBotAction(context, chat, this.input, this.cache),
                     keyboard,
                     service: 'vk',
@@ -212,7 +195,7 @@ export class VkBot extends AbstractBot<VkCommandContext> {
 
                     chat.lastMsgTime = Date.now()
 
-                    await callback.handler({ context, chat, chatData: chat.resync() })
+                    await callback.handler({ context, chat })
                 } catch (e: any) {
                     console.error(id, e)
                     this.vk.api.messages.send({

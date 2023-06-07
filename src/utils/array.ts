@@ -1,3 +1,7 @@
+export function arrayUnique<T>(array: T[]): T[] {
+    return Array.from(new Set(array));
+}
+
 export function chunkArray<T>(array: T[], size: number): T[][] {
     const chunks: T[][] = [];
 

@@ -1,6 +1,6 @@
 import { TelegramBotCommand } from "puregram/generated";
 import { raspCache } from "../../../../updater";
-import { formatSeconds } from "../../../../utils/seconds2times";
+import { formatSeconds } from "../../../../utils";
 import { DefaultCommand, HandlerParams } from "../../abstract";
 
 export default class extends DefaultCommand {

@@ -1,7 +1,6 @@
 import { config } from "../../../../config";
 import db from "../../../db";
-import { addslashes } from "../../../utils";
-import { arrayUnique } from "../../../utils/arrayUnique";
+import { addslashes, arrayUnique } from "../../../utils";
 
 export type ChatMode = 'student' | 'teacher' | 'parent' | 'guest'
 
@@ -210,3 +209,4 @@ abstract class AbstractChat {
 interface AbstractChat extends DbChat { };
 
 export { AbstractChat };
+

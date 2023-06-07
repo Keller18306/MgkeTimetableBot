@@ -18,19 +18,10 @@ import { KeyboardBuilder } from './keyboardBuilder';
 
 export type Service = 'tg' | 'vk' | 'viber';
 
-export type AdvancedContext = {
-    hasMention: boolean,
-    mentionId: number,
-    mentionMessage?: string,
-    selfMention: boolean
-}
-
 export type HandlerParams = {
     context: AbstractCommandContext,
     realContext: any,
-    adv_context: AdvancedContext,
     chat: AbstractChat,
-    chatData: DbChat,
     actions: AbstractAction,
     keyboard: Keyboard,
     service: Service,
@@ -39,20 +30,17 @@ export type HandlerParams = {
     service: 'vk',
     context: VkCommandContext,
     realContext: VkMessageContext<ContextDefaultState>,
-    chat: VkChat,
-    chatData: VkDb
+    chat: VkChat
 } | {
     service: 'viber',
     context: ViberCommandContext,
     realContext: ViberContext,
-    chat: ViberChat,
-    chatData: ViberDb
+    chat: ViberChat
 } | {
     service: 'tg',
     context: TgCommandContext,
     realContext: TgMessageContext,
-    chat: TgChat,
-    chatData: TgDb
+    chat: TgChat
 })
 
 export abstract class DefaultCommand {
@@ -77,8 +65,14 @@ export abstract class DefaultCommand {
      */
     public scene?: string | null;
 
-    public preHandle(params: HandlerParams) {
-        if (!this.services.includes(params.service)) return false;
+    public preHandle({ service, chat }: HandlerParams) {
+        if (!this.services.includes(service)) {
+            return false;
+        }
+
+        if (this.adminOnly && !chat.isAdmin) {
+            return false;
+        }
 
         return true;
     }

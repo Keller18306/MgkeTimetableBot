@@ -7,7 +7,7 @@ export default class extends DefaultCommand {
     public payload = null;
 
     handler({ context }: HandlerParams) {
-        context.send([
+        return context.send([
             `peer_id: ${context.peerId}`,
             `user_id: ${context.userId}`
         ].join('\n'))

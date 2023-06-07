@@ -6,7 +6,7 @@ export default class extends DefaultCommand {
     public regexp = /^(!|\/)chat$/i
     public payload = null;
 
-    handler({ context, chat, chatData }: HandlerParams) {
-        context.send(JSON.stringify(chatData, null, 1))
+    handler({ context, chat }: HandlerParams) {
+        return context.send(JSON.stringify(chat, null, 1))
     }
 }

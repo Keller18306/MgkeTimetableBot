@@ -4,8 +4,8 @@ import StatusCode from 'status-code-enum';
 import { config } from '../../../../config';
 import { FromType, InputRequestKey } from '../../../key';
 import { raspCache } from '../../../updater';
-import { createScheduleFormatter } from '../../../utils/';
-import { AbstractBot, AdvancedContext, DefaultCommand, FileCache, HandlerParams } from '../abstract';
+import { createScheduleFormatter } from '../../../utils';
+import { AbstractBot, DefaultCommand, FileCache, HandlerParams } from '../abstract';
 import { CommandController } from '../command';
 import { InputCancel } from '../input';
 import { Keyboard } from '../keyboard';
@@ -89,14 +89,7 @@ export class TgBot extends AbstractBot<TgCommandContext> {
     private messageHandler(context: MessageContext, next: NextMiddleware) {
         if (context.from?.isBot() || context.hasViaBot()) return next();
 
-        const selfMention = true;
-
-        const adv_context: AdvancedContext = {
-            hasMention: false,
-            mentionId: 0,
-            mentionMessage: '',
-            selfMention: selfMention
-        }
+        const selfMention: boolean = true;
 
         const text = context.text
         const _context = new TgCommandContext(context, this.input, this.cache)
@@ -129,7 +122,7 @@ export class TgBot extends AbstractBot<TgCommandContext> {
         }
 
         if (!cmd) {
-            if (selfMention || !(context.isChannel() || context.isGroup())) {
+            if (selfMention || !(context.isChannel() || context.isSupergroup() || context.isGroup())) {
                 if (chat.accepted) {
                     return this.notFound(_context, keyboard.MainMenu, selfMention)
                 } else {
@@ -140,18 +133,10 @@ export class TgBot extends AbstractBot<TgCommandContext> {
             return;
         }
 
-        if (cmd.adminOnly && !chat.isAdmin) {
-            return this.notFound(_context, keyboard.MainMenu, selfMention);
-        }
-
-        if (!cmd.services.includes('tg')) {
-            return this.notFound(_context, keyboard.MainMenu, selfMention);
-        }
-
         (async () => {
             try {
                 if (cmd.acceptRequired && !chat.accepted) {
-                    if (context.isGroup() || context.isChannel() && !selfMention) return;
+                    if (context.isGroup() || context.isSupergroup() || context.isChannel() && !selfMention) return;
 
                     return this.notAccepted(_context)
                 }
@@ -160,9 +145,7 @@ export class TgBot extends AbstractBot<TgCommandContext> {
 
                 const params: HandlerParams = {
                     context: _context,
-                    adv_context,
                     chat: chat,
-                    chatData: chat.resync(),
                     actions: new TgBotAction(context, chat, this.input, this.cache),
                     keyboard,
                     service: 'tg',
@@ -170,7 +153,9 @@ export class TgBot extends AbstractBot<TgCommandContext> {
                     scheduleFormatter: createScheduleFormatter('tg', raspCache, chat)
                 }
 
-                if (!cmd.preHandle(params)) return this.notFound(_context, keyboard.MainMenu, selfMention);
+                if (!cmd.preHandle(params)) {
+                    return this.notFound(_context, keyboard.MainMenu, selfMention);
+                }
 
                 await cmd.handler(params)
             } catch (e: any) {
@@ -240,7 +225,7 @@ export class TgBot extends AbstractBot<TgCommandContext> {
         }
     }
 
-    private myChatMember(context: ChatMemberContext, need: NextMiddleware) {
+    private myChatMember(context: ChatMemberContext, next: NextMiddleware) {
         const chat = new TgChat(context.chatId);
 
         if (context.newChatMember.status === 'kicked') {
