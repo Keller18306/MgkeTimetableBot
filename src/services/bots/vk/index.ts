@@ -7,7 +7,7 @@ import { defines } from '../../../defines';
 import { FromType, InputRequestKey } from '../../../key';
 import { raspCache } from '../../../updater';
 import { createScheduleFormatter } from '../../../utils';
-import { AbstractBot, DefaultCommand, FileCache, HandlerParams } from '../abstract';
+import { AbstractBot, DefaultCommand, HandlerParams } from '../abstract';
 import { CommandController } from '../command';
 import { InputCancel } from '../input';
 import { Keyboard } from '../keyboard';
@@ -25,8 +25,6 @@ export class VkBot extends AbstractBot<VkCommandContext> {
         [id: string]: DefaultCallback;
     } = {}
 
-    protected cache: FileCache;
-
     public static get instance() {
         if (!this._instance) {
             this._instance = new this()
@@ -36,15 +34,13 @@ export class VkBot extends AbstractBot<VkCommandContext> {
     }
 
     constructor() {
-        super()
+        super('vk')
         if (VkBot._instance) throw new Error('VkBot is singleton')
 
         this.vk = new VK({
             pollingGroupId: config.vk.bot.id,
             token: config.vk.bot.access_token,
         })
-
-        this.cache = new FileCache('vk.json');
 
         this.vk.updates.on('message_new', (context, next) => this.messageHandler(context, next))
         this.vk.updates.on('message_event', (context, next) => this.eventHandler(context, next))

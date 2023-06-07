@@ -41,7 +41,7 @@ export class ViberBot extends AbstractBot<ViberCommandContext> {
     private app: Application;
 
     constructor(app: express.Application) {
-        super();
+        super('viber');
 
         this.app = app;
 

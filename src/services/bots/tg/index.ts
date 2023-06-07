@@ -5,7 +5,7 @@ import { config } from '../../../../config';
 import { FromType, InputRequestKey } from '../../../key';
 import { raspCache } from '../../../updater';
 import { createScheduleFormatter } from '../../../utils';
-import { AbstractBot, DefaultCommand, FileCache, HandlerParams } from '../abstract';
+import { AbstractBot, DefaultCommand, HandlerParams } from '../abstract';
 import { CommandController } from '../command';
 import { InputCancel } from '../input';
 import { Keyboard } from '../keyboard';
@@ -19,8 +19,6 @@ export class TgBot extends AbstractBot<TgCommandContext> {
 
     public tg: Telegram;
 
-    protected cache: FileCache;
-
     public static get instance() {
         if (!this._instance) {
             this._instance = new this()
@@ -30,14 +28,12 @@ export class TgBot extends AbstractBot<TgCommandContext> {
     }
 
     constructor() {
-        super()
+        super('tg')
         if (TgBot._instance) throw new Error('TgBot is singleton')
 
         this.tg = new Telegram({
             token: config.telegram.token,
         })
-
-        this.cache = new FileCache('tg.json');
 
         this.tg.updates.on('message', (context, next) => this.messageHandler(context, next))
         this.tg.updates.on('my_chat_member', (context, next) => this.myChatMember(context, next))
