@@ -16,3 +16,6 @@ yarn.lock
 
 # Optional npm cache directory
 .npm
+
+# SFTP for deploy
+.vscode/sftp.json
