@@ -2,7 +2,7 @@ import { config } from "../../../config";
 import db from "../../db";
 import { DbChat } from "../../services/bots/abstract/chat";
 import { Service } from "../../services/bots/abstract/command";
-import { getDayNext, getTodayDate, strDateToNumber } from "../../utils";
+import { getDayNext, getTodayDate, prepareError, strDateToNumber } from "../../utils";
 import { createScheduleFormatter } from "../../utils/";
 import { GroupDay, TeacherDay } from "../parser/types";
 import { raspCache } from "../raspCache";
@@ -217,14 +217,14 @@ export abstract class AbstractEventListener<T extends DbChat = DbChat> {
         return this.sendMessages(chats, message);
     }
 
-    public async sendError(error: string) {
+    public async sendError(error: Error) {
         const chats: T[] = db.prepare(
             "SELECT * FROM chat_options JOIN `" + this._tableName + "` ON chat_options.id = " + this._tableName + ".id WHERE `service` = ? AND `accepted` = 1 AND `allowSendMess` = 1 AND `peerId` IN (" + Array(this.adminIds.length).fill('?') +")"
         ).all(this.service, this.adminIds) as any;
 
         return this.sendMessages(chats, [
             '‼️ Произошла ошибка парсера ‼️\n',
-            error
+            prepareError(error)
         ].join('\n'));
     }
 

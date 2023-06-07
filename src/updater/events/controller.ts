@@ -38,7 +38,7 @@ export class EventController {
         }
     }
 
-    public static async sendError(error: string) {
+    public static async sendError(error: Error) {
         for (const service of this.serviceList) {
             await service.sendError(error);
         }

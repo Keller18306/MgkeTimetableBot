@@ -180,27 +180,31 @@ export class Updater {
         let hits: number = 0;
 
         let val: string | undefined;
-        for (const log of this.logs.slice(0, LOG_COUNT_SEND)) {
-            if (!(log instanceof Error)) {
+        let error: Error | undefined;
+
+        for (const log of this.logs.slice(0, LOG_COUNT_SEND + 1)) {
+            const err: string | Error = log.result;
+
+            if (!(err instanceof Error)) {
                 return;
             }
 
-            const current: string = log.result.toString();
-            if (!val) {
-                val = current
+            if (!val || !error) {
+                val = err.message;
+                error = err;
             }
 
-            if (val === current) {
+            if (val === err.message) {
                 hits++
             }
         }
 
-        if (!val) {
+        if (!val || !error) {
             return;
         }
 
         if (hits === LOG_COUNT_SEND) {
-            EventController.sendError(val);
+            EventController.sendError(error);
         }
     }
 

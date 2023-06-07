@@ -1,6 +1,6 @@
 import { TelegramBotCommand } from "puregram/generated";
 import { Updater } from "../../../../updater";
-import { formatTime } from "../../../../utils/time";
+import { formatTime, prepareError } from "../../../../utils";
 import { DefaultCommand, HandlerParams } from "../../abstract";
 
 export default class extends DefaultCommand {
@@ -27,7 +27,7 @@ export default class extends DefaultCommand {
             const log = logs[i]
             message.push(
                 `${+i + 1}. [${formatTime(log.date, true)}]: ` +
-                ((log.result instanceof Error) ? log.result.stack?.replaceAll(process.cwd(), '') : log.result)
+                ((log.result instanceof Error) ? prepareError(log.result) : log.result)
             )
         }
 
