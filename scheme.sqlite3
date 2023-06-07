@@ -1,5 +1,5 @@
 --
--- Файл сгенерирован с помощью SQLiteStudio v3.4.4 в сб июнь 3 14:08:51 2023
+-- Файл сгенерирован с помощью SQLiteStudio v3.4.4 в ср июнь 7 21:06:35 2023
 --
 -- Использованная кодировка текста: System
 --
@@ -44,7 +44,7 @@ CREATE TABLE chat_options (
     showCalls                BOOLEAN      DEFAULT (1),
     showFastGroup            BOOLEAN      DEFAULT (1),
     showFastTeacher          BOOLEAN      DEFAULT (1),
-    removePastDays           BOOLEAN      DEFAULT (1),
+    hidePastDays             BOOLEAN      DEFAULT (1),
     deleteLastMsg            BOOLEAN      DEFAULT (0),
     lastMsgId                INTEGER,
     lastMsgTime              BIGINT       DEFAULT (0),
