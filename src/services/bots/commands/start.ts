@@ -5,19 +5,24 @@ import { StaticKeyboard } from "../keyboard";
 export default class extends DefaultCommand {
     public id = 'start'
 
-    public regexp = /^Начать|Start|Настроить$/i
+    public regexp = /(^(!|\/)start)|^(Начать|Start|Меню)$/i
     public payload = null;
     public tgCommand: TelegramBotCommand = {
         command: 'start',
         description: 'Запустить бота'
     };
 
-    handler({ context, chat, keyboard, service }: HandlerParams) {
+    handler({ context, chat, keyboard }: HandlerParams) {
         if (context.isChat) return;
 
-        if (chat.mode !== null) return context.send('Главное меню', {
-            keyboard: keyboard.MainMenu
-        });
+        if (chat.mode !== null) {
+            context.cancelInput();
+            chat.scene = null;
+
+            return context.send('Главное меню', {
+                keyboard: keyboard.MainMenu
+            });
+        }
 
         chat.scene = 'setup';
 
