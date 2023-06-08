@@ -2,14 +2,23 @@ import { format } from "util";
 import { config } from "../../../../config";
 import { defines } from "../../../defines";
 import { InputRequestKey, RequestKey } from "../../../key";
-import { BotInput } from "../input";
+import { BotInput, InputCancel } from "../input";
 import { StaticKeyboard } from "../keyboard";
 import { FileCache } from "./cache";
-import { AbstractCommandContext, Service } from "./command";
+import { AbstractChat } from "./chat";
+import { AbstractCommandContext, DefaultCommand, HandlerParams, Service } from "./command";
 
-export abstract class AbstractBot<Context extends AbstractCommandContext> {
+export type HandleMessageOptions = {
+    /** Есть ли упоминание бота в сообщении (для ВК) */
+    selfMention?: boolean;
+
+    /** Сообщение отправлено из чата (используется чтобы не отправлять "неизвестную команду", если люди просто общаются в чате) */
+    isFromChat?: boolean;
+}
+
+export abstract class AbstractBot {
     public abstract run(): void
-    protected abstract _getAcceptKeyParams(context: Context): InputRequestKey;
+    protected abstract _getAcceptKeyParams(context: AbstractCommandContext): InputRequestKey;
     
     protected readonly acceptTool: RequestKey = new RequestKey(config.encrypt_key);
     protected readonly input: BotInput = new BotInput();
@@ -22,7 +31,65 @@ export abstract class AbstractBot<Context extends AbstractCommandContext> {
         this.cache = new FileCache(this.service);
     }
 
-    protected notFound(context: Context, keyboard: any, selfMention: boolean = true) {
+    protected async handleMessage(cmd: DefaultCommand | null, handlerParams: HandlerParams, options: HandleMessageOptions = {}) {
+        const { chat, context, keyboard } = handlerParams;
+        const { selfMention, isFromChat } = Object.assign({}, {
+            selfMention: true, isFromChat: false
+        }, options);
+
+        if (!chat.allowSendMess) {
+            chat.allowSendMess = true
+        }
+        
+        if (chat.accepted && chat.needUpdateButtons) {
+            chat.needUpdateButtons = false;
+            chat.scene = null;
+            context.send('Клавиатура была принудительно пересоздана (обновлена)', {
+                keyboard: keyboard.MainMenu
+            });
+        }
+
+        if (!cmd) {
+            if (selfMention || !isFromChat) {
+                if (chat.accepted) {
+                    return this.notFound(chat, context, keyboard.MainMenu, selfMention)
+                } else {
+                    return this.notAccepted(context)
+                }
+            }
+
+            return;
+        }
+
+        if (cmd.acceptRequired && !chat.accepted) {
+            if (isFromChat && !selfMention) return;
+
+            return this.notAccepted(context)
+        }
+
+        chat.lastMsgTime = Date.now()
+
+        try {
+            if (!cmd.preHandle(handlerParams)) {
+                return this.notFound(chat, context, keyboard.MainMenu, selfMention);
+            }
+
+            await cmd.handler(handlerParams)
+        } catch (err: any) {
+            if (err instanceof InputCancel) return;
+            console.error(cmd.id, context.peerId, err);
+
+            this.handleMessageError(cmd, context, err)
+        }
+    }
+
+    protected handleMessageError(cmd: DefaultCommand, context: AbstractCommandContext, err: Error) {
+        context.send(`Произошла ошибка во время выполнения Command #${cmd.id}: ${err.toString()}`).catch(() => { })
+    }
+
+    protected notFound(chat: AbstractChat, context: AbstractCommandContext, keyboard: any, selfMention: boolean = true) {
+        chat.scene = null; //set main scene
+
         return context.send('Команда не найдена', {
             ...(selfMention ? {
                 keyboard: keyboard
@@ -30,7 +97,7 @@ export abstract class AbstractBot<Context extends AbstractCommandContext> {
         })
     }
 
-    protected notAccepted(context: Context) {
+    protected notAccepted(context: AbstractCommandContext) {
         context.send(format(defines['need.accept'],
             this.acceptTool.getKey(this._getAcceptKeyParams(context))
         ), {

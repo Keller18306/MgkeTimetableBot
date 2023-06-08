@@ -5,16 +5,15 @@ import { config } from '../../../../config';
 import { FromType, InputRequestKey } from '../../../key';
 import { raspCache } from '../../../updater';
 import { createScheduleFormatter } from '../../../utils';
-import { AbstractBot, DefaultCommand, HandlerParams } from '../abstract';
+import { AbstractBot, AbstractCommandContext, DefaultCommand } from '../abstract';
 import { CommandController } from '../command';
-import { InputCancel } from '../input';
 import { Keyboard } from '../keyboard';
 import { TgBotAction } from './action';
 import { TgChat } from './chat';
 import { TgCommandContext } from './context';
 import { TgEventListener } from './event';
 
-export class TgBot extends AbstractBot<TgCommandContext> {
+export class TgBot extends AbstractBot {
     private static _instance?: TgBot;
 
     public tg: Telegram;
@@ -85,8 +84,6 @@ export class TgBot extends AbstractBot<TgCommandContext> {
     private messageHandler(context: MessageContext, next: NextMiddleware) {
         if (context.from?.isBot() || context.hasViaBot()) return next();
 
-        const selfMention: boolean = true;
-
         const text = context.text
         const _context = new TgCommandContext(context, this.input, this.cache)
         const chat = new TgChat(context.chatId)
@@ -100,73 +97,32 @@ export class TgBot extends AbstractBot<TgCommandContext> {
             return this.input.resolve(String(context.chatId), text);
         }
 
-        const keyboard = new Keyboard(_context, chat)
-        if (chat.accepted && chat.needUpdateButtons) {
-            chat.needUpdateButtons = false;
-            chat.scene = null;
-            _context.send('Клавиатура была принудительно пересоздана (обновлена)', {
-                keyboard: keyboard.MainMenu
-            });
-        }
-
         let cmd: DefaultCommand | null = null;
-
         if (context.text === '/cancel') {
             cmd = CommandController.searchCommandByPayload('cancel', chat.scene)
         } else {
             cmd = CommandController.searchCommandByMessage(text, chat.scene)
         }
 
-        if (!cmd) {
-            if (selfMention || !(context.isChannel() || context.isSupergroup() || context.isGroup())) {
-                if (chat.accepted) {
-                    return this.notFound(_context, keyboard.MainMenu, selfMention)
-                } else {
-                    return this.notAccepted(_context)
-                }
-            }
+        this.handleMessage(cmd, {
+            context: _context,
+            chat: chat,
+            actions: new TgBotAction(context, chat, this.input, this.cache),
+            keyboard: new Keyboard(_context, chat),
+            service: 'tg',
+            realContext: context,
+            scheduleFormatter: createScheduleFormatter('tg', raspCache, chat)
+        }, {
+            isFromChat: context.isChannel() || context.isSupergroup() || context.isGroup()
+        });
+    }
 
+    protected override handleMessageError(cmd: DefaultCommand, context: AbstractCommandContext, err: Error): void {
+        if (err instanceof APIError && [StatusCode.ClientErrorTooManyRequests, StatusCode.ClientErrorForbidden].includes(err.code)) {
             return;
         }
 
-        (async () => {
-            try {
-                if (cmd.acceptRequired && !chat.accepted) {
-                    if (context.isGroup() || context.isSupergroup() || context.isChannel() && !selfMention) return;
-
-                    return this.notAccepted(_context)
-                }
-
-                chat.lastMsgTime = Date.now()
-
-                const params: HandlerParams = {
-                    context: _context,
-                    chat: chat,
-                    actions: new TgBotAction(context, chat, this.input, this.cache),
-                    keyboard,
-                    service: 'tg',
-                    realContext: context,
-                    scheduleFormatter: createScheduleFormatter('tg', raspCache, chat)
-                }
-
-                if (!cmd.preHandle(params)) {
-                    return this.notFound(_context, keyboard.MainMenu, selfMention);
-                }
-
-                await cmd.handler(params)
-            } catch (e: any) {
-                if (e instanceof InputCancel) return;
-                console.error(cmd.id, chat.peerId, e)
-
-                if (e instanceof APIError) {
-                    if ([StatusCode.ClientErrorTooManyRequests, StatusCode.ClientErrorForbidden].includes(e.code)) {
-                        return;
-                    }
-                }
-
-                context.send(`Произошла ошибка во время выполнения Command #${cmd.id}: ${e.toString()}`).catch(() => {})
-            }
-        })()
+        return super.handleMessageError(cmd, context, err);
     }
 
     private async callbackHandler(context: CallbackQueryContext, next: NextMiddleware) {

@@ -7,9 +7,8 @@ import { defines } from '../../../defines';
 import { FromType, InputRequestKey } from '../../../key';
 import { raspCache } from '../../../updater';
 import { createScheduleFormatter } from '../../../utils';
-import { AbstractBot, DefaultCommand, HandlerParams } from '../abstract';
+import { AbstractBot, DefaultCommand } from '../abstract';
 import { CommandController } from '../command';
-import { InputCancel } from '../input';
 import { Keyboard } from '../keyboard';
 import { VkBotAction } from './action';
 import { DefaultCallback } from './callbacks/_default';
@@ -17,7 +16,7 @@ import { VkChat } from './chat';
 import { VkCommandContext } from './context';
 import { VkEventListener } from './event';
 
-export class VkBot extends AbstractBot<VkCommandContext> {
+export class VkBot extends AbstractBot {
     private static _instance?: VkBot;
 
     public vk: VK
@@ -81,19 +80,29 @@ export class VkBot extends AbstractBot<VkCommandContext> {
         console.log(`[VK] Loaded ${Object.keys(this.callbacks).length} callbacks`)
     }
 
+    private parseMessage(text?: string) {
+        const hasMention = /\[(?:club|public)(\d+?)\|[\s\S]+?\],?\s([\s\S]*)/m.test(text || '')
+        let [, parsedMentionId, mentionMessage] = text?.match(/\[(?:club|public)(\d+?)\|[\s\S]+?\],?\s([\s\S]*)/m) || []
+
+        let mentionId: number = 0
+        if (hasMention && !isNaN(+parsedMentionId)) {
+            mentionId = Number(parsedMentionId);
+        }
+
+        let selfMention: boolean = false;
+        if (hasMention && mentionId == config.vk.bot.id) {
+            selfMention = true;
+        }
+
+        const outText: string | undefined = mentionMessage || text;
+
+        return { text: outText, selfMention };
+    }
+
     private messageHandler(context: MessageContext<ContextDefaultState>, next: NextMiddleware) {
         if (context.isFromGroup) return next();
 
-        const hasMention = /\[(?:club|public)(\d+?)\|[\s\S]+?\],?\s([\s\S]*)/m.test(context.text || '')
-        let [, parsedMentionId, mentionMessage] = context.text?.match(/\[(?:club|public)(\d+?)\|[\s\S]+?\],?\s([\s\S]*)/m) || []
-
-        let mentionId: number = 0
-        if (hasMention && !isNaN(+parsedMentionId)) mentionId = Number(parsedMentionId)
-
-        let selfMention = false
-        if (hasMention && mentionId == config.vk.bot.id) selfMention = true
-
-        const text = mentionMessage || context.text;
+        const { text, selfMention } = this.parseMessage(context.text);
         const _context = new VkCommandContext(context, this.input, this.cache);
         const chat = new VkChat(context.peerId);
 
@@ -105,15 +114,6 @@ export class VkBot extends AbstractBot<VkCommandContext> {
             return this.input.resolve(String(context.peerId), text);
         }
 
-        const keyboard = new Keyboard(_context, chat.resync())
-        if (chat.accepted && chat.needUpdateButtons) {
-            chat.needUpdateButtons = false;
-            chat.scene = null;
-            _context.send('Клавиатура была принудительно пересоздана (обновлена)', {
-                keyboard: keyboard.MainMenu
-            });
-        }
-
         let cmd: DefaultCommand | null = null;
         if (_context.payload) {
             cmd = CommandController.searchCommandByPayload(_context.payload.action, chat.scene)
@@ -121,50 +121,17 @@ export class VkBot extends AbstractBot<VkCommandContext> {
             cmd = CommandController.searchCommandByMessage(text, chat.scene)
         }
 
-        if (!cmd) {
-            if (selfMention || !context.isChat) {
-                if (chat.accepted) {
-                    return this.notFound(_context, keyboard.MainMenu, selfMention)
-                } else {
-                    return this.notAccepted(_context)
-                }
-            }
-
-            return;
-        }
-
-        (async () => {
-            try {
-                if (cmd.acceptRequired && !chat.accepted) {
-                    if (context.isChat && !selfMention) return;
-
-                    return this.notAccepted(_context)
-                }
-
-                chat.lastMsgTime = Date.now()
-
-                const params: HandlerParams = {
-                    context: _context,
-                    chat: chat,
-                    actions: new VkBotAction(context, chat, this.input, this.cache),
-                    keyboard,
-                    service: 'vk',
-                    realContext: context,
-                    scheduleFormatter: createScheduleFormatter('vk', raspCache, chat)
-                }
-
-                if (!cmd.preHandle(params)) {
-                    return this.notFound(_context, keyboard.MainMenu, selfMention);
-                }
-
-                await cmd.handler(params)
-            } catch (e: any) {
-                if (e instanceof InputCancel) return;
-
-                console.error(cmd.id, e)
-                context.send(`Произошла ошибка во время выполнения Command #${cmd.id}: ${e.toString()}`).catch(() => { })
-            }
-        })()
+        this.handleMessage(cmd, {
+            context: _context,
+            chat: chat,
+            actions: new VkBotAction(context, chat, this.input, this.cache),
+            keyboard: new Keyboard(_context, chat.resync()),
+            service: 'vk',
+            realContext: context,
+            scheduleFormatter: createScheduleFormatter('vk', raspCache, chat)
+        }, {
+            selfMention: selfMention
+        })
     }
 
     protected _getAcceptKeyParams(context: VkCommandContext): InputRequestKey {

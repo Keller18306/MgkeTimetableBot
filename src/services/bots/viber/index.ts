@@ -1,25 +1,23 @@
 import express, { Application } from 'express';
-import { format } from 'util';
 import { Bot, Events, ReceivedTextMessage, Response } from 'viber-bot';
 import { config } from '../../../../config';
 import { defines } from '../../../defines';
 import { FromType, InputRequestKey } from '../../../key/index';
 import { raspCache } from '../../../updater';
 import { createScheduleFormatter } from '../../../utils';
-import { AbstractBot, DefaultCommand, HandlerParams } from '../abstract';
+import { AbstractBot, DefaultCommand } from '../abstract';
 import { CommandController } from '../command';
-import { InputCancel } from '../input';
 import { Keyboard, StaticKeyboard } from '../keyboard';
 import { ViberAction } from './action';
 import { ViberChat } from './chat';
-import { ViberCommandContext, ViberContext } from './context';
+import { ViberCommandContext } from './context';
 import { ViberEventListener } from './event';
 
 const REDIRECT_URL: string = config.viber.url;
 const WEBHOOK_URL: string = config.viber.url + '/webhook';
 const AVATAR_URL: string = config.viber.url + '/avatar.png';
 
-export class ViberBot extends AbstractBot<ViberCommandContext> {
+export class ViberBot extends AbstractBot {
     private static _instance?: ViberBot;
 
     public static get instance(): ViberBot {
@@ -98,9 +96,6 @@ export class ViberBot extends AbstractBot<ViberCommandContext> {
             cmd = CommandController.searchCommandByMessage(message.text, chat.scene)
         }
 
-        const selfMention: boolean = true;
-        const keyboard = new Keyboard(context, chat.resync())
-
         if (chat.needUpdateDeviceInfo()) {
             await this.bot.getUserDetails(response.userProfile).then((res) => {
                 chat.setDeviceInfo(res.name, res.primary_device_os, res.viber_version, res.device_type)
@@ -109,62 +104,15 @@ export class ViberBot extends AbstractBot<ViberCommandContext> {
             })
         }
 
-        if (!chat.allowSendMess) {
-            chat.allowSendMess = true
-        }
-
-        if (!cmd) {
-            if (chat.accepted) {
-                return this.notFound(context, keyboard.MainMenu)
-            } else {
-                return context.send(
-                    format(defines['need.accept'],
-                        this.acceptTool.getKey({
-                            from: FromType.ViberBot,
-                            user_id: context.userId,
-                            time: Date.now()
-                        })
-                    )
-                )
-            }
-        }
-
-        const real_context: ViberContext = {
-            message, response
-        }
-
-        const params: HandlerParams = {
+        this.handleMessage(cmd, {
             context: context,
-            realContext: real_context,
+            realContext: { message, response },
             chat: chat,
             actions: new ViberAction(context, chat),
-            keyboard: keyboard,
+            keyboard: new Keyboard(context, chat.resync()),
             service: 'viber',
             scheduleFormatter: createScheduleFormatter('viber', raspCache, chat)
-        };
-
-        (async () => {
-            try {
-                if (cmd.acceptRequired && !chat.accepted) {
-                    if (context.isChat && !selfMention) return;
-
-                    return this.notAccepted(context)
-                }
-
-                chat.lastMsgTime = Date.now()
-
-                if (!cmd.preHandle(params)) {
-                    return this.notFound(context, keyboard.MainMenu);
-                }
-
-                await cmd.handler(params)
-            } catch (e: any) {
-                if (e instanceof InputCancel) return;
-
-                console.error(cmd.id, e)
-                context.send(`Произошла ошибка во время выполнения Command #${cmd.id}: ${e.toString()}`).catch(() => { })
-            }
-        })()
+        });
     }
 
     private async handleConversationStarted(response: Response, subscribed: boolean, _context: string) {
