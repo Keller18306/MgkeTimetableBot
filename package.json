@@ -2,7 +2,7 @@
   "name": "bot-get-lessons",
   "version": "1.0.0",
   "description": "",
-  "main": "index.ts",
+  "main": "src/index.ts",
   "scripts": {
     "start": "ts-node .",
     "check": "tsc --noEmit"
