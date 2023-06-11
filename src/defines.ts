@@ -1,28 +1,29 @@
+const globalLinks: string = 'Небольшая статья, как настроить бота: https://vk.com/@mgke_slave-ispolzovanie-bota\n\n' +
+    'Статья для преподавателей: https://vk.com/@mgke_slave-ispolzovanie-bota?anchor=dlya-uchiteley\n\n' +
+    'Исходный код: https://github.com/Keller18306/MgkeTimetableBot';
+
 export const defines: {
     [key: string]: string
 } = {
+    'global.links': globalLinks,
+
     'vk.message.about': 'Бот был создан [id290331922|Алексеем Костюком] из группы 63ТП. Для сообщения о багах или запроса функционала писать ему.\n\n' +
-        'Небольшая статья, как настроить бота: https://vk.com/@mgke_slave-ispolzovanie-bota\n\n' +
-        'Статья для преподавателей: https://vk.com/@mgke_slave-ispolzovanie-bota?anchor=dlya-uchiteley\n\n' +
+        `${globalLinks}\n\n` +
         'Отключить/включить кнопку "О боте" можно в настройках.',
 
     'viber.message.about': 'Бот был создан Алексеем Костюком из группы 63ТП. Для сообщения о багах или запроса функционала писать ему в вк: https://vk.com/keller18306.\n\n' +
-        'Небольшая статья, как настроить бота: https://vk.com/@mgke_slave-ispolzovanie-bota\n\n' +
-        'Статья для преподавателей: https://vk.com/@mgke_slave-ispolzovanie-bota?anchor=dlya-uchiteley\n\n' +
+        `${globalLinks}\n\n` +
         'Отключить/включить кнопку "О боте" можно в настройках.',
 
     'tg.message.about': 'Бот был создан Алексеем Костюком из группы 63ТП. Для сообщения о багах или запроса функционала писать ему в вк: https://vk.com/keller18306.\n\n' +
-        'Небольшая статья, как настроить бота: https://vk.com/@mgke_slave-ispolzovanie-bota\n\n' +
-        'Статья для преподавателей: https://vk.com/@mgke_slave-ispolzovanie-bota?anchor=dlya-uchiteley\n\n' +
+        `${globalLinks}\n\n` +
         'Отключить/включить кнопку "О боте" можно в настройках.',
 
     'need.accept': 'У вас нет доступа, чтобы использовать бота.\n\n' +
         'Для получения доступа писать ему: [id290331922|Костюк Алексей]\n\n' +
         'Ключ, который нужно предоставить:\n%s',
 
-    'success.accept': 'Доступ был успешно получен.\n\n' +
-        'Небольшая статья, как настроить бота: https://vk.com/@mgke_slave-ispolzovanie-bota\n\n' +
-        'Статья для преподавателей: https://vk.com/@mgke_slave-ispolzovanie-bota?anchor=dlya-uchiteley',
+    'success.accept': `Доступ был успешно получен.\n\n${globalLinks}`,
 
     'not.accepted': 'Доступ ещё не был выдан.\n\n' +
         'Для получения доступа писать ему: [id290331922|Костюк Алексей]\n\n' +
