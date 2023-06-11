@@ -112,8 +112,6 @@ export class TgBot extends AbstractBot {
             service: 'tg',
             realContext: context,
             scheduleFormatter: createScheduleFormatter('tg', raspCache, chat)
-        }, {
-            isFromChat: context.isChannel() || context.isSupergroup() || context.isGroup()
         });
     }
 

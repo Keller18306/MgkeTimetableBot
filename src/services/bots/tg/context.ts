@@ -37,7 +37,7 @@ export class TgCommandContext extends AbstractCommandContext {
     }
 
     get isChat(): boolean {
-        return this.context.isGroup()
+        return this.context.isChannel() || this.context.isSupergroup() || this.context.isGroup();
     }
 
     public async send(text: string, options: MessageOptions = {}): Promise<string> {

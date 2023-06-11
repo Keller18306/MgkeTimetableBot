@@ -33,8 +33,8 @@ export abstract class AbstractBot {
 
     protected async handleMessage(cmd: DefaultCommand | null, handlerParams: HandlerParams, options: HandleMessageOptions = {}) {
         const { chat, context, keyboard } = handlerParams;
-        const { selfMention, isFromChat } = Object.assign({}, {
-            selfMention: true, isFromChat: false
+        const { selfMention } = Object.assign({}, {
+            selfMention: true
         }, options);
 
         if (!chat.allowSendMess) {
@@ -50,7 +50,7 @@ export abstract class AbstractBot {
         }
 
         if (!cmd) {
-            if (selfMention || !isFromChat) {
+            if (selfMention || !context.isChat) {
                 if (chat.accepted) {
                     return this.notFound(chat, context, keyboard.MainMenu, selfMention)
                 } else {
@@ -62,7 +62,7 @@ export abstract class AbstractBot {
         }
 
         if (cmd.acceptRequired && !chat.accepted) {
-            if (isFromChat && !selfMention) return;
+            if (context.isChat && !selfMention) return;
 
             return this.notAccepted(context)
         }
