@@ -30,20 +30,30 @@ export default async function updateGroups(rasp: RaspGroupCache) {
     //to do notice into chats, when has changes 
     const dump = Object.assign({}, rasp.timetable);
 
-    //append new data, and clear old
-    for (const group in data) {
-        if (!rasp.timetable[group]) {
-            for (const group in data) {
-                rasp.timetable[group] = data[group];
-            }
+    //append new data
+    for (const groupIndex in data) {
+        const newGroup = data[groupIndex];
+        const currentGroup = rasp.timetable[groupIndex];
+
+        if (!currentGroup) {
+            rasp.timetable[groupIndex] = data[groupIndex];
         } else {
-            const newDays = doCombine(data[group].days, rasp.timetable[group]?.days || []).filter((day) => {
-                const dayDate: number = strDateToNumber(day.day);
+            currentGroup.days = doCombine(newGroup.days, currentGroup.days || []);
+        }
+    }
 
-                return (dayDate >= todayDate || dayDate >= siteMinimalDate);
-            });
+    //clear old
+    for (const groupIndex in rasp.timetable) {
+        const group = rasp.timetable[groupIndex];
 
-            rasp.timetable[group].days = newDays;
+        group.days = group.days.filter((day) => {
+            const dayDate: number = strDateToNumber(day.day);
+
+            return (dayDate >= todayDate || dayDate >= siteMinimalDate);
+        });
+
+        if (group.days.length === 0) {
+            delete rasp.timetable[groupIndex];
         }
     }
 

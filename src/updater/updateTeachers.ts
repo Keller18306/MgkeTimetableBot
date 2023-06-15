@@ -29,20 +29,30 @@ export default async function updateTeachers(rasp: RaspTeacherCache) {
     //to do notice into chats, when has changes 
     const dump = Object.assign({}, rasp.timetable);
 
-    //append new data, and clear old
-    for (const teacher in data) {
-        if (!rasp.timetable[teacher]) {
-            for (const teacher in data) {
-                rasp.timetable[teacher] = data[teacher];
-            }
+    //append new data
+    for (const teacherIndex in data) {
+        const newTeacher = data[teacherIndex];
+        const currentTeacher = rasp.timetable[teacherIndex];
+
+        if (!currentTeacher) {
+            rasp.timetable[teacherIndex] = data[teacherIndex];
         } else {
-            const newDays = doCombine(data[teacher].days, rasp.timetable[teacher]?.days || []).filter((day) => {
-                const dayDate: number = strDateToNumber(day.day);
+            currentTeacher.days = doCombine(newTeacher.days, currentTeacher.days || []);
+        }
+    }
 
-                return (dayDate >= todayDate || dayDate >= siteMinimalDate);
-            });
+    //clear old
+    for (const teacherIndex in rasp.timetable) {
+        const teacher = rasp.timetable[teacherIndex];
 
-            rasp.timetable[teacher].days = newDays;
+        teacher.days = teacher.days.filter((day) => {
+            const dayDate: number = strDateToNumber(day.day);
+
+            return (dayDate >= todayDate || dayDate >= siteMinimalDate);
+        });
+
+        if (teacher.days.length === 0) {
+            delete rasp.timetable[teacherIndex];
         }
     }
 
