@@ -28,8 +28,14 @@ export default class TeacherParser extends AbstractParser {
     }
 
     protected parseTeacher(table: HTMLTableElement, h2: HTMLHeadingElement) {
-        const h2Line = h2.textContent?.trim();
-        const teacherName = h2Line?.split('-')[1].trim()
+        const label = h2.textContent?.trim();
+        if (!label) return;
+
+        if (!label.toLowerCase().startsWith('преподаватель')) {
+            throw new Error('Это раписание не для преподавателя')
+        }
+
+        const teacherName = label.split('-')[1].trim()
         if (teacherName == undefined) throw new Error('Невозможно получить имя преподавателя')
 
         const rows = Array.from(table.rows)

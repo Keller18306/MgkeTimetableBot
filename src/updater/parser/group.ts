@@ -45,7 +45,14 @@ export default class StudentParser extends AbstractParser {
     }
 
     protected parseGroup(table: HTMLTableElement, h2: HTMLHeadingElement) {
-        const group = h2.textContent?.split('-', 2)[1]?.trim();
+        const label: string | undefined = h2.textContent?.trim();
+        if (!label) return;
+
+        if (!label.toLowerCase().startsWith('группа')) {
+            throw new Error('Это раписание не для группы')
+        }
+
+        const group = label.split('-', 2)[1]?.trim();
         const groupNumber = this.parseGroupNumber(group);
         if (!group || !groupNumber) throw new Error('Невозможно получить номер группы')
 
