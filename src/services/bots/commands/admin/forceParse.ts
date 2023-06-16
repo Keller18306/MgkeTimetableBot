@@ -13,8 +13,10 @@ export default class extends DefaultCommand {
     };
 
     async handler({ context }: HandlerParams) {
-        Updater.getInstance().forceParse();
+        const clearKeys: boolean = context.text?.replace(this.regexp, '').trim() === 'true';
 
-        return context.send('Запущено')
+        Updater.getInstance().forceParse(clearKeys);
+
+        return context.send('Запущено');
     }
 }

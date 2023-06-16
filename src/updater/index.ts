@@ -1,10 +1,12 @@
+import { JSDOM } from "jsdom"
 import { config } from "../../config"
 import { clearOldImages } from "../services/image/clear"
+import { doCombine, getTodayDate, strDateToNumber } from "../utils"
 import { EventController } from "./events/controller"
 import { NextDayUpdater } from "./nextDay"
-import { loadCache, raspCache, saveCache } from "./raspCache"
-import updateGroups from "./updateGroups"
-import updateTeachers from "./updateTeachers"
+import StudentParser from "./parser/group"
+import TeacherParser from "./parser/teacher"
+import { RaspGroupCache, RaspTeacherCache, loadCache, raspCache, saveCache } from "./raspCache"
 
 const MAX_LOG_LIMIT: number = 10;
 const LOG_COUNT_SEND: number = 3;
@@ -47,6 +49,7 @@ export class Updater {
 
     private logs: { date: Date, result: string | Error }[] = [];
     private delayPromise?: Delay;
+    private clearKeys: boolean = false;
 
     public getLogs() {
         return this.logs.slice();
@@ -101,37 +104,9 @@ export class Updater {
         return errorsCount === need;
     }
 
-    public forceParse() {
+    public forceParse(clearKeys: boolean = false) {
+        this.clearKeys = clearKeys;
         this.delayPromise?.resolve();
-    }
-
-    private async run() {
-        while (true) {
-            await this.runParse()
-        }
-    }
-
-    private async runParse() {
-        let error: boolean = false;
-
-        try {
-            const ms = await this.update();
-
-            raspCache.successUpdate = true
-
-            this.log(`success: ${ms}ms`)
-        } catch (e: any) {
-            raspCache.successUpdate = false
-            error = true;
-
-            console.error('update error', e)
-            this.log(e)
-        }
-
-        this.removeOldLogs()
-
-        this.delayPromise = this.getDelayTime(error);
-        await this.delayPromise.promise;
     }
 
     private getDelayTime(error: boolean = false): Delay {
@@ -208,6 +183,36 @@ export class Updater {
         }
     }
 
+    private async run() {
+        while (true) {
+            await this.runParse()
+        }
+    }
+
+    private async runParse() {
+        let error: boolean = false;
+
+        try {
+            const ms = await this.update();
+
+            raspCache.successUpdate = true
+
+            this.log(`success: ${ms}ms`)
+        } catch (e: any) {
+            raspCache.successUpdate = false
+            error = true;
+
+            console.error('update error', e)
+            this.log(e)
+        }
+
+        this.clearKeys = false;
+        this.removeOldLogs();
+
+        this.delayPromise = this.getDelayTime(error);
+        await this.delayPromise.promise;
+    }
+
     private async update() {
         return new Promise<number>(async (resolve, reject) => {
             const timeout = setTimeout(reject, 60e3)
@@ -238,14 +243,22 @@ export class Updater {
     }
 
     private async parse(): Promise<boolean[]> {
-        const callStack: [(...args: any) => Promise<boolean>, any[]][] = [
-            [updateGroups, [raspCache.groups]],
-            [updateTeachers, [raspCache.teachers]]
-        ]
+        const PARSER_ACTIONS = [
+            {
+                parser: StudentParser,
+                url: encodeURI('https://mgkct.minskedu.gov.by/персоналии/учащимся/расписание-занятий-на-неделю'),
+                cache: raspCache.groups
+            },
+            {
+                parser: TeacherParser,
+                url: encodeURI('https://mgkct.minskedu.gov.by/персоналии/преподавателям/расписание-занятий-на-неделю'),
+                cache: raspCache.teachers
+            }
+        ];
 
-        const promises: Promise<boolean>[] = []
-        for (const [func, args] of callStack) {
-            const result: Promise<boolean> = func.call(null, ...args)
+        const promises: Promise<boolean>[] = [];
+        for (const action of PARSER_ACTIONS) {
+            const result: Promise<boolean> = this.processParse(action.parser, action.url, action.cache);
             promises.push(result)
 
             if (config.parseSyncMode) {
@@ -255,7 +268,73 @@ export class Updater {
 
         return Promise.all(promises);
     }
+
+    private async processParse(Parser: typeof TeacherParser | typeof StudentParser, url: string, cache: RaspGroupCache | RaspTeacherCache) {
+        const todayDate: number = getTodayDate();
+
+        //console.log('[Parser - Groups] Start parsing')
+        const jsdom = await JSDOM.fromURL(url, {
+            userAgent: 'MGKE bot by Keller'
+        });
+
+        const parser = new Parser(jsdom.window);
+
+        const data = await parser.run();
+        if (Object.keys(data).length == 0) return false;
+
+        const siteMinimalDate: number = Math.min(...Object.entries(data).reduce<number[]>((bounds: number[], [, entry]): number[] => {
+            for (const day of entry.days) {
+                const date: number = strDateToNumber(day.day);
+                if (bounds.includes(date)) continue;
+
+                bounds.push(date);
+            }
+
+            return bounds;
+        }, []));
+
+        //to do notice into chats, when has changes 
+        //const dump = Object.assign({}, rasp.timetable);
+
+        //append new data
+        for (const index in data) {
+            const newEntry = data[index];
+            const currentEntry = cache.timetable[index];
+
+            if (!currentEntry) {
+                cache.timetable[index] = data[index];
+            } else {
+                currentEntry.days = doCombine(newEntry.days as any, currentEntry.days as any || []) as any;
+            }
+        }
+
+        //clear old
+        for (const index in cache.timetable) {
+            const entry = cache.timetable[index];
+
+            entry.days = (entry.days as any).filter((day: any) => {
+                const dayDate: number = strDateToNumber(day.day);
+
+                return (dayDate >= todayDate || dayDate >= siteMinimalDate);
+            }) as any;
+
+            if (entry.days.length === 0) {
+                delete cache.timetable[index];
+            }
+        }
+
+        if (this.clearKeys) {
+            for (const index in cache.timetable) {
+                if (!data[index]) {
+                    delete cache.timetable[index];
+                }
+            }
+        }
+
+        cache.update = Date.now();
+
+        return true;
+    }
 }
 
 export { raspCache }
-

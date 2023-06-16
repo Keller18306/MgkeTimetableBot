@@ -13,7 +13,7 @@ export default class extends DefaultCommand {
     };
 
     async handler({ context, chat }: HandlerParams) {
-        const message = context.text?.replace(this.regexp, '').trim()
+        const message = context.text?.replace(this.regexp, '').trim();
         if (!message) return context.send('Сообщение не введено');
 
         await EventController.sendDistibution(message);
