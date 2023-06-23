@@ -48,6 +48,8 @@ export default class extends DefaultCommand {
             showHeader: true
         })
 
-        return context.send(message);
+        return context.send(message, {
+            keyboard: keyboard.GenerateImage('teacher', teacher)
+        });
     }
 }

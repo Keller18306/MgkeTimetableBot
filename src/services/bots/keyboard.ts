@@ -162,7 +162,7 @@ export class Keyboard {
 
             keyboard.add({
                 text: Formatter.label+(selected ? ' (выбран)' : ''),
-                color: noYesColor(selected)
+                color: selected ? KeyboardColor.POSITIVE_COLOR : KeyboardColor.PRIMARY_COLOR
             });
 
             if (+i + 1 % 2 === 0) keyboard.row();
@@ -183,7 +183,10 @@ export class Keyboard {
         for (const group of this.chat.groupSearchHistory) {
             keyboard.add({
                 text: group,
-                payload: `answer:${group}`
+                payload: {
+                    action: 'answer',
+                    answer: group
+                }
             });
         }
 
@@ -196,7 +199,10 @@ export class Keyboard {
         for (const teacher of this.chat.teacherSearchHistory) {
             keyboard.add({
                 text: teacher,
-                payload: `answer:${teacher}`
+                payload: {
+                    action: 'answer',
+                    answer: teacher
+                }
             })
         }
 
@@ -209,11 +215,30 @@ export class Keyboard {
         for (const value of values) {
             keyboard.add({
                 text: value,
-                payload: `answer:${value}`
+                payload: {
+                    action: 'answer',
+                    answer: value
+                }
             }).row()
         }
 
         return keyboard;
+    }
+
+    public GenerateImage(type: string, value: string): KeyboardBuilder | undefined {
+        if (this.chat.service !== 'tg') return;
+
+        const keyboard: KeyboardBuilder = new KeyboardBuilder('GenerateImage', true);
+
+        return keyboard.add({
+            text: '📷 Сгенерировать изображение',
+            payload: {
+                action: 'image',
+                type: type,
+                value: value
+            },
+            color: KeyboardColor.PRIMARY_COLOR
+        });
     }
 }
 

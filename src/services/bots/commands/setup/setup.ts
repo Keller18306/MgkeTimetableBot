@@ -13,7 +13,7 @@ export default class extends DefaultCommand {
     };
 
     handler({ context, chat }: HandlerParams) {
-        if (chat.isChat) return context.send('Недоступно в беседе');
+        //if (chat.isChat) return context.send('Недоступно в беседе');
 
         chat.scene = 'setup';
 

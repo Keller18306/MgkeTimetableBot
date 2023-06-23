@@ -1,10 +1,11 @@
 import { NextMiddleware } from 'middleware-io';
-import { APIError, CallbackQueryContext, ChatMemberContext, MessageContext, Telegram } from 'puregram';
+import { APIError, CallbackQueryContext, ChatMemberContext, MediaInput, MediaSourceType, MessageContext, PhotoAttachment, Telegram } from 'puregram';
 import StatusCode from 'status-code-enum';
 import { config } from '../../../../config';
 import { FromType, InputRequestKey } from '../../../key';
 import { raspCache } from '../../../updater';
 import { createScheduleFormatter } from '../../../utils';
+import { ImageBuilder, ImageFile } from '../../image/builder';
 import { AbstractBot, AbstractCommandContext, DefaultCommand } from '../abstract';
 import { CommandController } from '../command';
 import { Keyboard } from '../keyboard';
@@ -126,14 +127,83 @@ export class TgBot extends AbstractBot {
     private async callbackHandler(context: CallbackQueryContext, next: NextMiddleware) {
         if (context.from?.isBot()) return next();
 
-        let payload: string | undefined = context.queryPayload as any;
+        let payload: any = context.queryPayload;
         if (!payload || !context.message) {
             return;
         }
 
         const chat = new TgChat(context.from.id);
+        
+        //todo rewrite to abstract for all services
+        if (typeof payload === 'object') {
+            switch (payload.action) {
+                case 'answer':
+                    const answer: string = payload.answer;
+                    if (!answer) return;
 
-        if (payload === 'cancel') {
+                    await context.answerCallbackQuery({
+                        text: `Выбрано: "${answer}"`
+                    }).catch(() => { });
+
+                    if (chat.accepted && this.input.has(String(context.message.chatId))) {
+                        this.input.resolve(String(context.message.chatId), answer);
+
+                        await context.message.delete().catch(() => { });
+                    }
+
+                    return;
+                
+                case 'image':
+                    const type: string = payload.type;
+                    const value: string = payload.value;
+                    if (!type || !value) return;
+
+                    let image: ImageFile | undefined;
+                    if (type === 'group') {
+                        const rasp = raspCache.groups.timetable[value];
+                        if (!rasp) return;
+
+                        image = await ImageBuilder.getGroupImage(rasp);
+                    } else if (type === 'teacher') {
+                        const rasp = raspCache.teachers.timetable[value];
+                        if (!rasp) return;
+
+                        image = await ImageBuilder.getTeacherImage(rasp);
+                    }
+
+                    if (!image) return;
+
+                    let fileId = this.cache.get(image.id);
+
+                    let photo: MediaInput;
+                    if (fileId) {
+                        photo = {
+                            type: MediaSourceType.FileId,
+                            value: fileId
+                        }
+                    } else {
+                        photo = {
+                            type: MediaSourceType.Buffer,
+                            value: await image.data()
+                        }
+                    }
+
+                    const result: MessageContext = await context.message.sendPhoto(photo, {
+                        reply_to_message_id: context.message.id
+                    });
+
+                    const attachment = result.attachment;
+                    if (!fileId && attachment instanceof PhotoAttachment) {
+                        fileId = attachment.bigSize.fileId;
+
+                        this.cache.add(image.id, fileId);
+                    }
+
+                    return context.answerCallbackQuery({
+                        text: 'Изображение было отправлено'
+                    }).catch(() => {});
+            }
+        } else if (payload === 'cancel') {
             this.input.cancel(String(context.message.chatId));
             chat.scene = null;
 
@@ -145,22 +215,6 @@ export class TgBot extends AbstractBot {
             }).catch(() => { });
 
             await context.message.delete().catch(() => { });
-
-            return;
-        }
-        
-        if (payload.startsWith('answer:')) {
-            const text: string = payload.replace(/answer:/i, '');
-
-            await context.answerCallbackQuery({
-                text: `Выбрано: "${text}"`
-            }).catch(() => { });
-
-            if (chat.accepted && this.input.has(String(context.message.chatId))) {
-                this.input.resolve(String(context.message.chatId), text);
-
-                await context.message.delete().catch(() => { });
-            }
 
             return;
         }

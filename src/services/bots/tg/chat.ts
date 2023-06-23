@@ -1,7 +1,7 @@
 import { Chat, User } from "puregram";
 import { config } from "../../../../config";
 import db from "../../../db";
-import { AbstractChat, DbChat } from "../abstract";
+import { AbstractChat, DbChat, Service } from "../abstract";
 
 export type TgDb = DbChat & {
     /** Юзернейм */
@@ -21,7 +21,7 @@ class TgChat extends AbstractChat {
     public peerId: number;
 
     public db_table: string = 'tg_bot_chats';
-    protected service: string = 'tg';
+    public readonly service: Service = 'tg';
     protected columns: string[] = [
         'domain', 'firstName', 'lastName', 'lang'
     ];
@@ -68,3 +68,4 @@ class TgChat extends AbstractChat {
 interface TgChat extends TgDb { };
 
 export { TgChat };
+

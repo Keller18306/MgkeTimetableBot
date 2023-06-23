@@ -13,7 +13,7 @@ export default class extends DefaultCommand {
     };
 
     handler({ context, chat, keyboard }: HandlerParams) {
-        if (context.isChat) return;
+        //if (context.isChat) return;
 
         if (chat.mode !== null) {
             context.cancelInput();

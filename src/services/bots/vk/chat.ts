@@ -1,5 +1,5 @@
 import { config } from "../../../../config";
-import { AbstractChat, DbChat } from "../abstract";
+import { AbstractChat, DbChat, Service } from "../abstract";
 
 export type VkDb = DbChat & {
     peerId: number; //переопределение как число
@@ -12,7 +12,7 @@ class VkChat extends AbstractChat {
     public peerId: number;
 
     public db_table: string = 'vk_bot_chats';
-    protected service: string = 'vk';
+    public readonly service: Service = 'vk';
     protected columns: string[] = [
         'allowVkAppAccept'
     ];

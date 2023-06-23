@@ -1,3 +1,4 @@
+import { Service } from ".";
 import { config } from "../../../../config";
 import db from "../../../db";
 import { addslashes, arrayUnique } from "../../../utils";
@@ -101,7 +102,7 @@ const SEARCH_HISTORY_LENGTH: number = 3;
 abstract class AbstractChat {
     public abstract peerId: number | string;
 
-    protected abstract service: string;
+    public abstract readonly service: Service;
     public abstract db_table: string;
     protected _cache: { [key: string]: any } = {};
     protected defaultAllowSendMess: boolean = true;
