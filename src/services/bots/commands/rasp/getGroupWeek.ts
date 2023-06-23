@@ -23,7 +23,7 @@ export default class extends DefaultCommand {
         if (group == '' || group == undefined || group.length > 3 || isNaN(+group)) {
             const randGroup = randArray(Object.keys(raspCache.groups.timetable))
 
-            group = await context.input(`Введите номер группы, которой хотите узнать расписание на день (например, ${randGroup})`, {
+            group = await context.input(`Введите номер группы, которой хотите узнать расписание на неделю (например, ${randGroup})`, {
                 keyboard: withCancelButton(keyboard.GroupHistory)
             });
         }
