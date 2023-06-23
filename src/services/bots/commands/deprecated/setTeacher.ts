@@ -46,8 +46,9 @@ export default class extends DefaultCommand {
 
         teacher = matched[0]
 
-        chat.teacher = teacher
-        chat.mode = 'teacher'
+        chat.teacher = teacher;
+        chat.mode = 'teacher';
+        chat.scene = null;
 
         return context.send(`Преподвателя этого чата был успешно изменен на '${teacher}'`, {
             keyboard: keyboard.MainMenu

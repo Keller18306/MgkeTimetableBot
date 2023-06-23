@@ -25,8 +25,9 @@ export default class extends DefaultCommand {
             return context.send('Данной учебной группы не существует')
         }
 
-        chat.group = Number(group)
-        chat.mode = 'student'
+        chat.group = Number(group);
+        chat.mode = 'student';
+        chat.scene = null;
 
         context.send(`Группа этого чата была успешно изменена на '${group}'`, {
             keyboard: keyboard.MainMenu
