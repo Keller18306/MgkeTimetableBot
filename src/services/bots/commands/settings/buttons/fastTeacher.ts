@@ -1,4 +1,4 @@
-import { DefaultCommand, HandlerParams } from "../../abstract";
+import { DefaultCommand, HandlerParams } from "../../../abstract";
 
 export default class extends DefaultCommand {
     public id = 'settings_showFastTeacher'
@@ -13,7 +13,7 @@ export default class extends DefaultCommand {
         return context.send(
             `Показывать кнопку "👩‍🏫 Преподаватель"? Установлено: '${chat.showFastTeacher ? 'да' : 'нет'}'`,
             {
-                keyboard: keyboard.Settings
+                keyboard: keyboard.SettingsButtons
             }
         )
     }

@@ -13,7 +13,7 @@ export default class extends DefaultCommand {
         return context.send(
             `Скрывать прошедшие дни? Установлено: '${chat.hidePastDays ? 'да' : 'нет'}'`,
             {
-                keyboard: keyboard.Settings
+                keyboard: keyboard.SettingsMain
             }
         )
     }

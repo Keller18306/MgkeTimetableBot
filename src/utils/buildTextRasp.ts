@@ -8,13 +8,22 @@ import { DefaultScheduleFormatter } from './formatters/default';
 import { VisualScheduleFormatter } from './formatters/visual';
 import { getIsSaturday, getTodayDate, nowInTime, strDateToNumber } from './time';
 
-export function createScheduleFormatter(service: Service, raspCache: RaspCache, chat ?: AbstractChat): ScheduleFormatter {
+export const SCHEDULE_FORMATTERS = [
+    DefaultScheduleFormatter, VisualScheduleFormatter
+];
+
+export function createScheduleFormatter(service: Service, raspCache: RaspCache, chat?: AbstractChat): ScheduleFormatter {
     if (!chat) {
         return new DefaultScheduleFormatter(service, raspCache, chat);
     }
 
-    //TODO
-    return new DefaultScheduleFormatter(service, raspCache, chat);
+    if (chat.scheduleFormatter > SCHEDULE_FORMATTERS.length - 1) {
+        chat.scheduleFormatter = 0;
+    }
+
+    const Formatter = SCHEDULE_FORMATTERS[chat.scheduleFormatter];
+    
+    return new Formatter(service, raspCache, chat);
 }
 
 export function removePastDays<T extends GroupDay | TeacherDay>(days: T[], processAutoskip: boolean = true): T[] {

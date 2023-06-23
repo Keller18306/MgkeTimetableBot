@@ -1,4 +1,13 @@
+import { SCHEDULE_FORMATTERS } from '../../utils';
 import { AbstractChat, AbstractCommandContext, KeyboardBuilder, KeyboardColor } from './abstract';
+
+function noYesSmile(value: number | boolean, text: string, smiles: [string, string] = ['✅', '🚫']): string {
+    return (value ? smiles[0] : smiles[1]) + ` ${text}`
+}
+
+function noYesColor(value: number | boolean) {
+    return value ? KeyboardColor.POSITIVE_COLOR : KeyboardColor.NEGATIVE_COLOR
+}
 
 export class Keyboard {
     private context?: AbstractCommandContext;
@@ -85,21 +94,38 @@ export class Keyboard {
         return keyboard
     }
 
-    public get Settings() {
+    public get SettingsMain() {
         const keyboard: KeyboardBuilder = new KeyboardBuilder('Settings');
-
-        function noYesSmile(value: number | boolean, text: string, smiles: [string, string] = ['✅', '🚫']): string {
-            return (value ? smiles[0] : smiles[1]) + ` ${text}`
-        }
-
-        function noYesColor(value: number | boolean) {
-            return value ? KeyboardColor.POSITIVE_COLOR : KeyboardColor.NEGATIVE_COLOR
-        }
-
+        
         return keyboard.add({
             text: '📚 Первоначальная настройка',
             color: KeyboardColor.PRIMARY_COLOR
         }).row().add({
+            text: '⌨️ Настройка кнопок'
+        }).row().add({
+            text: '📃 Настройка форматировщика'
+        }).row().add({
+            text: noYesSmile(this.chat.hidePastDays, 'Скрывать прошедшие дни'),
+            color: noYesColor(this.chat.hidePastDays)
+        }).row().add({
+            text: noYesSmile(this.chat.showParserTime, 'Время последней загрузки расписания'),
+            color: noYesColor(this.chat.showParserTime)
+        }).row().add({
+            text: noYesSmile(this.chat.noticeChanges, 'Оповещение о новых днях: ', ['🔈', '🔇']) + (this.chat.noticeChanges ? 'Да' : 'Нет'),
+            color: noYesColor(this.chat.noticeChanges)
+        }).row().add({
+            text: 'Показать текущие',
+            color: KeyboardColor.PRIMARY_COLOR
+        }).add({
+            text: 'Меню',
+            color: KeyboardColor.SECONDARY_COLOR
+        })
+    }
+
+    public get SettingsButtons() {
+        const keyboard: KeyboardBuilder = new KeyboardBuilder('Settings');
+
+        return keyboard.add({
             text: noYesSmile(this.chat.showDaily, 'Кнопка "📄 На день"'),
             color: noYesColor(this.chat.showDaily)
         }).add({
@@ -118,17 +144,33 @@ export class Keyboard {
             text: noYesSmile(this.chat.showFastTeacher, 'Кнопка "👩‍🏫 Преподаватель"'),
             color: noYesColor(this.chat.showFastTeacher)
         }).row().add({
-            text: noYesSmile(this.chat.hidePastDays, 'Скрывать прошедшие дни'),
-            color: noYesColor(this.chat.hidePastDays)
-        }).row().add({
-            text: noYesSmile(this.chat.showParserTime, 'Время последней загрузки расписания'),
-            color: noYesColor(this.chat.showParserTime)
-        }).row().add({
-            text: noYesSmile(this.chat.noticeChanges, 'Оповещение о новых днях: ', ['🔈', '🔇']) + (this.chat.noticeChanges ? 'Да' : 'Нет'),
-            color: noYesColor(this.chat.noticeChanges)
-        }).row().add({
-            text: 'Показать текущие',
-            color: KeyboardColor.PRIMARY_COLOR
+            text: 'Меню настроек',
+            color: KeyboardColor.SECONDARY_COLOR
+        }).add({
+            text: 'Меню',
+            color: KeyboardColor.SECONDARY_COLOR
+        })
+    }
+
+    public get SettingsFormatters() {
+        const keyboard: KeyboardBuilder = new KeyboardBuilder('Settings');
+
+        for (const i in SCHEDULE_FORMATTERS) {
+            const Formatter = SCHEDULE_FORMATTERS[i];
+
+            const selected: boolean = this.chat.scheduleFormatter === +i;
+
+            keyboard.add({
+                text: Formatter.label+(selected ? ' (выбран)' : ''),
+                color: noYesColor(selected)
+            });
+
+            if (+i + 1 % 2 === 0) keyboard.row();
+        }
+
+        return keyboard.row().add({
+            text: 'Меню настроек',
+            color: KeyboardColor.SECONDARY_COLOR
         }).add({
             text: 'Меню',
             color: KeyboardColor.SECONDARY_COLOR

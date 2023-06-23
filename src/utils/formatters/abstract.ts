@@ -36,7 +36,7 @@ export type GroupLessonOptions = {
 }
 
 export abstract class ScheduleFormatter {
-    public abstract readonly label: string;
+    public static readonly label: string;
 
     constructor(
         private service: Service,
@@ -45,6 +45,8 @@ export abstract class ScheduleFormatter {
     ) { }
 
     protected abstract formatGroupLesson(lesson: GroupLessonExplain, options: GroupLessonOptions): string;
+    protected abstract formatLessonHeader(header: string, mainLessons: string, withSubgroups: boolean): string;
+    protected abstract formatSubgroupLesson(value: string, currentIndex: number, lastIndex: number): string;
     protected abstract formatTeacherLesson(lesson: TeacherLessonExplain): string;
 
     protected abstract GroupHeader(group: string): string;
@@ -111,17 +113,15 @@ export abstract class ScheduleFormatter {
             const lesson = lessons[i]
             if (lesson == null) continue;
 
-            const cab: string[] = [
-                this.LessonHeader(+i)
-            ];
+            const lessonHeader = this.LessonHeader(+i);
 
             if (!lesson) {
-                text.push(cab.join(''));
+                text.push(lessonHeader);
                 continue;
             }
 
             const subs = Array.isArray(lesson) ? lesson : [lesson];
-            const isSubs = Array.isArray(lesson)
+            const withSubgroups = Array.isArray(lesson)
 
             const lessonsEqual: boolean = subs.every(_ => _.lesson === subs[0].lesson);
             const typeEqual: boolean = lessonsEqual && subs.every(_ => _.type === subs[0].type);
@@ -131,12 +131,12 @@ export abstract class ScheduleFormatter {
 
             const options: GroupLessonOptions = {
                 isMain: true,
-                showSubgroup: !isSubs,
-                showLesson: !isSubs || lessonsEqual,
-                showType: !isSubs || typeEqual,
-                showTeacher: !isSubs || teacherEqual,
-                showCabinet: !isSubs || cabinetEqual,
-                showComment: !isSubs || commentEqual,
+                showSubgroup: !withSubgroups,
+                showLesson: !withSubgroups || lessonsEqual,
+                showType: !withSubgroups || typeEqual,
+                showTeacher: !withSubgroups || teacherEqual,
+                showCabinet: !withSubgroups || cabinetEqual,
+                showComment: !withSubgroups || commentEqual,
             }
 
             const reversedOptions = Object.fromEntries(Object.entries(options).map(([key, value]) => {
@@ -144,33 +144,20 @@ export abstract class ScheduleFormatter {
             })) as GroupLessonOptions;
 
             const mainLessons = this.formatGroupLesson(subs[0], options)
-            if (mainLessons) {
-                cab.push(mainLessons);
-            }
+            text.push(this.formatLessonHeader(lessonHeader, mainLessons, withSubgroups))
 
-            text.push(cab.join(' '));
-
-            if (isSubs) {
+            if (withSubgroups) {
                 const lines: string[] = subs.map((lesson: GroupLessonExplain, i: number): string => {
-                    let line: string = this.formatGroupLesson(lesson, reversedOptions)
+                    const value: string = this.formatGroupLesson(lesson, reversedOptions)
 
-                    if (i === subs.length - 1) {
-                        line = '└── ' + line;
-                    } else {
-                        line = '├── ' + line;
-                    }
-                    // if (i > 0) {
-                    //     line = '\n' + line;
-                    // }
-
-                    return line;
+                    return this.formatSubgroupLesson(value, i, subs.length - 1);
                 });
 
                 text.push(lines.join('\n'));
             }
         }
 
-        return text.join('\n')
+        return text.join('\n').trim();
     }
 
     public formatTeacherLessons(lessons: TeacherLesson[]): string {
@@ -184,13 +171,13 @@ export abstract class ScheduleFormatter {
             const lesson = lessons[i]
             if (lesson == null) continue;
 
-            text.push([
-                this.LessonHeader(+i),
-                this.formatTeacherLesson(lesson)
-            ].join(''));
+            const header = this.LessonHeader(+i);
+            const mainLessons = this.formatTeacherLesson(lesson);
+
+            text.push(this.formatLessonHeader(header, mainLessons, false));
         }
 
-        return text.join('\n')
+        return text.join('\n').trim();
     }
 
     protected getDefaultFormatGroupOptions(options: InputFormatGroupOptions | undefined, group: string): FormatGroupOptions {

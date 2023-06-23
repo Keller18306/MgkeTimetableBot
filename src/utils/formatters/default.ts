@@ -2,7 +2,7 @@ import { GroupLessonExplain, TeacherLessonExplain } from "../../updater/parser/t
 import { GroupLessonOptions, ScheduleFormatter } from "./abstract";
 
 export class DefaultScheduleFormatter extends ScheduleFormatter {
-    public readonly label: string = '📝 Стуктурированный';
+    public static readonly label: string = '📝 Стуктурированный';
 
     protected formatGroupLesson(lesson: GroupLessonExplain, options: GroupLessonOptions): string {
         const line: string[] = [];
@@ -56,6 +56,28 @@ export class DefaultScheduleFormatter extends ScheduleFormatter {
         return line.join(' ');
     }
 
+    protected formatLessonHeader(header: string, mainLessons: string, withSubgroups: boolean): string {
+        const line: string[] = [
+            header
+        ];
+
+        if (mainLessons) {
+            line.push(mainLessons);
+        }
+
+        return line.join('');
+    }
+
+    protected formatSubgroupLesson(value: string, currentIndex: number, lastIndex: number): string {
+        if (currentIndex === lastIndex) {
+            value = '└── ' + value;
+        } else {
+            value = '├── ' + value;
+        }
+
+        return value
+    }
+
     protected GroupHeader(group: string): string {
         return `- Группа '${group}' -`;
     }
@@ -65,7 +87,7 @@ export class DefaultScheduleFormatter extends ScheduleFormatter {
     }
 
     protected DayHeader(day: string, weekday: string): string {
-        return `__ ${weekday}, ${day} __`;
+        return `__ ${this.b(weekday)}, ${day} __`;
     }
 
     protected LessonHeader(i: number): string {
@@ -101,7 +123,6 @@ export class DefaultScheduleFormatter extends ScheduleFormatter {
     }
 
     protected NoLessons(): string {
-        return 'Пар нет';
+        return this.i('Пар нет');
     }
-
 }

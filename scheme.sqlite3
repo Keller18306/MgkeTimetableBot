@@ -1,5 +1,5 @@
 --
--- Файл сгенерирован с помощью SQLiteStudio v3.4.4 в ср июнь 7 21:06:35 2023
+-- Файл сгенерирован с помощью SQLiteStudio v3.4.4 в пт июнь 16 18:43:52 2023
 --
 -- Использованная кодировка текста: System
 --
@@ -57,6 +57,7 @@ CREATE TABLE chat_options (
                                           DEFAULT "[]",
     historyTeacher           STRING       NOT NULL
                                           DEFAULT "[]",
+    scheduleFormatter        INTEGER      DEFAULT (0),
     eula                     BOOLEAN      DEFAULT (0),
     deactivateSecondaryCheck BOOLEAN      DEFAULT (0) 
 );

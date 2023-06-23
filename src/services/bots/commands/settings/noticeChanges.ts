@@ -13,7 +13,7 @@ export default class extends DefaultCommand {
         return context.send(
             `Оповещение о добавлении нового дня: ${chat.noticeChanges ? 'включено' : 'выключено'}`,
             {
-                keyboard: keyboard.Settings
+                keyboard: keyboard.SettingsMain
             }
         )
     }

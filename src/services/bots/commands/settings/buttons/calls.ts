@@ -1,4 +1,4 @@
-import { DefaultCommand, HandlerParams } from "../../abstract";
+import { DefaultCommand, HandlerParams } from "../../../abstract";
 
 export default class extends DefaultCommand {
     public id = 'settings_showCalls'
@@ -13,7 +13,7 @@ export default class extends DefaultCommand {
         return context.send(
             `Показывать кнопку "🕐 Звонки"? Установлено: '${chat.showCalls ? 'да' : 'нет'}'`,
             {
-                keyboard: keyboard.Settings
+                keyboard: keyboard.SettingsButtons
             }
         )
     }

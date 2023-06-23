@@ -8,6 +8,7 @@ export * from './combineRasp';
 export * from './error';
 export * from './natural';
 export * from './rand';
+export * from './regexp';
 export * from './sort';
 export * from './subjects';
 export * from './time';

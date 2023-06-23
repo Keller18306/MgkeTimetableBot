@@ -13,7 +13,7 @@ export default class extends DefaultCommand {
         return context.send(
             `Отображать в сообщении время последней загрузки расписания? Установлено: '${chat.showParserTime ? 'да' : 'нет'}'`,
             {
-                keyboard: keyboard.Settings
+                keyboard: keyboard.SettingsMain
             }
         )
     }

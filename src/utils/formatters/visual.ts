@@ -2,7 +2,7 @@ import { GroupLessonExplain, TeacherLessonExplain } from "../../updater/parser/t
 import { GroupLessonOptions, ScheduleFormatter } from "./abstract";
 
 export class VisualScheduleFormatter extends ScheduleFormatter {
-    public readonly label: string = '🌈 Визуальный';
+    public static readonly label: string = '🌈 Визуальный';
 
     protected formatGroupLesson(lesson: GroupLessonExplain, options: GroupLessonOptions): string {
         const line: string[] = [];
@@ -48,6 +48,29 @@ export class VisualScheduleFormatter extends ScheduleFormatter {
         return line.join('\n');
     }
 
+    protected formatLessonHeader(header: string, mainLessons: string, withSubgroups: boolean): string {
+        const line: string[] = [
+            header
+        ];
+
+        if (mainLessons) {
+            line.push(mainLessons);
+            if (withSubgroups) {
+                line.push('')
+            }
+        }
+
+        return line.join('\n');
+    }
+
+    protected formatSubgroupLesson(value: string, currentIndex: number, lastIndex: number): string {
+        if (currentIndex > 0) {
+            value = '\n' + value;
+        }
+
+        return value;
+    }
+
     protected GroupHeader(group: string): string {
         return `👩‍🎓 Группа '${group}'`;
     }
@@ -61,7 +84,7 @@ export class VisualScheduleFormatter extends ScheduleFormatter {
     }
 
     protected LessonHeader(i: number): string {
-        return `\n${this.getSmileNumber(i)} Пара:`;
+        return `\n${this.getSmileNumber(i + 1)} Пара:`;
     }
 
     protected Subgroup(subgroup: string): string {

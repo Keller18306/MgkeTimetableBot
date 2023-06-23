@@ -2,6 +2,14 @@ import { GroupLessonExplain, TeacherLessonExplain } from "../../updater/parser/t
 import { GroupLessonOptions, ScheduleFormatter } from "./abstract";
 
 export class LitolaxScheduleFormatter extends ScheduleFormatter {
+    public static readonly label: string = '💩 LitolaxStyle';
+
+    protected formatLessonHeader(header: string, mainLessons: string, withSubgroups: boolean): string {
+        throw new Error("Method not implemented.");
+    }
+    protected formatSubgroupLesson(value: string, currentIndex: number, lastIndex: number): string {
+        throw new Error("Method not implemented.");
+    }
     protected formatGroupLesson(lesson: GroupLessonExplain, options: GroupLessonOptions): string {
         throw new Error("Method not implemented.");
     }
@@ -44,9 +52,6 @@ export class LitolaxScheduleFormatter extends ScheduleFormatter {
     protected NoLessons(): string {
         throw new Error("Method not implemented.");
     }
-
-    public readonly label: string = '💩 LitolaxStyle';
-
 
     protected groupHeader(group: string): string {
         return `Группа: ${this.b(group)}`;
