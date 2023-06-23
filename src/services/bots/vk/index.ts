@@ -103,7 +103,7 @@ export class VkBot extends AbstractBot {
         if (context.isFromGroup) return next();
 
         const { text, selfMention } = this.parseMessage(context.text);
-        const _context = new VkCommandContext(context, this.input, this.cache);
+        const _context = new VkCommandContext(context, this.input, this.cache, text);
         const chat = new VkChat(context.peerId);
 
         if (chat.ref === null) {
@@ -116,7 +116,7 @@ export class VkBot extends AbstractBot {
 
         let cmd: DefaultCommand | null = null;
         if (_context.payload) {
-            cmd = CommandController.searchCommandByPayload(_context.payload.action, chat.scene)
+            cmd = CommandController.searchCommandByPayload(_context.payload.action || _context.payload, chat.scene)
         } else {
             cmd = CommandController.searchCommandByMessage(text, chat.scene)
         }

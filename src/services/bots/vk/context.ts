@@ -19,17 +19,17 @@ export class VkCommandContext extends AbstractCommandContext {
 
     private _isAdmin: boolean | undefined;
 
-    constructor(context: MessageContext<ContextDefaultState>, input: BotInput, cache: FileCache) {
+    constructor(context: MessageContext<ContextDefaultState>, input: BotInput, cache: FileCache, text?: string) {
         super(input)
         this.vk = VkBot.instance.vk
         this.context = context
         this.id = context.peerId.toString()
-        this.text = context.text || ''
+        this.text = text || context.text || ''
         this.cache = cache;
 
-        if (typeof context.messagePayload === 'object' && context.messagePayload.action != null) {
-            this.payload = context.messagePayload
-        }
+        //if (typeof context.messagePayload === 'object' && context.messagePayload.action != null) {
+        this.payload = context.messagePayload
+        //}
 
         this.peerId = context.peerId
         this.userId = context.senderId
