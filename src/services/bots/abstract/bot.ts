@@ -37,49 +37,58 @@ export abstract class AbstractBot {
             selfMention: true
         }, options);
 
-        if (!chat.allowSendMess) {
-            chat.allowSendMess = true
-        }
-        
-        if (chat.accepted && chat.needUpdateButtons) {
-            chat.needUpdateButtons = false;
-            chat.scene = null;
-            context.send('Клавиатура была принудительно пересоздана (обновлена)', {
-                keyboard: keyboard.MainMenu
-            });
-        }
-
-        if (!cmd) {
-            if (selfMention || !context.isChat) {
-                if (chat.accepted) {
-                    return this.notFound(chat, context, keyboard.MainMenu, selfMention)
-                } else {
-                    return this.notAccepted(context)
-                }
-            }
-
-            return;
-        }
-
-        if (cmd.acceptRequired && !chat.accepted) {
-            if (context.isChat && !selfMention) return;
-
-            return this.notAccepted(context)
-        }
-
-        chat.lastMsgTime = Date.now()
-
         try {
-            if (!cmd.preHandle(handlerParams)) {
-                return this.notFound(chat, context, keyboard.MainMenu, selfMention);
+            if (!chat.allowSendMess) {
+                chat.allowSendMess = true
             }
 
-            await cmd.handler(handlerParams)
-        } catch (err: any) {
-            if (err instanceof InputCancel) return;
-            console.error(cmd.id, context.peerId, err);
+            if (chat.accepted && !chat.eula) {
+                context.send(defines['eula']);
+                chat.eula = true;
+            }
+        
+            if (chat.accepted && chat.needUpdateButtons) {
+                chat.needUpdateButtons = false;
+                chat.scene = null;
+                context.send('Клавиатура была принудительно пересоздана (обновлена)', {
+                    keyboard: keyboard.MainMenu
+                });
+            }
 
-            this.handleMessageError(cmd, context, err)
+            if (!cmd) {
+                if (selfMention || !context.isChat) {
+                    if (chat.accepted) {
+                        return this.notFound(chat, context, keyboard.MainMenu, selfMention)
+                    } else {
+                        return this.notAccepted(context)
+                    }
+                }
+
+                return;
+            }
+
+            if (cmd.acceptRequired && !chat.accepted) {
+                if (context.isChat && !selfMention) return;
+
+                return this.notAccepted(context)
+            }
+
+            chat.lastMsgTime = Date.now()
+
+            try {
+                if (!cmd.preHandle(handlerParams)) {
+                    return this.notFound(chat, context, keyboard.MainMenu, selfMention);
+                }
+
+                await cmd.handler(handlerParams)
+            } catch (err: any) {
+                if (err instanceof InputCancel) return;
+                console.error(cmd.id, context.peerId, err);
+
+                this.handleMessageError(cmd, context, err)
+            }
+        } catch (err: any) {
+            console.error('sys send error', context.peerId, err);
         }
     }
 
