@@ -293,10 +293,10 @@ export class Updater {
             return bounds;
         }, []));
 
-        //to do notice into chats, when has changes 
+        //TODO сделать оповещения в чаты, когда изменения на день поступили
         //const dump = Object.assign({}, rasp.timetable);
 
-        //append new data
+        // добавление новых данных
         for (const index in data) {
             const newEntry = data[index];
             const currentEntry = cache.timetable[index];
@@ -308,7 +308,7 @@ export class Updater {
             }
         }
 
-        //clear old
+        // удаление старых данных
         for (const index in cache.timetable) {
             const entry = cache.timetable[index];
 

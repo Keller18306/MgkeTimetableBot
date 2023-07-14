@@ -75,7 +75,7 @@ export function getDayRasp<T extends GroupDay | TeacherDay>(days: T[], processAu
     return showDays;
 }
 
-export function getDayNext<T extends GroupDay | TeacherDay>(days: T[]): T | null {
+export function getNextDays<T extends GroupDay | TeacherDay>(days: T[]): T[] {
     const todayDate: number = getTodayDate();
 
     const dayIndex: number = days.findIndex(_ => {
@@ -83,10 +83,16 @@ export function getDayNext<T extends GroupDay | TeacherDay>(days: T[]): T | null
     });
 
     if (dayIndex === -1) {
-        return null;
+        return [];
     }
 
     const nextDays = days.slice(dayIndex);
 
-    return nextDays[0];
+    return nextDays;
+}
+
+export function getNextDay<T extends GroupDay | TeacherDay>(days: T[]): T | null {
+    const nextDays = getNextDays(days);
+
+    return nextDays[0] || null;
 }

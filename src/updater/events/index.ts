@@ -2,7 +2,7 @@ import { config } from "../../../config";
 import db from "../../db";
 import { DbChat } from "../../services/bots/abstract/chat";
 import { Service } from "../../services/bots/abstract/command";
-import { createScheduleFormatter, getDayNext, getTodayDate, prepareError, strDateToNumber } from "../../utils";
+import { createScheduleFormatter, getNextDays, getTodayDate, prepareError, strDateToNumber } from "../../utils";
 import { GroupDay, TeacherDay } from "../parser/types";
 import { raspCache } from "../raspCache";
 import { EventController } from "./controller";
@@ -85,8 +85,14 @@ export abstract class AbstractEventListener<T extends DbChat = DbChat> {
         for (const group in chatsKeyed) {
             const chats: T[] = chatsKeyed[group];
 
-            const day = getDayNext(raspCache.groups.timetable[group].days);
-            if (!day) continue;
+            const nextDays = getNextDays(raspCache.groups.timetable[group].days);
+            if (!nextDays.length) continue;
+
+            //если дальше всё расписание пустое, то больше не оповещаем
+            const isEmpty: boolean = nextDays.every(day => day.lessons.length === 0);
+            if (isEmpty) continue;
+
+            const day = nextDays[0];
 
             for (const chat of chats) {
                 const formatter = createScheduleFormatter(this.service, raspCache);
@@ -170,8 +176,14 @@ export abstract class AbstractEventListener<T extends DbChat = DbChat> {
         for (const teacher in chatsKeyed) {
             const chats: T[] = chatsKeyed[teacher];
 
-            const day = getDayNext(raspCache.teachers.timetable[teacher].days);
-            if (!day) continue;
+            const nextDays = getNextDays(raspCache.teachers.timetable[teacher].days);
+            if (!nextDays.length) continue;
+
+            //если дальше всё расписание пустое, то больше не оповещаем
+            const isEmpty: boolean = nextDays.every(day => day.lessons.length === 0);
+            if (isEmpty) continue;
+
+            const day = nextDays[0];
 
             for (const chat of chats) {
                 const formatter = createScheduleFormatter(this.service, raspCache);
