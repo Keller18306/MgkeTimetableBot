@@ -2,7 +2,7 @@ import { config } from "../../../config";
 import db from "../../db";
 import { DbChat } from "../../services/bots/abstract/chat";
 import { Service } from "../../services/bots/abstract/command";
-import { createScheduleFormatter, getNextDays, getTodayDate, prepareError, strDateToNumber } from "../../utils";
+import { createScheduleFormatter, getNextDays, getTodayDate, prepareError, strDateToNumber, isNextWeek } from "../../utils";
 import { GroupDay, TeacherDay } from "../parser/types";
 import { raspCache } from "../raspCache";
 import { EventController } from "./controller";
@@ -93,12 +93,13 @@ export abstract class AbstractEventListener<T extends DbChat = DbChat> {
             if (isEmpty) continue;
 
             const day = nextDays[0];
+            const phrase: string = isNextWeek(day.day) ? 'следующую неделю' : 'следующий день';
 
             for (const chat of chats) {
                 const formatter = createScheduleFormatter(this.service, raspCache);
 
                 const message: string = [
-                    '📢 Расписание на следующий день\n',
+                    `📢 Расписание на ${phrase}\n`,
                     formatter.formatGroupFull(group, {
                         showHeader: false,
                         days: [day]
@@ -184,12 +185,13 @@ export abstract class AbstractEventListener<T extends DbChat = DbChat> {
             if (isEmpty) continue;
 
             const day = nextDays[0];
+            const phrase: string = isNextWeek(day.day) ? 'следующую неделю' : 'следующий день';
 
             for (const chat of chats) {
                 const formatter = createScheduleFormatter(this.service, raspCache);
 
                 const message: string = [
-                    '📢 Расписание на следующий день\n',
+                    `📢 Расписание на ${phrase}\n`,
                     formatter.formatTeacherFull(teacher, {
                         showHeader: false,
                         days: [day]

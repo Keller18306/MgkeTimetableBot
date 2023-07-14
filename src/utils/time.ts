@@ -38,15 +38,28 @@ export function formatTime(date: Date, microtime: boolean = false): string {
         (microtime ? `,${date.getMilliseconds().toString().padStart(3, '0')}` : '')
 }
 
+
 export function getTodayDate(): number {
     const date = new Date();
-
+    
     date.setHours(0, 0, 0, 0);
-
+    
     return date.getTime() / 1e3 / 1e2;
 }
 
-export function strDateToNumber(str_date: string): number {
+export function getTodayWeekNumber(): number {
+    const date = new Date();
+
+    const startingDate = new Date(1970, 0, 5)
+
+    const oneWeekMilliseconds = 7 * 24 * 60 * 60 * 1000;
+    const millisecondsElapsed = date.getTime() - startingDate.getTime();
+    const weekNumber = Math.floor(millisecondsElapsed / oneWeekMilliseconds);
+
+    return weekNumber;
+}
+
+export function parseStrToDate(str_date: string): Date {
     const date = new Date();
 
     const parts = str_date.split('.').map((value: string): number => {
@@ -57,7 +70,32 @@ export function strDateToNumber(str_date: string): number {
     date.setFullYear(...parts);
     date.setHours(0, 0, 0, 0);
 
+    return date;
+}
+    
+export function strDateToNumber(str_date: string): number {
+    const date = parseStrToDate(str_date);
+
     return date.getTime() / 1e3 / 1e2;
+}
+
+export function getStrWeekNumber(str_date: string): number {
+    const date = parseStrToDate(str_date);
+
+    const startingDate = new Date(1970, 0, 5)
+
+    const oneWeekMilliseconds = 7 * 24 * 60 * 60 * 1000;
+    const millisecondsElapsed = date.getTime() - startingDate.getTime();
+    const weekNumber = Math.floor(millisecondsElapsed / oneWeekMilliseconds);
+
+    return weekNumber;
+}
+
+export function isNextWeek(str_date: string): boolean {
+    const todayWeekNumber = getTodayWeekNumber();
+    const weekNumber = getStrWeekNumber(str_date);
+
+    return weekNumber > todayWeekNumber;
 }
 
 export function getIsSaturday(): boolean {
