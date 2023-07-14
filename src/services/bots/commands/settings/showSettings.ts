@@ -28,6 +28,8 @@ export default class extends DefaultCommand {
 
             '\n~~~ Системные (отладочная информация) ~~~',
             `Режим чата: ${chat.mode} (deactivateSecondaryCheck: ${chat.deactivateSecondaryCheck ? 'да' : 'нет'})`,
+            `Выбранная группа: ${chat.group || 'нет'}`,
+            `Выбранный учитель: ${chat.teacher || 'нет'}`,
             `ID последнего сообщения: ${chat.lastMsgId}`,
             `Время последенего сообщения: ${chat.lastMsgTime}`,
             `Разрешено ли отправлять боту сообщения: ${chat.allowSendMess ? 'да' : 'нет'}`,
