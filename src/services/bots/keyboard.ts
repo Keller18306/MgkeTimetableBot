@@ -117,7 +117,7 @@ export class Keyboard {
             text: 'Показать текущие',
             color: KeyboardColor.PRIMARY_COLOR
         }).add({
-            text: 'Меню',
+            text: 'Главное меню',
             color: KeyboardColor.SECONDARY_COLOR
         })
     }
@@ -147,7 +147,7 @@ export class Keyboard {
             text: 'Меню настроек',
             color: KeyboardColor.SECONDARY_COLOR
         }).add({
-            text: 'Меню',
+            text: 'Главное меню',
             color: KeyboardColor.SECONDARY_COLOR
         })
     }
@@ -172,7 +172,7 @@ export class Keyboard {
             text: 'Меню настроек',
             color: KeyboardColor.SECONDARY_COLOR
         }).add({
-            text: 'Меню',
+            text: 'Главное меню',
             color: KeyboardColor.SECONDARY_COLOR
         })
     }
