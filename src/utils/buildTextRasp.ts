@@ -35,7 +35,7 @@ export function removePastDays<T extends GroupDay | TeacherDay>(days: T[], proce
     });
 
     if (dayIndex === -1) {
-        throw new Error('nearest day not found')
+        return [];
     }
 
     const nextDays: T[] = days.slice(dayIndex);
@@ -65,6 +65,10 @@ export function removePastDays<T extends GroupDay | TeacherDay>(days: T[], proce
 export function getDayRasp<T extends GroupDay | TeacherDay>(days: T[], processAutoskip: boolean = true): T[] {
     const nextDays: T[] = removePastDays(days, processAutoskip);
     const showDays: T[] = [];
+
+    if (nextDays.length === 0) {
+        return [];
+    }
 
     showDays.push(nextDays[0]);
 

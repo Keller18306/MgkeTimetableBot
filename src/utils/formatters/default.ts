@@ -125,4 +125,8 @@ export class DefaultScheduleFormatter extends ScheduleFormatter {
     protected NoLessons(): string {
         return this.i('Пар нет');
     }
+
+    protected NoTimetable(): string {
+        return 'Нет расписания для отображения';
+    }
 }

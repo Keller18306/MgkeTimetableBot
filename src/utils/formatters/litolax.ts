@@ -3,7 +3,10 @@ import { GroupLessonOptions, ScheduleFormatter } from "./abstract";
 
 export class LitolaxScheduleFormatter extends ScheduleFormatter {
     public static readonly label: string = '💩 LitolaxStyle';
-
+    
+    protected NoTimetable(): string {
+        throw new Error("Method not implemented.");
+    }
     protected formatLessonHeader(header: string, mainLessons: string, withSubgroups: boolean): string {
         throw new Error("Method not implemented.");
     }

@@ -61,6 +61,7 @@ export abstract class ScheduleFormatter {
     protected abstract Cabinet(cabinet: string): string;
     protected abstract Comment(comment: string): string;
     protected abstract NoLessons(): string;
+    protected abstract NoTimetable(): string;
 
     public formatGroupFull(group: string, _options?: InputFormatGroupOptions): string {
         const options = this.getDefaultFormatGroupOptions(_options, group);
@@ -70,36 +71,44 @@ export abstract class ScheduleFormatter {
             text.push(this.GroupHeader(group))
         }
 
-        for (const day of options.days) {
-            text.push([
-                this.DayHeader(day.day, day.weekday),
-                this.formatGroupLessons(day.lessons)
-            ].join('\n'))
+        if (options.days.length > 0) {
+            for (const day of options.days) {
+                text.push([
+                    this.DayHeader(day.day, day.weekday),
+                    this.formatGroupLessons(day.lessons)
+                ].join('\n'));
+            }
+        } else {
+            text.push(this.NoTimetable());
         }
 
-        text.push(this.footer(this.raspCache.groups))
+        text.push(this.footer(this.raspCache.groups));
 
-        return text.join('\n\n')
+        return text.join('\n\n');
     }
 
     public formatTeacherFull(teacher: string, _options?: InputFormatTeacherOptions | undefined): string {
         const options = this.getDefaultFormatTeacherOptions(_options, teacher);
 
-        const text: string[] = []
+        const text: string[] = [];
         if (options.showHeader) {
-            text.push(this.TeacherHeader(teacher))
+            text.push(this.TeacherHeader(teacher));
         }
 
-        for (const day of options.days) {
-            text.push([
-                this.DayHeader(day.day, day.weekday),
-                this.formatTeacherLessons(day.lessons)
-            ].join('\n'))
+        if (options.days.length > 0) {
+            for (const day of options.days) {
+                text.push([
+                    this.DayHeader(day.day, day.weekday),
+                    this.formatTeacherLessons(day.lessons)
+                ].join('\n'));
+            }
+        } else {
+            text.push(this.NoTimetable());
         }
 
         text.push(this.footer(this.raspCache.teachers));
 
-        return text.join('\n\n')
+        return text.join('\n\n');
     }
 
     public formatGroupLessons(lessons: GroupLesson[]): string {
