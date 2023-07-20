@@ -1,6 +1,7 @@
 import { config } from "../../../../config";
 import db from "../../../db";
 import { ApiKey } from "../../../key";
+import { formatTime } from "../../../utils";
 import { KeyData } from "../../api/key";
 import { DefaultCommand, HandlerParams } from "../abstract";
 
@@ -8,41 +9,38 @@ const keyTool = new ApiKey(config.encrypt_key);
 
 export default class extends DefaultCommand {
     public id = 'api'
-    public regexp = /^(!|\/)api$/i
+    public regexp = /^(!|\/)api(_new)?$/i
     public payload = null;
 
     handler({ context, service }: HandlerParams) {
         if (context.isChat) return context.send('Команда недоступна в беседах')
 
-        const fromId: string = String(context.peerId);
-        let limit: string | undefined = String(2);
+        let limit: number = 2;
 
-        const _key: KeyData = db.prepare('SELECT * FROM `api` WHERE `service` = ? AND `fromId` = ?').get(service, fromId) as any;
-
-        let recreate: boolean;
-        let id: number
-        if (_key) {
-            recreate = true;
-            id = _key.id
-            limit = String(_key.limitPerSec)
-        } else {
-            recreate = false;
-
+        let key: KeyData | null = db.prepare('SELECT * FROM `api` WHERE `service` = ? AND `fromId` = ?').get(service, context.peerId) as any;
+        if (!key) {
             const res = db.prepare(
                 'INSERT INTO `api` (`service`, `fromId`, `limitPerSec`) VALUES (?, ?, ?)'
-            ).run(service, fromId, limit);
+            ).run(service, context.peerId, limit);
 
-            id = Number(res.lastInsertRowid)
+            key = db.prepare('SELECT * FROM `api` WHERE `id` = ?').get(res.lastInsertRowid) as KeyData;
+        } else {
+            limit = key.limitPerSec;
         }
 
-        const key = keyTool.createKey(id);
-
-        db.prepare('UPDATE `api` SET `iv` = ? WHERE `id` = ?').run(key.iv, id);
+        if (!key.iv || context.text.endsWith('_new')) {
+            key.iv = keyTool.createStringIV();
+            db.prepare('UPDATE `api` SET `iv` = ? WHERE `id` = ?').run(key.iv, key.id);
+        }
 
         return context.send([
-            `${recreate ? 'Новый ' : ''}API токен #${id} создан:`,
-            key.key,
-            '\nДокументация: https://vk.com/@mgke_slave-api'
+            `${context.text.endsWith('_new') ? 'Новый ' : ''}API токен #${key.id}:`,
+            keyTool.getKey(key.id, key.iv),
+            `Запросов в сек: ${key.limitPerSec}`,
+            `Последнее использование: ${key.last_time ? formatTime(new Date(key.last_time)) : 'нет'}`,
+
+            '\nДокументация: https://vk.com/@mgke_slave-api',
+            'Создать новый: /api_new'
         ].join('\n'));
     }
 }

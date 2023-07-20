@@ -164,7 +164,8 @@ export abstract class DefaultCommand {
 export type MessageOptions = {
     keyboard?: KeyboardBuilder,
     reply_to?: string,
-    disable_mentions?: boolean
+    disable_mentions?: boolean,
+    disable_intents?: boolean
 }
 
 export abstract class AbstractCommandContext {

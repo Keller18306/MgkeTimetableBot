@@ -12,7 +12,7 @@ export default class extends DefaultCommand {
     };
 
     handler({ context, chat, keyboard }: HandlerParams) {
-        context.send('Клавиатура показана', {
+        return context.send('Клавиатура показана', {
             keyboard: keyboard.MainMenu
         })
     }

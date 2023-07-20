@@ -111,6 +111,9 @@ export class Keyboard {
             text: noYesSmile(this.chat.showParserTime, 'Время последней загрузки расписания'),
             color: noYesColor(this.chat.showParserTime)
         }).row().add({
+            text: noYesSmile(this.chat.showHints, 'Показывать подсказки: ') + (this.chat.showHints ? 'Да' : 'Нет'),
+            color: noYesColor(this.chat.showHints),
+        }).row().add({
             text: noYesSmile(this.chat.noticeChanges, 'Оповещение о новых днях: ', ['🔈', '🔇']) + (this.chat.noticeChanges ? 'Да' : 'Нет'),
             color: noYesColor(this.chat.noticeChanges)
         }).row().add({

@@ -1,4 +1,3 @@
-import { TelegramBotCommand } from "puregram/generated";
 import { DefaultCommand, HandlerParams } from "../../abstract";
 
 export default class extends DefaultCommand {
@@ -8,7 +7,7 @@ export default class extends DefaultCommand {
     public payload = null;
     public scene = 'settings';
 
-    handler({ context, chat, keyboard }: HandlerParams) {
+    handler({ context, keyboard }: HandlerParams) {
         return context.send('Меню настройки форматировщика.', {
             keyboard: keyboard.SettingsFormatters
         });

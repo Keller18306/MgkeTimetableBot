@@ -87,7 +87,7 @@ export default class extends DefaultCommand {
             'Выходящий тип данных почему-то не равен number'
         )
 
-        context.send(`${result}`.substr(0, 4096))
+        return context.send(`${result}`.substring(0, 4096))
     }
 
     info(cmd: string) {

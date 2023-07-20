@@ -1,8 +1,10 @@
+import { hints } from "../../defines";
 import { AbstractChat } from "../../services/bots/abstract/chat";
 import { Service } from "../../services/bots/abstract/command";
 import { Updater } from "../../updater";
 import { GroupDay, GroupLesson, GroupLessonExplain, TeacherDay, TeacherLesson, TeacherLessonExplain } from "../../updater/parser/types";
 import { RaspCache, RaspGroupCache, RaspTeacherCache } from "../../updater/raspCache";
+import { randArray } from "../rand";
 import { formatSeconds } from "../time";
 
 export type InputFormatGroupOptions = {
@@ -212,6 +214,8 @@ export abstract class ScheduleFormatter {
 
         if (Updater.getInstance().isHasErrors()) {
             text.push('⚠️ В последний раз при получении расписания с сайта произошла ошибка. Есть вероятность, что расписание не актуальное. Если проблема не исчезнет - сообщите разработчику.')
+        } else if (this.chat && this.chat.showHints) {
+            text.push(`💬 Подсказка: ${randArray(hints)}`)
         }
 
         return text.join('\n\n')

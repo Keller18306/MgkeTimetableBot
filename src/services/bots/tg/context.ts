@@ -51,7 +51,10 @@ export class TgCommandContext extends AbstractCommandContext {
 
         const result: MessageContext = await this.context.send(text, {
             parse_mode: 'HTML',
-            reply_to_message_id: reply_to,
+            ...(reply_to ? {
+                allow_sending_without_reply: true,
+                reply_to_message_id: reply_to,
+            } : {}),
             disable_notification: options.disable_mentions,
             reply_markup: convertAbstractToTg(options.keyboard)
         });
