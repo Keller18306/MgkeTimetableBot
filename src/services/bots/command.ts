@@ -88,6 +88,10 @@ export class CommandController {
         }, [])
     }
 
+    public static reloadCommandById(id: string) {
+        this.instance.reloadCommand(id);
+    }
+
     constructor() {
         if (CommandController._instance) throw new Error('CommandController is singleton');
         CommandController._instance = this;
@@ -163,7 +167,9 @@ export class CommandController {
 
     public reloadCommand(id: string) {
         const cmd = this.commands[id];
-        if (!cmd) return;
+        if (!cmd) {
+            throw new Error(`command with id '${id}' not found`)
+        }
 
         this.unloadCommand(cmd);
         this.loadCommand(cmd.path);

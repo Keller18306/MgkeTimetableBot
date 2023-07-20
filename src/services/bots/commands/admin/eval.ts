@@ -35,7 +35,7 @@ export default class extends AbstractCommand {
                 global, clearInterval, clearTimeout, setInterval,
                 setTimeout, queueMicrotask, clearImmediate, setImmediate,
                 context, vk, fs, crypto, require, process, Buffer,
-                cmds, console, db, raspCache, chat
+                cmds, console, db, raspCache, chat, CommandController
             }, {
                 timeout: 10000
             })
