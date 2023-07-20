@@ -25,19 +25,18 @@ export class CommandController {
         return this._instance;
     }
 
-    public static getCommand(id: string): AbstractCommand {
-        const _this = this.instance;
+    public static getCommandById(id: string): AbstractCommand {
+        const cmd = this.instance.commands[id];
 
-        if (!_this.commands[id]) throw new Error(`Command with id '${id}' not found`);
+        if (!cmd) throw new Error(`Command with id '${id}' not found`);
 
-        return _this.commands[id].command;
+        return cmd.command;
     }
 
     public static searchCommandByMessage(message?: string, scene?: string | null): AbstractCommand | null {
         if (!message) return null
 
-        const _this = this.instance;
-        const cmds = _this.commands;
+        const cmds = this.instance.commands;
 
         for (const id in cmds) {
             const cmd = cmds[id].command;
@@ -57,8 +56,7 @@ export class CommandController {
     public static searchCommandByPayload(payload?: string, scene?: string | null): AbstractCommand | null {
         if (!payload) return null;
 
-        const _this = this.instance;
-        const cmds = _this.commands;
+        const cmds = this.instance.commands;
 
         for (const id in cmds) {
             const cmd = cmds[id].command;
@@ -78,7 +76,7 @@ export class CommandController {
             if (tgCommand && (!command.adminOnly || showAdminCommands)) {
                 tgCommand.command = tgCommand.command.toLowerCase();
                 if (command.adminOnly) {
-                    tgCommand.description = '[админ] ' + tgCommand.description;
+                    tgCommand.description = '[адм] ' + tgCommand.description;
                 }
                 
                 commands.push(tgCommand)
@@ -139,16 +137,15 @@ export class CommandController {
         if (cmdClass == undefined) return;
 
         const cmd: AbstractCommand = new cmdClass();
-        if (cmd.id == undefined) {
-            throw new Error(`there are no id for command: ${filePath}`);  ``
+        if (!(cmd instanceof AbstractCommand)) {
+            throw new Error(`incorrect command class: ${filePath}`);
         }
-
-        if (Object.keys(this.commands).includes(cmd.id)) {
-            throw new Error(`cmd id '${cmd.id}' is already registred`);
-        }
+        
+        const id = this.pathToId(filePath);
+        cmd.id = id;
 
         const value: CommandValue = {
-            id: cmd.id,
+            id: id,
             path: filePath,
             command: cmd
         };
@@ -157,7 +154,7 @@ export class CommandController {
         //     this.initCommandWatcher(value);
         // }
 
-        this.commands[cmd.id] = value;
+        this.commands[id] = value;
     }
 
     public unloadCommand(cmd: CommandValue) {
@@ -173,6 +170,14 @@ export class CommandController {
 
         this.unloadCommand(cmd);
         this.loadCommand(cmd.path);
+    }
+
+    private pathToId(filePath: string) {
+        return filePath
+            .replace(cmdsPath, '')
+            .replace(/^(\\|\/)/i, '')
+            .replace(/(\.(ts|js))$/i, '')
+            .replace(/\\|\//ig, '_');
     }
 
     // protected initCommandWatcher({ }: CommandValue) {

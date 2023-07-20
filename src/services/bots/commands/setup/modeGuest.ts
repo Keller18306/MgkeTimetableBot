@@ -2,8 +2,6 @@ import { defines } from "../../../../defines";
 import { AbstractCommand, HandlerParams } from "../../abstract";
 
 export default class extends AbstractCommand {
-    public id = 'modeGuest'
-
     public regexp = /^(👀\s)?Гость$/i
     public payload = null;
     public scene?: string | null = 'setup';

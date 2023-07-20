@@ -1,8 +1,6 @@
 import { AbstractCommand, HandlerParams } from "../../../abstract";
 
 export default class extends AbstractCommand {
-    public id = 'settings_noticeNextWeek'
-
     public regexp = /^(🔇|🔈)\sОповещение о новой недел(е|и)(\:\s(да|нет))?$/i
     public payload = null;
     public scene?: string | null = 'settings';

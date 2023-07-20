@@ -4,8 +4,6 @@ import { formatSeconds, sort } from "../../../../utils";
 import { AbstractCommand, HandlerParams } from "../../abstract";
 
 export default class extends AbstractCommand {
-    public id = 'get_teachers'
-
     public regexp = /^(!|\/)(get)?teachers$/i
     public payload = null;
     public tgCommand: TelegramBotCommand = {

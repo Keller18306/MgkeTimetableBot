@@ -6,8 +6,6 @@ import { AbstractCommand, HandlerParams } from "../../abstract";
 const acceptTool = new RequestKey(config.encrypt_key)
 
 export default class extends AbstractCommand {
-    public id = 'decrypt_key'
-
     public regexp = /^(!|\/)decrypt(key)?/i
     public payload = null;
 

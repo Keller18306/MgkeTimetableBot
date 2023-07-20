@@ -5,8 +5,6 @@ import { ImageBuilder, ImageFile } from "../../../image/builder";
 import { AbstractCommand, HandlerParams } from "../../abstract";
 
 export default class extends AbstractCommand {
-    public id = 'find_teacher_image';
-
     public regexp = /^(((!|\/)((get|find)?(teacherImage|imageTeacher)))|((Преподаватель|Учитель)(фотография|таблица)))(\b|$|\s)/i;
     public payload = null;
     public tgCommand: TelegramBotCommand = {

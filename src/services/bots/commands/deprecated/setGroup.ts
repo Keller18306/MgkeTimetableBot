@@ -3,8 +3,6 @@ import { randArray } from "../../../../utils";
 import { AbstractCommand, HandlerParams } from "../../abstract";
 
 export default class extends AbstractCommand {
-    public id = 'set_group'
-
     public regexp = /^\/setGroup/i
     public payload = null;
 

@@ -2,8 +2,6 @@ import db from "../../../../db";
 import { AbstractCommand, HandlerParams } from "../../abstract";
 
 export default class extends AbstractCommand {
-    public id = 'acceptBot'
-
     public regexp = /^(!|\/)acceptBot($|\s)/i
     public payload = null;
 

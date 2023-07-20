@@ -3,7 +3,6 @@ import { EventController } from '../../../../updater/events/controller';
 import { AbstractCommand, HandlerParams } from "../../abstract";
 
 export default class extends AbstractCommand {
-    public id = 'admin_send'
     public regexp = /^(!|\/)send/i
     public payload = null;
     public adminOnly: boolean = true;

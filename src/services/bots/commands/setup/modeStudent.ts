@@ -5,8 +5,6 @@ import { AbstractCommand, HandlerParams } from "../../abstract";
 import { StaticKeyboard } from "../../keyboard";
 
 export default class extends AbstractCommand {
-    public id = 'modeStudent'
-
     public regexp = /^((👩‍🎓\s)?(Ученик|Учащийся)|(👨‍👩‍👦\s)?Родитель)$/i
     public payload = null;
     public scene?: string | null = 'setup';

@@ -8,7 +8,6 @@ import { StaticKeyboard } from "../../keyboard";
 const acceptTool = new RequestKey(config.encrypt_key)
 
 export default class extends AbstractCommand {
-    public id = 'check_accept'
 
     public acceptRequired: boolean = false;
     public regexp = /^Проверить$/i

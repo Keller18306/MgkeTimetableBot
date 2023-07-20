@@ -3,7 +3,6 @@ import { AbstractCommand, HandlerParams } from "../../abstract";
 import { CommandController } from '../../command';
 
 export default class extends AbstractCommand {
-    public id = 'admin_reloadCmd'
     public regexp = /^(!|\/)reloadCmd/i
     public payload = null;
     public adminOnly: boolean = true;

@@ -1,8 +1,6 @@
 import { AbstractCommand, HandlerParams } from "../../abstract";
 
 export default class extends AbstractCommand {
-    public id = 'get_settings_formatter'
-
     public regexp = /^(📃\s)?(Настройка форматировщика|Форматировщик)$/i
     public payload = null;
     public scene = 'settings';

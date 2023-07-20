@@ -5,8 +5,6 @@ import { AbstractCommand, HandlerParams } from "../../abstract";
 import { withCancelButton } from "../../keyboard";
 
 export default class extends AbstractCommand {
-    public id = 'find_teacher_day';
-
     public regexp = /^(((!|\/)(get|find)?teacher(Day)?)|(👩‍🏫\s)?(Учитель|Преподаватель|Препод\.?)(\s?День)?)(\b|$|\s)/i;
     public payload = null;
     public tgCommand: TelegramBotCommand = {

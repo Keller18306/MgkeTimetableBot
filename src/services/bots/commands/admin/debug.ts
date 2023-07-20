@@ -25,8 +25,6 @@ setInterval(() => {
 //const { size: startBdSize } = fs.statSync('./sqlite3.db')
 
 export default class extends AbstractCommand {
-    public id = 'debug'
-
     public regexp = /^(!|\/)debug$/i
     public payload = null;
     public tgCommand: TelegramBotCommand = {

@@ -1,8 +1,6 @@
 import { AbstractCommand, HandlerParams } from "../../../abstract";
 
 export default class extends AbstractCommand {
-    public id = 'settings_showWeekly'
-
     public regexp = /^(✅|🚫)\sКнопка "(📑\s)?На неделю"$/i
     public payload = null;
     public scene?: string | null = 'settings';

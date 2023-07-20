@@ -3,7 +3,6 @@ import db from "../../../../db";
 import { AbstractCommand, HandlerParams } from "../../abstract";
 
 export default class extends AbstractCommand {
-    public id = 'requireNewButtons'
 
     public adminOnly: boolean = true;
     public regexp = /^(!|\/)requireNewButtons$/i

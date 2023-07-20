@@ -1,8 +1,6 @@
 import { AbstractCommand, HandlerParams } from "../../../abstract";
 
 export default class extends AbstractCommand {
-    public id = 'settings_showFastGroup'
-
     public regexp = /^(✅|🚫)\sКнопка "(👩‍🎓\s)?Группа"$/i
     public payload = null;
     public scene?: string | null = 'settings';

@@ -3,8 +3,6 @@ import { AbstractCommand, HandlerParams } from "../../abstract";
 import { StaticKeyboard } from "../../keyboard";
 
 export default class extends AbstractCommand {
-    public id = 'setup'
-
     public regexp = /^(!|\/)setup|(📚\s)?Первоначальная настройка$/i
     public payload = null;
     public tgCommand: TelegramBotCommand = {

@@ -1,8 +1,6 @@
 import { AbstractCommand, HandlerParams } from "../../abstract";
 
 export default class extends AbstractCommand {
-    public id = 'get_chat'
-
     public regexp = /^(!|\/)chat$/i
     public payload = null;
 

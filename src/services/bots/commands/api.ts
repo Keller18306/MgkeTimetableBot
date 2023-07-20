@@ -8,7 +8,6 @@ import { AbstractCommand, HandlerParams } from "../abstract";
 const keyTool = new ApiKey(config.encrypt_key);
 
 export default class extends AbstractCommand {
-    public id = 'api'
     public regexp = /^(!|\/)api(_new)?$/i
     public payload = null;
 

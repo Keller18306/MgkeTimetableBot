@@ -3,8 +3,6 @@ import { AbstractCommand, HandlerParams } from "../../abstract";
 //const activateTool = new ActivateKey(config.encrypt_key)
 
 export default class extends AbstractCommand {
-    public id = 'activate'
-
     public regexp = /^(!|\/)activate/i
     public payload = null;
 

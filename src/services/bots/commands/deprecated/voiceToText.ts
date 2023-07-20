@@ -1,8 +1,6 @@
 import { AbstractCommand, HandlerParams } from "../../abstract";
 
 export default class extends AbstractCommand {
-    public id = 'voiceToText'
-
     public regexp = /^(!|\/)(vtt?|voice(to)?text)$/i
     public payload = null;
 

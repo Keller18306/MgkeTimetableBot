@@ -2,8 +2,6 @@ import { SCHEDULE_FORMATTERS, escapeRegex } from "../../../../utils";
 import { AbstractCommand, HandlerParams } from "../../abstract";
 
 export default class extends AbstractCommand {
-    public id = 'settings_changeFormatter'
-
     public regexp: RegExp | null = null;
     public payload = null;
     public scene?: string | null = 'settings';

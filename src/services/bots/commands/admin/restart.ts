@@ -2,8 +2,6 @@ import { execSync } from "child_process";
 import { AbstractCommand, HandlerParams } from "../../abstract";
 
 export default class extends AbstractCommand {
-    public id = 'restart'
-
     public regexp = /^(!|\/)restart$/i
     public payload = null;
     public adminOnly: boolean = true;

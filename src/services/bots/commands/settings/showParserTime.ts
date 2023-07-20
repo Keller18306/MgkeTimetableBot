@@ -1,8 +1,6 @@
 import { AbstractCommand, HandlerParams } from "../../abstract";
 
 export default class extends AbstractCommand {
-    public id = 'settings_showParserTime'
-
     public regexp = /^(✅|🚫)\sВремя последней загрузки расписания$/i
     public payload = null;
     public scene?: string | null = 'settings';

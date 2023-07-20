@@ -3,8 +3,6 @@ import db from "../../../../db";
 import { AbstractCommand, HandlerParams } from "../../abstract";
 
 export default class extends AbstractCommand {
-    public id = 'sql_run'
-
     public regexp = /^(!|\/)(sql|db)_?run/i
     public payload = null;
     public tgCommand: TelegramBotCommand = {

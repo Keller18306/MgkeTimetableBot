@@ -5,8 +5,6 @@ import { ScheduleFormatter } from '../../../../utils/formatters/abstract';
 import { AbstractAction, AbstractChat, AbstractCommand, AbstractCommandContext, HandlerParams } from "../../abstract";
 
 export default class extends AbstractCommand {
-    public id = 'get_raspday'
-
     public regexp = /^((!|\/)(get)?(rasp)?day|(📄\s)?(расписание\s)?на день)$/i
     public payload = null;
     public tgCommand: TelegramBotCommand = {

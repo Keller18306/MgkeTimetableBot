@@ -7,8 +7,6 @@ import { AbstractAction, AbstractChat, AbstractCommand, AbstractCommandContext, 
 import { Keyboard } from '../../keyboard';
 
 export default class extends AbstractCommand {
-    public id = 'get_raspweek'
-
     public regexp = /^((!|\/)(get)?(rasp)?week|(📑\s)?(расписание\s)?на неделю)$/i
     public payload = null;
     public tgCommand: TelegramBotCommand = {

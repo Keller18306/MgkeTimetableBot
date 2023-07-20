@@ -3,8 +3,6 @@ import { defines } from "../../../../defines";
 import { AbstractCommand, HandlerParams } from "../../abstract";
 
 export default class extends AbstractCommand {
-    public id = 'about'
-
     public regexp = /^((!|\/)(get)?about|(💡\s)?О боте)$/i
     public payload = null;
     public tgCommand: TelegramBotCommand = {

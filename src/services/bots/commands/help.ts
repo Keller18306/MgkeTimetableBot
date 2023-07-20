@@ -3,8 +3,6 @@ import { AbstractCommand, HandlerParams } from "../abstract";
 import { CommandController } from "../command";
 
 export default class extends AbstractCommand {
-    public id = 'help'
-
     public regexp = /^(!|\/)help$/i
     public payload = null;
     public tgCommand: TelegramBotCommand | null = {

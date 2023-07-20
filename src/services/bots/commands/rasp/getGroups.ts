@@ -4,8 +4,6 @@ import { formatSeconds } from "../../../../utils";
 import { AbstractCommand, HandlerParams } from "../../abstract";
 
 export default class extends AbstractCommand {
-    public id = 'get_groups'
-
     public regexp = /^(!|\/)(get)?groups$/i
     public payload = null;
     public tgCommand: TelegramBotCommand = {

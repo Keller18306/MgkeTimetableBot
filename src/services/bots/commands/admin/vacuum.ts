@@ -5,7 +5,6 @@ import { formatBytes } from '../../../../utils';
 import { AbstractCommand, HandlerParams } from "../../abstract";
 
 export default class extends AbstractCommand {
-    public id = 'admin_vacuum'
     public regexp = /^(!|\/)vacuum/i
     public payload = null;
     public adminOnly: boolean = true;

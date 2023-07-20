@@ -2,8 +2,6 @@ import { TelegramBotCommand } from "puregram/generated";
 import { AbstractCommand, HandlerParams } from "../../abstract";
 
 export default class extends AbstractCommand {
-    public id = 'get_settings'
-
     public regexp = /^((!|\/)settings)|((⚙️\s)?Настройки|Меню настроек)$/i
     public payload = null;
     public tgCommand: TelegramBotCommand = {

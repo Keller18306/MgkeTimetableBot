@@ -1,8 +1,6 @@
 import { AbstractCommand, HandlerParams, Service } from "../../abstract";
 
 export default class extends AbstractCommand {
-    public id = 'settings_deleteLastMsg'
-
     public regexp = /^(!|\/)deleteLastMsg$/i
     public payload = null;
 

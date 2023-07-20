@@ -5,8 +5,6 @@ import { nowInTime } from "../../../../utils";
 import { AbstractCommand, HandlerParams } from "../../abstract";
 
 export default class extends AbstractCommand {
-    public id = 'get_calls'
-
     public regexp = /^((!|\/)(get)?(times|calls)|(🕐\s)?звонки)$/i
     public payload = null;
     public tgCommand: TelegramBotCommand = {

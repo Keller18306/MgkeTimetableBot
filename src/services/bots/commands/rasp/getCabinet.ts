@@ -4,8 +4,6 @@ import { TeacherLessonExplain } from "../../../../updater/parser/types";
 import { AbstractCommand, HandlerParams } from "../../abstract";
 
 export default class extends AbstractCommand {
-    public id = 'get_cabinet_info';
-
     public regexp = /^((!|\/)(get)?cabinet)(\b|$|\s)/i;
     public payload = null;
     public tgCommand: TelegramBotCommand = {

@@ -2,8 +2,6 @@ import { runInNewContext } from 'vm';
 import { AbstractCommand, HandlerParams } from '../abstract';
 
 export default class extends AbstractCommand {
-    public id = 'math'
-
     public regexp = /^(!|\/)math/i
     public payload = null;
 

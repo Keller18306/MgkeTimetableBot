@@ -12,7 +12,6 @@ const cmds = CommandController.instance.commands
 const vk = VkBot.instance.vk
 
 export default class extends AbstractCommand {
-    public id = 'eval'
     public regexp = /^(!|\/)eval/i
     public payload = null;
     public adminOnly: boolean = true;

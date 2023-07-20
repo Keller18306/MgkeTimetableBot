@@ -3,7 +3,6 @@ import { Updater } from '../../../../updater';
 import { AbstractCommand, HandlerParams } from "../../abstract";
 
 export default class extends AbstractCommand {
-    public id = 'admin_foce_parse'
     public regexp = /^(!|\/)force_?parse/i
     public payload = null;
     public adminOnly: boolean = true;
