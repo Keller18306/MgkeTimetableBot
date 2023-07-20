@@ -1,10 +1,10 @@
 import { TelegramBotCommand } from "puregram/generated";
 import { raspCache } from "../../../../updater";
 import { getDayRasp, randArray } from "../../../../utils";
-import { DefaultCommand, HandlerParams } from "../../abstract";
+import { AbstractCommand, HandlerParams } from "../../abstract";
 import { withCancelButton } from "../../keyboard";
 
-export default class extends DefaultCommand {
+export default class extends AbstractCommand {
     public id = 'get_day_by_group';
 
     public regexp = /^(((!|\/)(getDayByGroup|getGroupDay|(get)?group))|((👩‍🎓\s)?Группа(\s?День)?))(\b|$|\s)/i;

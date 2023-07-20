@@ -5,7 +5,7 @@ import { defines } from '../../../defines';
 import { FromType, InputRequestKey } from '../../../key/index';
 import { raspCache } from '../../../updater';
 import { createScheduleFormatter } from '../../../utils';
-import { AbstractBot, DefaultCommand } from '../abstract';
+import { AbstractBot, AbstractCommand } from '../abstract';
 import { CommandController } from '../command';
 import { Keyboard, StaticKeyboard } from '../keyboard';
 import { ViberAction } from './action';
@@ -89,7 +89,7 @@ export class ViberBot extends AbstractBot {
             return this.input.resolve(context.peerId, message.text);
         }
 
-        let cmd: DefaultCommand | null = null;
+        let cmd: AbstractCommand | null = null;
         if (context.payload) {
             cmd = CommandController.searchCommandByPayload(context.payload.action, chat.scene)
         } else {

@@ -1,12 +1,12 @@
 import { config } from "../../../../../config";
 import db from "../../../../db";
 import { FromType, RequestKey } from "../../../../key";
-import { DefaultCommand, HandlerParams, Service } from "../../abstract";
 import { UserData } from '../../../vk_app/user';
+import { AbstractCommand, HandlerParams, Service } from "../../abstract";
 
 const acceptTool = new RequestKey(config.encrypt_key)
 
-export default class extends DefaultCommand {
+export default class extends AbstractCommand {
     public id = 'acceptMe'
 
     public regexp = /^(!|\/)acceptMe($|\s)/i

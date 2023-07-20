@@ -2,9 +2,9 @@ import { TelegramBotCommand } from "puregram/generated";
 import { config } from "../../../../../config";
 import { raspCache } from "../../../../updater";
 import { nowInTime } from "../../../../utils";
-import { DefaultCommand, HandlerParams } from "../../abstract";
+import { AbstractCommand, HandlerParams } from "../../abstract";
 
-export default class extends DefaultCommand {
+export default class extends AbstractCommand {
     public id = 'get_calls'
 
     public regexp = /^((!|\/)(get)?(times|calls)|(🕐\s)?звонки)$/i

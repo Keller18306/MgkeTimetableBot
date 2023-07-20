@@ -1,6 +1,6 @@
-import { DefaultCommand, HandlerParams, Service } from "../../abstract";
+import { AbstractCommand, HandlerParams, Service } from "../../abstract";
 
-export default class extends DefaultCommand {
+export default class extends AbstractCommand {
     public id = 'settings_deleteUserMsg'
 
     public regexp = /^(!|\/)deleteUserMsg$/i

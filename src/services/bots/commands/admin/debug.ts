@@ -5,7 +5,7 @@ import { TelegramBotCommand } from 'puregram/generated';
 import { cpuTemperature } from 'systeminformation';
 import db from "../../../../db";
 import { formatBytes, formatSeconds } from "../../../../utils";
-import { DefaultCommand, HandlerParams } from "../../abstract";
+import { AbstractCommand, HandlerParams } from "../../abstract";
 
 let latestUsage = cpuUsage()
 let latestTime = Date.now()
@@ -24,7 +24,7 @@ setInterval(() => {
 
 //const { size: startBdSize } = fs.statSync('./sqlite3.db')
 
-export default class extends DefaultCommand {
+export default class extends AbstractCommand {
     public id = 'debug'
 
     public regexp = /^(!|\/)debug$/i

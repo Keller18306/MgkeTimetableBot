@@ -1,13 +1,13 @@
-import { readdirSync, statSync } from "fs";
+import { existsSync, readdirSync, statSync } from "fs";
 import path from "path";
 import { TelegramBotCommand } from "puregram/generated";
-import { DefaultCommand } from "./abstract";
+import { AbstractCommand } from "./abstract";
 
 const cmdsPath = path.join(__dirname, 'commands');
 type CommandValue = {
     id: string,
     path: string,
-    command: DefaultCommand
+    command: AbstractCommand
 }
 
 export class CommandController {
@@ -25,7 +25,7 @@ export class CommandController {
         return this._instance;
     }
 
-    public static getCommand(id: string): DefaultCommand {
+    public static getCommand(id: string): AbstractCommand {
         const _this = this.instance;
 
         if (!_this.commands[id]) throw new Error(`Command with id '${id}' not found`);
@@ -33,7 +33,7 @@ export class CommandController {
         return _this.commands[id].command;
     }
 
-    public static searchCommandByMessage(message?: string, scene?: string | null): DefaultCommand | null {
+    public static searchCommandByMessage(message?: string, scene?: string | null): AbstractCommand | null {
         if (!message) return null
 
         const _this = this.instance;
@@ -54,7 +54,7 @@ export class CommandController {
         return null;
     }
 
-    public static searchCommandByPayload(payload?: string, scene?: string | null): DefaultCommand | null {
+    public static searchCommandByPayload(payload?: string, scene?: string | null): AbstractCommand | null {
         if (!payload) return null;
 
         const _this = this.instance;
@@ -118,32 +118,55 @@ export class CommandController {
                 continue;
             }
 
-            if (!filePath.endsWith('.ts') && !filePath.endsWith('.js')) {
-                continue;
-            }
-
-            const { default: cmdClass } = require(filePath);
-            if (cmdClass == undefined) continue;
-
-            const cmd: DefaultCommand = new cmdClass();
-            if (cmd.id == undefined) continue;
-
-            if (Object.keys(this.commands).includes(cmd.id)) {
-                throw new Error(`cmd id '${cmd.id}' is already registred`);
-            }
-
-            const value: CommandValue = {
-                id: cmd.id,
-                path: filePath,
-                command: cmd
-            };
-
-            // if (config.dev) {
-            //     this.initCommandWatcher(value);
-            // }
-
-            this.commands[cmd.id] = value;
+            this.loadCommand(filePath)
         }
+    }
+
+    public loadCommand(filePath: string) {
+        if (!filePath.endsWith('.ts') && !filePath.endsWith('.js')) {
+            return;
+        }
+
+        if (!existsSync(filePath)) {
+            return;
+        }
+
+        const { default: cmdClass } = require(filePath);
+        if (cmdClass == undefined) return;
+
+        const cmd: AbstractCommand = new cmdClass();
+        if (cmd.id == undefined) {
+            throw new Error(`there are no id for command: ${filePath}`);  ``
+        }
+
+        if (Object.keys(this.commands).includes(cmd.id)) {
+            throw new Error(`cmd id '${cmd.id}' is already registred`);
+        }
+
+        const value: CommandValue = {
+            id: cmd.id,
+            path: filePath,
+            command: cmd
+        };
+
+        // if (config.dev) {
+        //     this.initCommandWatcher(value);
+        // }
+
+        this.commands[cmd.id] = value;
+    }
+
+    public unloadCommand(cmd: CommandValue) {
+        delete require.cache[cmd.path];
+        delete this.commands[cmd.id];
+    }
+
+    public reloadCommand(id: string) {
+        const cmd = this.commands[id];
+        if (!cmd) return;
+
+        this.unloadCommand(cmd);
+        this.loadCommand(cmd.path);
     }
 
     // protected initCommandWatcher({ }: CommandValue) {

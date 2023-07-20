@@ -1,10 +1,10 @@
 import { TelegramBotCommand } from "puregram/generated";
 import { raspCache } from "../../../../updater";
 import { randArray } from "../../../../utils";
-import { DefaultCommand, HandlerParams } from "../../abstract";
+import { AbstractCommand, HandlerParams } from "../../abstract";
 import { withCancelButton } from "../../keyboard";
 
-export default class extends DefaultCommand {
+export default class extends AbstractCommand {
     public id = 'find_teacher_week';
 
     public regexp = /^(((!|\/)(get|find)?teacherWeek)|(Учитель|Преподаватель|Препод\.?)\s?Неделя)(\b|$|\s)/i;

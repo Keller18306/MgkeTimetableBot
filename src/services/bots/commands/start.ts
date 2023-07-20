@@ -1,8 +1,8 @@
 import { TelegramBotCommand } from "puregram/generated";
-import { DefaultCommand, HandlerParams } from "../abstract";
+import { AbstractCommand, HandlerParams } from "../abstract";
 import { StaticKeyboard } from "../keyboard";
 
-export default class extends DefaultCommand {
+export default class extends AbstractCommand {
     public id = 'start'
 
     public regexp = /(^(!|\/)start)|^(Начать|Start|(Главное\s)?Меню)$/i

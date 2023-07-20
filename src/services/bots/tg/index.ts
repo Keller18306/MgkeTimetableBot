@@ -6,7 +6,7 @@ import { FromType, InputRequestKey } from '../../../key';
 import { raspCache } from '../../../updater';
 import { createScheduleFormatter } from '../../../utils';
 import { ImageBuilder, ImageFile } from '../../image/builder';
-import { AbstractBot, AbstractCommandContext, DefaultCommand } from '../abstract';
+import { AbstractBot, AbstractCommand, AbstractCommandContext } from '../abstract';
 import { CommandController } from '../command';
 import { Keyboard } from '../keyboard';
 import { TgBotAction } from './action';
@@ -98,7 +98,7 @@ export class TgBot extends AbstractBot {
             return this.input.resolve(String(context.chatId), text);
         }
 
-        let cmd: DefaultCommand | null = null;
+        let cmd: AbstractCommand | null = null;
         if (context.text === '/cancel') {
             cmd = CommandController.searchCommandByPayload('cancel', chat.scene)
         } else {
@@ -116,7 +116,7 @@ export class TgBot extends AbstractBot {
         });
     }
 
-    protected override handleMessageError(cmd: DefaultCommand, context: AbstractCommandContext, err: Error): void {
+    protected override handleMessageError(cmd: AbstractCommand, context: AbstractCommandContext, err: Error): void {
         if (err instanceof APIError && [StatusCode.ClientErrorTooManyRequests, StatusCode.ClientErrorForbidden].includes(err.code)) {
             return;
         }

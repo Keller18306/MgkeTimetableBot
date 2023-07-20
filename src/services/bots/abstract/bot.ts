@@ -6,7 +6,7 @@ import { BotInput, InputCancel } from "../input";
 import { StaticKeyboard } from "../keyboard";
 import { FileCache } from "./cache";
 import { AbstractChat } from "./chat";
-import { AbstractCommandContext, DefaultCommand, HandlerParams, Service } from "./command";
+import { AbstractCommand, AbstractCommandContext, HandlerParams, Service } from "./command";
 
 export type HandleMessageOptions = {
     /** Есть ли упоминание бота в сообщении (для ВК) */
@@ -31,7 +31,7 @@ export abstract class AbstractBot {
         this.cache = new FileCache(this.service);
     }
 
-    protected async handleMessage(cmd: DefaultCommand | null, handlerParams: HandlerParams, options: HandleMessageOptions = {}) {
+    protected async handleMessage(cmd: AbstractCommand | null, handlerParams: HandlerParams, options: HandleMessageOptions = {}) {
         const { chat, context, keyboard } = handlerParams;
         const { selfMention } = Object.assign({}, {
             selfMention: true
@@ -92,7 +92,7 @@ export abstract class AbstractBot {
         }
     }
 
-    protected handleMessageError(cmd: DefaultCommand, context: AbstractCommandContext, err: Error) {
+    protected handleMessageError(cmd: AbstractCommand, context: AbstractCommandContext, err: Error) {
         context.send(`Произошла ошибка во время выполнения Command #${cmd.id}: ${err.toString()}`).catch(() => { })
     }
 

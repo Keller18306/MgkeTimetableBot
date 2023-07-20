@@ -1,8 +1,8 @@
-import { DefaultCommand, HandlerParams } from "../../abstract";
-import { defines } from "../../../../defines";
 import { TelegramBotCommand } from "puregram/generated";
+import { defines } from "../../../../defines";
+import { AbstractCommand, HandlerParams } from "../../abstract";
 
-export default class extends DefaultCommand {
+export default class extends AbstractCommand {
     public id = 'about'
 
     public regexp = /^((!|\/)(get)?about|(💡\s)?О боте)$/i

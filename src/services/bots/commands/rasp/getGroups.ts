@@ -1,9 +1,9 @@
 import { TelegramBotCommand } from "puregram/generated";
 import { raspCache } from "../../../../updater";
 import { formatSeconds } from "../../../../utils";
-import { DefaultCommand, HandlerParams } from "../../abstract";
+import { AbstractCommand, HandlerParams } from "../../abstract";
 
-export default class extends DefaultCommand {
+export default class extends AbstractCommand {
     public id = 'get_groups'
 
     public regexp = /^(!|\/)(get)?groups$/i

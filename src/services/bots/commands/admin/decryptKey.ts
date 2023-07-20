@@ -1,11 +1,11 @@
 import { config } from "../../../../../config";
 import { RequestKey, appType } from "../../../../key";
 import { formatTime } from "../../../../utils";
-import { DefaultCommand, HandlerParams } from "../../abstract";
+import { AbstractCommand, HandlerParams } from "../../abstract";
 
 const acceptTool = new RequestKey(config.encrypt_key)
 
-export default class extends DefaultCommand {
+export default class extends AbstractCommand {
     public id = 'decrypt_key'
 
     public regexp = /^(!|\/)decrypt(key)?/i

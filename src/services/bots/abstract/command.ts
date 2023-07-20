@@ -6,14 +6,14 @@ import { ScheduleFormatter } from '../../../utils/formatters/abstract';
 import { ImageFile } from '../../image/builder';
 import { BotInput } from '../input';
 import { Keyboard, StaticKeyboard, withCancelButton } from '../keyboard';
-import { TgChat, TgDb } from '../tg/chat';
+import { TgChat } from '../tg/chat';
 import { TgCommandContext } from '../tg/context';
-import { ViberChat, ViberDb } from '../viber/chat';
+import { ViberChat } from '../viber/chat';
 import { ViberCommandContext, ViberContext } from '../viber/context';
-import { VkChat, VkDb } from '../vk/chat';
+import { VkChat } from '../vk/chat';
 import { VkCommandContext } from '../vk/context';
 import { AbstractAction } from './action';
-import { AbstractChat, DbChat } from './chat';
+import { AbstractChat } from './chat';
 import { KeyboardBuilder } from './keyboardBuilder';
 
 export type Service = 'tg' | 'vk' | 'viber';
@@ -43,7 +43,7 @@ export type HandlerParams = {
     chat: TgChat
 })
 
-export abstract class DefaultCommand {
+export abstract class AbstractCommand {
     public id?: string;
     public acceptRequired: boolean = true;
     public adminOnly: boolean = false;

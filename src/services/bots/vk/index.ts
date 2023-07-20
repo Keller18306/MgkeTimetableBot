@@ -7,7 +7,7 @@ import { defines } from '../../../defines';
 import { FromType, InputRequestKey } from '../../../key';
 import { raspCache } from '../../../updater';
 import { createScheduleFormatter } from '../../../utils';
-import { AbstractBot, DefaultCommand } from '../abstract';
+import { AbstractBot, AbstractCommand } from '../abstract';
 import { CommandController } from '../command';
 import { Keyboard } from '../keyboard';
 import { VkBotAction } from './action';
@@ -114,7 +114,7 @@ export class VkBot extends AbstractBot {
             return this.input.resolve(String(context.peerId), text);
         }
 
-        let cmd: DefaultCommand | null = null;
+        let cmd: AbstractCommand | null = null;
         if (_context.payload) {
             cmd = CommandController.searchCommandByPayload(_context.payload.action || _context.payload, chat.scene)
         } else {

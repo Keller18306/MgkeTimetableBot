@@ -1,10 +1,10 @@
 import { TelegramBotCommand } from "puregram/generated";
 import { raspCache } from "../../../../updater";
 import { randArray } from "../../../../utils";
-import { DefaultCommand, HandlerParams } from "../../abstract";
+import { AbstractCommand, HandlerParams } from "../../abstract";
 import { withCancelButton } from "../../keyboard";
 
-export default class extends DefaultCommand {
+export default class extends AbstractCommand {
     public id = 'get_week_by_group'
 
     public regexp = /^(((!|\/)(getWeekByGroup|(get)?GroupWeek))|(Группа\s?Неделя))/i

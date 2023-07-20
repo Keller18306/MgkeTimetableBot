@@ -1,6 +1,6 @@
-import { DefaultCommand } from "../../abstract";
+import { AbstractCommand } from "../../abstract";
 
-export default class extends DefaultCommand {
+export default class extends AbstractCommand {
     public id = 'error'
 
     public regexp = /^(!|\/)error$/i

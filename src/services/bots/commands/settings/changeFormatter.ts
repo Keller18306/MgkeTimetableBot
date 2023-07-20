@@ -1,7 +1,7 @@
 import { SCHEDULE_FORMATTERS, escapeRegex } from "../../../../utils";
-import { DefaultCommand, HandlerParams } from "../../abstract";
+import { AbstractCommand, HandlerParams } from "../../abstract";
 
-export default class extends DefaultCommand {
+export default class extends AbstractCommand {
     public id = 'settings_changeFormatter'
 
     public regexp: RegExp | null = null;

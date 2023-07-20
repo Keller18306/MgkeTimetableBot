@@ -1,17 +1,17 @@
 import * as crypto from 'crypto';
 import * as fs from 'fs';
+import { TelegramBotCommand } from 'puregram/generated';
 import { runInNewContext } from 'vm';
 import db from '../../../../db';
 import { raspCache } from "../../../../updater";
-import { DefaultCommand, HandlerParams } from "../../abstract";
+import { AbstractCommand, HandlerParams } from "../../abstract";
 import { CommandController } from "../../command";
 import { VkBot } from "../../vk";
-import { TelegramBotCommand } from 'puregram/generated';
 
 const cmds = CommandController.instance.commands
 const vk = VkBot.instance.vk
 
-export default class extends DefaultCommand {
+export default class extends AbstractCommand {
     public id = 'eval'
     public regexp = /^(!|\/)eval/i
     public payload = null;

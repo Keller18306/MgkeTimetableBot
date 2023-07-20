@@ -1,7 +1,7 @@
 import { NextDayUpdater } from "../../../../updater/nextDay";
-import { DefaultCommand, HandlerParams } from "../../abstract";
+import { AbstractCommand, HandlerParams } from "../../abstract";
 
-export default class extends DefaultCommand {
+export default class extends AbstractCommand {
     public id = 'trigger'
 
     public regexp = /^(!|\/)trigger/i

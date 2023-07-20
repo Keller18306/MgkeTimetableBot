@@ -1,6 +1,6 @@
-import { DefaultCommand, HandlerParams } from "../../abstract";
+import { AbstractCommand, HandlerParams } from "../../abstract";
 
-export default class extends DefaultCommand {
+export default class extends AbstractCommand {
     public id = 'get_settings_formatter'
 
     public regexp = /^(📃\s)?(Настройка форматировщика|Форматировщик)$/i

@@ -3,10 +3,10 @@ import { raspCache } from '../../../../updater';
 import { GroupDay, TeacherDay } from '../../../../updater/parser/types';
 import { randArray, removePastDays } from "../../../../utils";
 import { ScheduleFormatter } from '../../../../utils/formatters/abstract';
-import { AbstractAction, AbstractChat, AbstractCommandContext, DefaultCommand, HandlerParams } from "../../abstract";
+import { AbstractAction, AbstractChat, AbstractCommand, AbstractCommandContext, HandlerParams } from "../../abstract";
 import { Keyboard } from '../../keyboard';
 
-export default class extends DefaultCommand {
+export default class extends AbstractCommand {
     public id = 'get_raspweek'
 
     public regexp = /^((!|\/)(get)?(rasp)?week|(📑\s)?(расписание\s)?на неделю)$/i

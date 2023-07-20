@@ -1,7 +1,7 @@
 import { runInNewContext } from 'vm';
-import { DefaultCommand, HandlerParams } from '../abstract';
+import { AbstractCommand, HandlerParams } from '../abstract';
 
-export default class extends DefaultCommand {
+export default class extends AbstractCommand {
     public id = 'math'
 
     public regexp = /^(!|\/)math/i

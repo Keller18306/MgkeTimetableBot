@@ -2,9 +2,9 @@ import { TelegramBotCommand } from "puregram/generated";
 import { raspCache } from "../../../../updater";
 import { randArray } from "../../../../utils";
 import { ImageBuilder, ImageFile } from "../../../image/builder";
-import { DefaultCommand, HandlerParams } from "../../abstract";
+import { AbstractCommand, HandlerParams } from "../../abstract";
 
-export default class extends DefaultCommand {
+export default class extends AbstractCommand {
     public id = 'find_teacher_image';
 
     public regexp = /^(((!|\/)((get|find)?(teacherImage|imageTeacher)))|((Преподаватель|Учитель)(фотография|таблица)))(\b|$|\s)/i;

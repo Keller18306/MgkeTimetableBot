@@ -1,12 +1,12 @@
 import { config } from "../../../../../config";
 import db from "../../../../db";
 import { ApiKey } from "../../../../key";
-import { DefaultCommand, HandlerParams } from "../../abstract";
 import { KeyData } from "../../../api/key";
+import { AbstractCommand, HandlerParams } from "../../abstract";
 
 const keyTool = new ApiKey(config.encrypt_key);
 
-export default class extends DefaultCommand {
+export default class extends AbstractCommand {
     public id = 'createApiKey'
     public regexp = /^(!|\/)createApi(Key|Token)/i
     public payload = null;

@@ -1,6 +1,6 @@
-import { DefaultCommand, HandlerParams } from "../../../abstract";
+import { AbstractCommand, HandlerParams } from "../../../abstract";
 
-export default class extends DefaultCommand {
+export default class extends AbstractCommand {
     public id = 'settings_showCalls'
 
     public regexp = /^(✅|🚫)\sКнопка "(🕐\s)?Звонки"$/i

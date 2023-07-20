@@ -1,7 +1,7 @@
 import { TelegramBotCommand } from "puregram/generated";
-import { DefaultCommand, HandlerParams } from "../abstract";
+import { AbstractCommand, HandlerParams } from "../abstract";
 
-export default class extends DefaultCommand {
+export default class extends AbstractCommand {
     public id = 'get_buttons'
 
     public regexp = /^(!|\/)button(s)?$/i
