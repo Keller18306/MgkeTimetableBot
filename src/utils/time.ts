@@ -39,16 +39,20 @@ export function formatTime(date: Date, microtime: boolean = false): string {
 }
 
 
-export function getTodayDate(): number {
-    const date = new Date();
-    
+export function getDayIndex(date?: Date): number {
+    if (!date) {
+        date = new Date();
+    }
+
     date.setHours(0, 0, 0, 0);
     
     return date.getTime() / 1e3 / 1e2;
 }
 
-export function getTodayWeekNumber(): number {
-    const date = new Date();
+export function getWeekIndex(date?: Date): number {
+    if (!date) {
+        date = new Date();
+    }
 
     const startingDate = new Date(1970, 0, 5)
 
@@ -73,27 +77,21 @@ export function parseStrToDate(str_date: string): Date {
     return date;
 }
     
-export function strDateToNumber(str_date: string): number {
+export function strDateToIndex(str_date: string): number {
     const date = parseStrToDate(str_date);
 
     return date.getTime() / 1e3 / 1e2;
 }
 
-export function getStrWeekNumber(str_date: string): number {
+export function getStrWeekIndex(str_date: string): number {
     const date = parseStrToDate(str_date);
 
-    const startingDate = new Date(1970, 0, 5)
-
-    const oneWeekMilliseconds = 7 * 24 * 60 * 60 * 1000;
-    const millisecondsElapsed = date.getTime() - startingDate.getTime();
-    const weekNumber = Math.floor(millisecondsElapsed / oneWeekMilliseconds);
-
-    return weekNumber;
+    return getWeekIndex(date);
 }
 
 export function isNextWeek(str_date: string): boolean {
-    const todayWeekNumber = getTodayWeekNumber();
-    const weekNumber = getStrWeekNumber(str_date);
+    const todayWeekNumber = getWeekIndex();
+    const weekNumber = getStrWeekIndex(str_date);
 
     return weekNumber > todayWeekNumber;
 }

@@ -101,9 +101,9 @@ export class Keyboard {
             text: '📚 Первоначальная настройка',
             color: KeyboardColor.PRIMARY_COLOR
         }).row().add({
-            text: '⌨️ Настройка кнопок'
-        }).row().add({
-            text: '📃 Настройка форматировщика'
+            text: '⌨️ Кнопки'
+        }).add({
+            text: '📃 Форматировщик'
         }).row().add({
             text: noYesSmile(this.chat.hidePastDays, 'Скрывать прошедшие дни'),
             color: noYesColor(this.chat.hidePastDays)
@@ -113,6 +113,9 @@ export class Keyboard {
         }).row().add({
             text: noYesSmile(this.chat.noticeChanges, 'Оповещение о новых днях: ', ['🔈', '🔇']) + (this.chat.noticeChanges ? 'Да' : 'Нет'),
             color: noYesColor(this.chat.noticeChanges)
+        }).row().add({
+            text: noYesSmile(this.chat.noticeNextWeek, 'Оповещение о новой неделе: ', ['🔈', '🔇']) + (this.chat.noticeNextWeek ? 'Да' : 'Нет'),
+            color: noYesColor(this.chat.noticeNextWeek)
         }).row().add({
             text: 'Показать текущие',
             color: KeyboardColor.PRIMARY_COLOR

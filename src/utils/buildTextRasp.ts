@@ -6,7 +6,7 @@ import { RaspCache } from '../updater/raspCache';
 import { ScheduleFormatter } from './formatters/abstract';
 import { DefaultScheduleFormatter } from './formatters/default';
 import { VisualScheduleFormatter } from './formatters/visual';
-import { getIsSaturday, getTodayDate, nowInTime, strDateToNumber } from './time';
+import { getDayIndex, getIsSaturday, nowInTime, strDateToIndex } from './time';
 
 export const SCHEDULE_FORMATTERS = [
     DefaultScheduleFormatter, VisualScheduleFormatter
@@ -28,10 +28,10 @@ export function createScheduleFormatter(service: Service, raspCache: RaspCache, 
 
 export function removePastDays<T extends GroupDay | TeacherDay>(days: T[], processAutoskip: boolean = true): T[] {
     const isSaturday: boolean = getIsSaturday();
-    const todayDate: number = getTodayDate();
+    const todayDate: number = getDayIndex();
 
     const dayIndex: number = days.findIndex(_ => {
-        return strDateToNumber(_.day) >= todayDate;
+        return strDateToIndex(_.day) >= todayDate;
     });
 
     if (dayIndex === -1) {
@@ -52,7 +52,7 @@ export function removePastDays<T extends GroupDay | TeacherDay>(days: T[], proce
         const lastLessonTime: string = timetable[todayLessons - 1][1][1];
 
         if (
-            strDateToNumber(currentDay.day) === todayDate &&
+            strDateToIndex(currentDay.day) === todayDate &&
             !nowInTime(isSaturday ? [6] : [1, 2, 3, 4, 5], '00:00', lastLessonTime)
         ) {
             nextDays.splice(0, 1);
@@ -80,10 +80,10 @@ export function getDayRasp<T extends GroupDay | TeacherDay>(days: T[], processAu
 }
 
 export function getNextDays<T extends GroupDay | TeacherDay>(days: T[]): T[] {
-    const todayDate: number = getTodayDate();
+    const todayDate: number = getDayIndex();
 
     const dayIndex: number = days.findIndex(_ => {
-        return strDateToNumber(_.day) > todayDate;
+        return strDateToIndex(_.day) > todayDate;
     });
 
     if (dayIndex === -1) {

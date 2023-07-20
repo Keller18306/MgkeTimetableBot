@@ -1,7 +1,7 @@
 import { IContext, Reply } from "@keller18306/yandex-dialogs-sdk";
 import { raspCache } from "../../../updater";
 import { GroupDay, TeacherDay } from "../../../updater/parser/types";
-import { closestJaroWinkler, getDayRasp, getFullSubjectName, getTodayDate } from "../../../utils";
+import { closestJaroWinkler, getDayRasp, getFullSubjectName } from "../../../utils";
 import { AliceSkill } from "../skill";
 import { AliceUser } from "../user";
 
@@ -197,7 +197,7 @@ export default class extends AliceSkill {
     }
 
     private getDay<T extends GroupDay | TeacherDay>(matched: string | undefined, days: T[]): T | false | null | undefined {
-        const date = getTodayDate();
+        // const date = getTodayDate();
 
         switch (matched) {
             case undefined:

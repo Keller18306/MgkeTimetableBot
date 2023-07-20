@@ -19,6 +19,8 @@ export default class extends DefaultCommand {
             `Отображать в сообщении время последней загрузки расписания: ${chat.showParserTime ? 'да' : 'нет'}`,
 
             `\nОповещение о добавлении нового дня: ${chat.noticeChanges ? 'да' : 'нет'}`,
+            `Оповещение о добавлении новой недели: ${chat.noticeNextWeek ? 'да' : 'нет'}`,
+            `Оповещение об ошибке парсера: ${chat.noticeParserErrors ? 'да' : 'нет'}`,
 
             ...(service === 'vk' ? [
                 '\n__ ТОЛЬКО ВК __:',
@@ -33,7 +35,7 @@ export default class extends DefaultCommand {
             `ID последнего сообщения: ${chat.lastMsgId}`,
             `Время последенего сообщения: ${chat.lastMsgTime}`,
             `Разрешено ли отправлять боту сообщения: ${chat.allowSendMess ? 'да' : 'нет'}`,
-            `Подписка на рассыку: ${chat.subscribeMess ? 'да' : 'нет'}`,
+            `Подписка на рассыку: ${chat.subscribeDistribution ? 'да' : 'нет'}`,
             `Разрешено ли одобрить VK приложение: ${(service === 'vk' && chat.allowVkAppAccept) ? 'да' : 'нет (возможно уже использовано)'}`,
             `Требуется ли принудительное обновление кнопок: ${chat.needUpdateButtons ? 'да' : 'нет'}`
         ].join('\n'))

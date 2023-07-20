@@ -1,4 +1,5 @@
 import { AbstractEventListener } from ".";
+import { ChatMode } from "../../services/bots/abstract";
 import { GroupDay, TeacherDay } from "../parser/types";
 
 export class EventController {
@@ -29,6 +30,12 @@ export class EventController {
     public static async updateTeacherDay(data: { day: TeacherDay, teacher: string }) {
         for (const service of this.serviceList) {
             await service.updateTeacherDay(data);
+        }
+    }
+
+    public static async sendNextWeek(chatMode: ChatMode) {
+        for (const service of this.serviceList) {
+            await service.sendNextWeek(chatMode);
         }
     }
 

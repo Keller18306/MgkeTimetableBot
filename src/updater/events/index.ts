@@ -1,8 +1,8 @@
 import { config } from "../../../config";
 import db from "../../db";
-import { DbChat } from "../../services/bots/abstract/chat";
+import { ChatMode, DbChat } from "../../services/bots/abstract/chat";
 import { Service } from "../../services/bots/abstract/command";
-import { createScheduleFormatter, getNextDays, getTodayDate, prepareError, strDateToNumber, isNextWeek } from "../../utils";
+import { createScheduleFormatter, getDayIndex, getNextDays, isNextWeek, prepareError, strDateToIndex } from "../../utils";
 import { GroupDay, TeacherDay } from "../parser/types";
 import { raspCache } from "../raspCache";
 import { EventController } from "./controller";
@@ -51,11 +51,11 @@ export abstract class AbstractEventListener<T extends DbChat = DbChat> {
     }
 
     public async nextGroupDay({ index }: { index: number }) {
-        const today: number = getTodayDate();
+        const today: number = getDayIndex();
 
         const groups: string[] = Object.entries(raspCache.groups.timetable).map(([group, { days }]): [string, GroupDay | undefined] => {
             const todayDay = days.find((day) => {
-                return strDateToNumber(day.day) === today;
+                return strDateToIndex(day.day) === today;
             });
 
             return [group, todayDay];
@@ -143,11 +143,11 @@ export abstract class AbstractEventListener<T extends DbChat = DbChat> {
     // }
 
     public async nextTeacherDay({ index }: { index: number }) {
-        const today: number = getTodayDate();
+        const today: number = getDayIndex();
 
         const teachers: string[] = Object.entries(raspCache.teachers.timetable).map(([teacher, { days }]): [string, TeacherDay | undefined] => {
             const todayDay = days.find((day) => {
-                return strDateToNumber(day.day) === today;
+                return strDateToIndex(day.day) === today;
             });
 
             return [teacher, todayDay];
@@ -222,9 +222,19 @@ export abstract class AbstractEventListener<T extends DbChat = DbChat> {
         }
     }
 
+    // public abstract addGroupWeek(data: { week: string, teacher: string }): any;
+    // public abstract addTeacherWeek(data: { week: string, teacher: string }): any;
+    public async sendNextWeek(chatMode: ChatMode) {
+        const chats: T[] = db.prepare(
+            "SELECT * FROM chat_options JOIN `" + this._tableName + "` ON chat_options.id = " + this._tableName + ".id WHERE `service` = ? AND `accepted` = 1 AND `allowSendMess` = 1 AND `noticeNextWeek` = 1 AND `mode` = ?"
+        ).all(this.service, chatMode) as any;
+
+        return this.sendMessages(chats, '🆕 Доступно расписание на следующую неделю');
+    }
+
     public async sendDistribution(message: string) {
         const chats: T[] = db.prepare(
-            "SELECT * FROM chat_options JOIN `" + this._tableName + "` ON chat_options.id = " + this._tableName + ".id WHERE `service` = ? AND `accepted` = 1 AND `allowSendMess` = 1"
+            "SELECT * FROM chat_options JOIN `" + this._tableName + "` ON chat_options.id = " + this._tableName + ".id WHERE `service` = ? AND `accepted` = 1 AND `allowSendMess` = 1 AND `subscribeDistribution` = 1"
         ).all(this.service) as any;
 
         return this.sendMessages(chats, message);
@@ -232,15 +242,12 @@ export abstract class AbstractEventListener<T extends DbChat = DbChat> {
 
     public async sendError(error: Error) {
         const chats: T[] = db.prepare(
-            "SELECT * FROM chat_options JOIN `" + this._tableName + "` ON chat_options.id = " + this._tableName + ".id WHERE `service` = ? AND `accepted` = 1 AND `allowSendMess` = 1 AND `peerId` IN (" + Array(this.adminIds.length).fill('?') +")"
-        ).all(this.service, this.adminIds) as any;
+            "SELECT * FROM chat_options JOIN `" + this._tableName + "` ON chat_options.id = " + this._tableName + ".id WHERE `service` = ? AND `accepted` = 1 AND `allowSendMess` = 1 AND `noticeParserErrors` = 1"
+        ).all(this.service) as any;
 
         return this.sendMessages(chats, [
             '‼️ Произошла ошибка парсера ‼️\n',
             prepareError(error)
         ].join('\n'));
     }
-
-    // public abstract addGroupWeek(data: { week: string, teacher: string }): any;
-    // public abstract addTeacherWeek(data: { week: string, teacher: string }): any;
 }

@@ -1,5 +1,5 @@
 --
--- Файл сгенерирован с помощью SQLiteStudio v3.4.4 в пт июнь 16 18:43:52 2023
+-- Файл сгенерирован с помощью SQLiteStudio v3.4.4 в чт июль 20 22:32:03 2023
 --
 -- Использованная кодировка текста: System
 --
@@ -37,7 +37,6 @@ CREATE TABLE chat_options (
     mode                     STRING (16),
     [group]                  STRING (3),
     teacher                  STRING (255),
-    noticeChanges            BOOLEAN      DEFAULT (0),
     showAbout                BOOLEAN      DEFAULT (1),
     showDaily                BOOLEAN      DEFAULT (1),
     showWeekly               BOOLEAN      DEFAULT (1),
@@ -50,7 +49,10 @@ CREATE TABLE chat_options (
     lastMsgTime              BIGINT       DEFAULT (0),
     deleteUserMsg            BOOLEAN      DEFAULT (0),
     allowSendMess            BOOLEAN      DEFAULT (1),
-    subscribeMess            BOOLEAN      DEFAULT (1),
+    subscribeDistribution    BOOLEAN      DEFAULT (1),
+    noticeChanges            BOOLEAN      DEFAULT (1),
+    noticeNextWeek           BOOLEAN      DEFAULT (1),
+    noticeParserErrors       BOOLEAN      DEFAULT (0),
     needUpdateButtons        BOOLEAN      DEFAULT (0),
     showParserTime           BOOLEAN      DEFAULT (0),
     historyGroup             STRING       NOT NULL
@@ -156,7 +158,8 @@ CREATE INDEX options_indexes ON chat_options (
     allowSendMess,
     accepted,
     deactivateSecondaryCheck,
-    subscribeMess
+    subscribeDistribution,
+    noticeNextWeek
 );
 
 

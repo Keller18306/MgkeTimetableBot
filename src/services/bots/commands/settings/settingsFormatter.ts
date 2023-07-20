@@ -4,7 +4,7 @@ import { DefaultCommand, HandlerParams } from "../../abstract";
 export default class extends DefaultCommand {
     public id = 'get_settings_formatter'
 
-    public regexp = /^(📃\s)?Настройка форматировщика$/i
+    public regexp = /^(📃\s)?(Настройка форматировщика|Форматировщик)$/i
     public payload = null;
     public scene = 'settings';
 

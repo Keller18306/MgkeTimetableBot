@@ -4,7 +4,7 @@ import { DefaultCommand, HandlerParams } from "../../abstract";
 export default class extends DefaultCommand {
     public id = 'get_settings_buttons'
 
-    public regexp = /^(⌨️\s)?Настройка кнопок$/i
+    public regexp = /^(⌨️\s)?(Настройка кнопок|Кнопки)$/i
     public payload = null;
     public scene = 'settings';
 

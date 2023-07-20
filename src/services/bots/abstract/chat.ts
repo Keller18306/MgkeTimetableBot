@@ -30,9 +30,6 @@ export type DbChat = {
     /** Выбранное имя для преподавателя */
     teacher: string | null;
 
-    /** Оповещать ли о добавлении дней */
-    noticeChanges: boolean;
-
     /** Показывать ли кнопку "О боте" */
     showAbout: boolean;
 
@@ -70,7 +67,16 @@ export type DbChat = {
     allowSendMess: boolean;
 
     /** Подписка на рассылку */
-    subscribeMess: boolean;
+    subscribeDistribution: boolean;
+
+    /** Оповещать ли о добавлении дней */
+    noticeChanges: boolean;
+
+    /** Оповещать ли о добавлении новой недели */
+    noticeNextWeek: boolean;
+
+    /** Оповещать ли при ошибках парсера (если 3 последние одинаковые ошибки) */
+    noticeParserErrors: boolean;
 
     /** Нужно ли принудительно обновить кнопки */
     needUpdateButtons: boolean;

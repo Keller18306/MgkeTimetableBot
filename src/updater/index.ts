@@ -1,11 +1,13 @@
 import { JSDOM } from "jsdom"
 import { config } from "../../config"
+import { ChatMode } from "../services/bots/abstract"
 import { clearOldImages } from "../services/image/clear"
-import { doCombine, getTodayDate, strDateToNumber } from "../utils"
+import { doCombine, getDayIndex, getStrWeekIndex, getWeekIndex, strDateToIndex } from "../utils"
 import { EventController } from "./events/controller"
 import { NextDayUpdater } from "./nextDay"
 import StudentParser from "./parser/group"
 import TeacherParser from "./parser/teacher"
+import { Group, Teacher } from "./parser/types"
 import { RaspGroupCache, RaspTeacherCache, loadCache, raspCache, saveCache } from "./raspCache"
 
 const MAX_LOG_LIMIT: number = 10;
@@ -215,30 +217,30 @@ export class Updater {
 
     private async update() {
         return new Promise<number>(async (resolve, reject) => {
-            const timeout = setTimeout(reject, 60e3)
+            const timeout = setTimeout(reject, 60e3);
 
             let ms: number;
             try {
-                const startTime: number = Date.now()
+                const startTime: number = Date.now();
 
-                const res = await this.parse()
+                const res = await this.parse();
 
-                const updateTime: number = Date.now()
-                clearTimeout(timeout)
+                const updateTime: number = Date.now();
+                clearTimeout(timeout);
 
-                await clearOldImages()
+                await clearOldImages();
 
                 if (!res[0] || !res[1]) {
-                    throw new Error(`timetable is empty {groups:${res[0]},teachers:${res[1]}}`)
+                    throw new Error(`timetable is empty {groups:${res[0]},teachers:${res[1]}}`);
                 }
 
-                ms = updateTime - startTime
+                ms = updateTime - startTime;
             } catch (e) {
-                return reject(e)
+                return reject(e);
             }
 
-            saveCache()
-            resolve(ms)
+            saveCache();
+            resolve(ms);
         })
     }
 
@@ -270,7 +272,8 @@ export class Updater {
     }
 
     private async processParse(Parser: typeof TeacherParser | typeof StudentParser, url: string, cache: RaspGroupCache | RaspTeacherCache) {
-        const todayDate: number = getTodayDate();
+        const date = new Date();
+        const todayIndex = getDayIndex(date);
 
         //console.log('[Parser - Groups] Start parsing')
         const jsdom = await JSDOM.fromURL(url, {
@@ -282,9 +285,9 @@ export class Updater {
         const data = await parser.run();
         if (Object.keys(data).length == 0) return false;
 
-        const siteMinimalDate: number = Math.min(...Object.entries(data).reduce<number[]>((bounds: number[], [, entry]): number[] => {
+        const siteMinimalDayIndex: number = Math.min(...Object.entries(data).reduce<number[]>((bounds: number[], [, entry]): number[] => {
             for (const day of entry.days) {
-                const date: number = strDateToNumber(day.day);
+                const date: number = strDateToIndex(day.day);
                 if (bounds.includes(date)) continue;
 
                 bounds.push(date);
@@ -295,6 +298,15 @@ export class Updater {
 
         //TODO сделать оповещения в чаты, когда изменения на день поступили
         //const dump = Object.assign({}, rasp.timetable);
+
+        // Полная очистка
+        if (this.clearKeys) {
+            for (const index in cache.timetable) {
+                if (!data[index]) {
+                    delete cache.timetable[index];
+                }
+            }
+        }
 
         // добавление новых данных
         for (const index in data) {
@@ -313,9 +325,9 @@ export class Updater {
             const entry = cache.timetable[index];
 
             entry.days = (entry.days as any).filter((day: any) => {
-                const dayDate: number = strDateToNumber(day.day);
+                const dayIndex: number = strDateToIndex(day.day);
 
-                return (dayDate >= todayDate || dayDate >= siteMinimalDate);
+                return (dayIndex >= todayIndex || dayIndex >= siteMinimalDayIndex);
             }) as any;
 
             if (entry.days.length === 0) {
@@ -323,14 +335,34 @@ export class Updater {
             }
         }
 
-        if (this.clearKeys) {
-            for (const index in cache.timetable) {
-                if (!data[index]) {
-                    delete cache.timetable[index];
-                }
+        // проверка на то, что добавлена новая неделя
+        const maxWeekNumber = Math.max(...(Object.values(cache.timetable) as (Group | Teacher)[])
+            .map((entry) => {
+                const weekNumbers = entry.days.map((day) => {
+                    return getStrWeekIndex(day.day);
+                });
+
+                return Math.max(...weekNumbers);
+            })
+        );
+
+        if (cache.lastWeekIndex && maxWeekNumber > getWeekIndex(date)) {
+            let chatMode: ChatMode | undefined;
+
+            if (Parser instanceof StudentParser) {
+                chatMode = 'student';
+            }
+
+            if (Parser instanceof TeacherParser) {
+                chatMode = 'teacher';
+            }
+
+            if (chatMode) {
+                EventController.sendNextWeek(chatMode)
             }
         }
 
+        cache.lastWeekIndex = maxWeekNumber;
         cache.update = Date.now();
 
         return true;

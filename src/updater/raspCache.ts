@@ -5,6 +5,7 @@ import { Groups, Teachers } from './parser/types'
 export type RaspGroupCache = {
     timetable: Groups,
     update: number,
+    lastWeekIndex: number,
     hashes: {
         [key: string]: string
     }
@@ -13,6 +14,7 @@ export type RaspGroupCache = {
 export type RaspTeacherCache = {
     timetable: Teachers,
     update: number,
+    lastWeekIndex: number,
     hashes: {
         [key: string]: string
     }
@@ -28,11 +30,13 @@ export const raspCache: RaspCache = {
     groups: {
         timetable: {},
         update: 0,
+        lastWeekIndex: 0,
         hashes: {}
     },
     teachers: {
         timetable: {},
         update: 0,
+        lastWeekIndex: 0,
         hashes: {}
     },
     successUpdate: true
