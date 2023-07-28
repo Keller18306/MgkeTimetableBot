@@ -51,6 +51,8 @@ export type ConfigScheme = {
     },
     updater: {
         enabled: boolean,
+        syncMode: boolean,
+        localMode: boolean,
         end_hour: number,
         activity: [number, number],
         update_interval: {
@@ -65,7 +67,6 @@ export type ConfigScheme = {
         saturday: [[string, string], [string, string]][],
     },
     encrypt_key: Buffer,
-    parseSyncMode: boolean,
     globalNoticer: boolean,
     globalAdblock: boolean
 }

@@ -1,27 +1,36 @@
 import { GroupDay, TeacherDay } from "../updater/parser/types";
 
-function strToDate(day: string): Date {
-    const parts = day.split('.').map(p => Number(p));
-
-    const date = new Date(`${parts[2]}-${parts[1]}-${parts[0]}Z+3UTC`);
-
-    return date;
-}
-
-export function doCombine<T extends GroupDay | TeacherDay>(new_day: T[], old_day: T[]): T[] {
+/**
+ * @description Перезаписывает старые дни, новыми, сохраняя старые неизменённые
+ */
+export function mergeDays<T extends GroupDay | TeacherDay>(new_days: T[], old_days: T[]): { mergedDays: T[], added: string[], changes: string[] } {
+    const addedDays: string[] = [];
+    const changedDays: string[] = [];
     const days: {
         [day: string]: T
-    } = {}
+    } = {};
 
-    for (const _day of old_day) {
-        days[_day.day] = _day
+    for (const _day of old_days) {
+        days[_day.day] = _day;
     }
 
-    for (const _day of new_day) {
-        days[_day.day] = _day
+    for (const newDay of new_days) {
+        const oldDay: T = days[newDay.day];
+
+        if (oldDay === undefined) {
+            addedDays.push(newDay.day);
+        } else if (JSON.stringify(oldDay.lessons) !== JSON.stringify(newDay.lessons)) {
+            changedDays.push(newDay.day);
+        }
+
+        days[newDay.day] = newDay;
     }
 
-    return Object.values(days)
+    return {
+        mergedDays: Object.values(days),
+        added: addedDays,
+        changes: changedDays
+    }
 }
 
 export function collectDays(rasp_array: GroupDay[] | TeacherDay[]): string[] {

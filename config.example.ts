@@ -53,6 +53,8 @@ export const config: ConfigScheme = {
     },
     updater: {
         enabled: true,
+        syncMode: false, // Режим парсинга. false - параллельный (все запросы выполняются одновременно), true - последовательный (все запросы выполняются по очереди)
+        localMode: false, // Используется только во время разработки (парсер не делает запросы к сайту, а читает json файл)
         end_hour: 17,
         activity: [9, 17],
         update_interval: {
@@ -81,7 +83,6 @@ export const config: ConfigScheme = {
         ]
     },
     encrypt_key: Buffer.from('', 'base64'), //Ключ шифрования для ключей (API, Запрос на ацепт, и т.д.), можно создать через `crypto.randomBytes(32).toString('base64')`
-    parseSyncMode: false, // Режим парсинга. false - параллельный (все запросы выполняются одновременно), true - последовательный (все запросы выполняются по очереди)
     globalNoticer: false, // Отключить везде оповещения
     globalAdblock: false // Отключить рекламу в приложениях
 }

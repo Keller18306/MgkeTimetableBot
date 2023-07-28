@@ -1,13 +1,14 @@
+import { readFileSync } from "fs"
 import { JSDOM } from "jsdom"
 import { config } from "../../config"
 import { ChatMode } from "../services/bots/abstract"
 import { clearOldImages } from "../services/image/clear"
-import { doCombine, getDayIndex, getStrWeekIndex, getWeekIndex, strDateToIndex } from "../utils"
+import { getDayIndex, getStrWeekIndex, mergeDays, strDateToIndex } from "../utils"
 import { EventController } from "./events/controller"
 import { NextDayUpdater } from "./nextDay"
 import StudentParser from "./parser/group"
 import TeacherParser from "./parser/teacher"
-import { Group, Teacher } from "./parser/types"
+import { Group, Groups, Teacher, Teachers } from "./parser/types"
 import { RaspGroupCache, RaspTeacherCache, loadCache, raspCache, saveCache } from "./raspCache"
 
 const MAX_LOG_LIMIT: number = 10;
@@ -113,6 +114,11 @@ export class Updater {
 
     private getDelayTime(error: boolean = false): Delay {
         if (error) return createDelayPromise(config.updater.update_interval.error * 1e3)
+
+        // во время локального тестирования - 3 секунды
+        if (config.updater.localMode) {
+            return createDelayPromise(3e3);
+        }
 
         const date = new Date()
         const hour = date.getHours()
@@ -263,7 +269,7 @@ export class Updater {
             const result: Promise<boolean> = this.processParse(action.parser, action.url, action.cache);
             promises.push(result)
 
-            if (config.parseSyncMode) {
+            if (config.updater.syncMode) {
                 await result;
             }
         }
@@ -276,13 +282,36 @@ export class Updater {
         const todayIndex = getDayIndex(date);
 
         //console.log('[Parser - Groups] Start parsing')
-        const jsdom = await JSDOM.fromURL(url, {
-            userAgent: 'MGKE bot by Keller'
-        });
 
-        const parser = new Parser(jsdom.window);
+        let data: Teachers | Groups;
+        if (config.updater.localMode) {
+            let fileName: string | undefined;
 
-        const data = await parser.run();
+            if (Parser === StudentParser) {
+                fileName = 'groups';
+            }
+
+            if (Parser === TeacherParser) {
+                fileName = 'teachers';
+            }
+
+            if (!fileName) {
+                throw new Error('WHAT?!')
+            }
+
+            const file: any = JSON.parse(readFileSync(`./cache/rasp/${fileName}.json`, 'utf8'));
+
+            data = file.timetable;
+        } else {
+            const jsdom = await JSDOM.fromURL(url, {
+                userAgent: 'MGKE bot by Keller'
+            });
+
+            const parser = new Parser(jsdom.window);
+
+            data = parser.run();
+        }
+
         if (Object.keys(data).length == 0) return false;
 
         const siteMinimalDayIndex: number = Math.min(...Object.entries(data).reduce<number[]>((bounds: number[], [, entry]): number[] => {
@@ -316,7 +345,20 @@ export class Updater {
             if (!currentEntry) {
                 cache.timetable[index] = data[index];
             } else {
-                currentEntry.days = doCombine(newEntry.days as any, currentEntry.days as any || []) as any;
+                const { mergedDays, added, changes } = mergeDays(newEntry.days as any, currentEntry.days as any);
+
+                //test
+                if (config.dev) {
+                    if (changes.length > 0) {
+                        console.log(`Для '${index}' были изменены дни:`, changes)
+                    }
+
+                    if (added.length > 0) {
+                        console.log(`Для '${index}' были добавлены дни:`, added)
+                    }
+                }
+
+                currentEntry.days = mergedDays as any;
             }
         }
 
@@ -348,19 +390,20 @@ export class Updater {
             })
         );
 
-        if (cache.lastWeekIndex && maxWeekNumber > getWeekIndex(date)) {
+        // оповещение в чаты, что на сайте вывесили новую неделю
+        if (cache.lastWeekIndex && maxWeekNumber > cache.lastWeekIndex) {
             let chatMode: ChatMode | undefined;
 
-            if (Parser instanceof StudentParser) {
+            if (Parser === StudentParser) {
                 chatMode = 'student';
             }
 
-            if (Parser instanceof TeacherParser) {
+            if (Parser === TeacherParser) {
                 chatMode = 'teacher';
             }
 
             if (chatMode) {
-                EventController.sendNextWeek(chatMode)
+                EventController.sendNextWeek(chatMode);
             }
         }
 
