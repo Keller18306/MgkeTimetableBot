@@ -3,9 +3,8 @@ import db from "../../../../db";
 import { AbstractCommand, HandlerParams } from "../../abstract";
 
 export default class extends AbstractCommand {
-
-    public adminOnly: boolean = true;
     public regexp = /^(!|\/)requireNewButtons$/i
+    public adminOnly: boolean = true;
     public payload = null;
     public tgCommand: TelegramBotCommand = {
         command: 'requireNewButtons',

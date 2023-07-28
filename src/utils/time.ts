@@ -83,6 +83,10 @@ export function strDateToIndex(str_date: string): number {
     return date.getTime() / 1e3 / 1e2;
 }
 
+export function dayIndexToDate(dayIndex: number) {
+    return new Date(dayIndex * 1e3 * 1e2);
+}
+
 export function getStrWeekIndex(str_date: string): number {
     const date = parseStrToDate(str_date);
 
