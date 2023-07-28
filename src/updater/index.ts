@@ -324,13 +324,15 @@ export class Updater {
         for (const index in cache.timetable) {
             const entry = cache.timetable[index];
 
+            //удаление старых дней (удаляются дни, которые старше указанных на сайте и старше сегодняшнего дня)
             entry.days = (entry.days as any).filter((day: any) => {
                 const dayIndex: number = strDateToIndex(day.day);
 
                 return (dayIndex >= todayIndex || dayIndex >= siteMinimalDayIndex);
             }) as any;
 
-            if (entry.days.length === 0) {
+            //удаление группы/учителя если все дни пустые и его нет в новых данных
+            if (entry.days.length === 0 && data[index] === undefined) {
                 delete cache.timetable[index];
             }
         }
