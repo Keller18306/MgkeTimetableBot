@@ -9,7 +9,6 @@ export type Group = {
 
 export type GroupDay = {
     day: string,
-    weekday: string,
     lessons: GroupLesson[]
 }
 

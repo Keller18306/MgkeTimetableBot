@@ -129,7 +129,7 @@ export function nowInTime(includedDays: number[], timeFrom: string, timeTo: stri
 }
 
 export function weekBounds(date: Date): [Date, Date] {
-    const ONE_DAY = 1000 * 60 * 60 * 24;
+    const ONE_DAY: number = 1000 * 60 * 60 * 24;
 
     const d1 = new Date(date.getTime() - (date.getDay() * ONE_DAY));
     d1.setHours(0, 0, 0, 0);
@@ -138,4 +138,22 @@ export function weekBounds(date: Date): [Date, Date] {
     d2.setHours(23, 59, 59, 999);
 
     return [d1, d2];
+}
+
+export function getWeekdayName(date: Date): string {
+    const days: string[] = [
+        'Воскресенье',
+        'Понедельник',
+        'Вторник',
+        'Среда',
+        'Четверг',
+        'Пятница',
+        'Суббота'
+    ];
+
+    return days[date.getDay()];
+}
+
+export function getWeekdayNameByStrDate(str_date: string): string {
+    return getWeekdayName(parseStrToDate(str_date))
 }

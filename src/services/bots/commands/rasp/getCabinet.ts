@@ -2,6 +2,7 @@ import { TelegramBotCommand } from "puregram/generated";
 import { raspCache } from "../../../../updater";
 import { TeacherLessonExplain } from "../../../../updater/parser/types";
 import { AbstractCommand, HandlerParams } from "../../abstract";
+import { getWeekdayNameByStrDate } from "../../../../utils";
 
 export default class extends AbstractCommand {
     public regexp = /^((!|\/)(get)?cabinet)(\b|$|\s)/i;
@@ -26,7 +27,6 @@ export default class extends AbstractCommand {
             [cabinet: string]: {
                 [day: string]: {
                     day: string,
-                    weekday: string,
                     lessons: (TeacherLessonExplain & { index: number, teacher: string })[]
                 }
             }
@@ -49,7 +49,6 @@ export default class extends AbstractCommand {
                     if (!info[lesson.cabinet][day.day]) {
                         info[lesson.cabinet][day.day] = {
                             day: day.day,
-                            weekday: day.weekday,
                             lessons: []
                         }
                     }
@@ -73,10 +72,10 @@ export default class extends AbstractCommand {
 
             cabinetMessage.push(`Кабинет: ${cabinet}`);
 
-            for (const { day, weekday, lessons } of Object.values(info[cabinet])) {
+            for (const { day, lessons } of Object.values(info[cabinet])) {
                 const dayMessage: string[] = [];
 
-                dayMessage.push(`${weekday}, ${day}`);
+                dayMessage.push(`${getWeekdayNameByStrDate(day)}, ${day}`);
 
                 for (const lesson of lessons) {
                     dayMessage.push(`${lesson.index + 1}. ${lesson.lesson} (${lesson.type}), ${lesson.group}, ${lesson.teacher}`);

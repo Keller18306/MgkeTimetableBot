@@ -5,7 +5,7 @@ import { GroupDay, GroupLesson, GroupLessonExplain, Groups } from './types/group
 export default class StudentParser extends AbstractParser {
     protected groups: Groups = {}
 
-    public run(groups?: Groups) {
+    public run(groups?: Groups): Groups {
         if (groups) {
             this.groups = groups;
         }
@@ -79,7 +79,6 @@ export default class StudentParser extends AbstractParser {
 
             days.push({
                 day: day,
-                weekday: weekday,
                 lessons: []
             })
         }

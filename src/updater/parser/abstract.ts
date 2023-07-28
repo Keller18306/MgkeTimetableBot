@@ -1,4 +1,5 @@
 import { DOMWindow } from "jsdom";
+import { parseStrToDate } from "../../utils";
 import { GroupLesson, Groups } from "./types/group";
 import { TeacherLesson, Teachers } from "./types/teacher";
 
@@ -88,7 +89,7 @@ export abstract class AbstractParser {
             const { days } = rasp[key];
 
             const sundayIndex = days.findIndex((day): boolean => {
-                return day.weekday.toLowerCase() === 'воскресенье';
+                return parseStrToDate(day.day).getDay() === 0; //воскресенье
             });
             if (sundayIndex === -1) continue;
 

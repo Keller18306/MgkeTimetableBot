@@ -9,7 +9,6 @@ export type Teacher = {
 
 export type TeacherDay = {
     day: string,
-    weekday: string,
     lessons: TeacherLesson[]
 }
 

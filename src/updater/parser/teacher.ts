@@ -4,7 +4,7 @@ import { Teacher, TeacherDay, TeacherLesson, Teachers } from './types/teacher';
 export default class TeacherParser extends AbstractParser {
     protected teachers: Teachers = {}
 
-    async run(teachers?: Teachers): Promise<Teachers> {
+    public run(teachers?: Teachers): Teachers {
         if (teachers) {
             this.teachers = teachers;
         }
@@ -24,7 +24,7 @@ export default class TeacherParser extends AbstractParser {
             }
         }
 
-        return this.teachers
+        return this.teachers;
     }
 
     protected parseTeacher(table: HTMLTableElement, h2: HTMLHeadingElement) {
@@ -63,7 +63,6 @@ export default class TeacherParser extends AbstractParser {
 
             days.push({
                 day: day,
-                weekday: weekday,
                 lessons: []
             })
         }

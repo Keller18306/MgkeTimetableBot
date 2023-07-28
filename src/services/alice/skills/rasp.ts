@@ -1,7 +1,7 @@
 import { IContext, Reply } from "@keller18306/yandex-dialogs-sdk";
 import { raspCache } from "../../../updater";
 import { GroupDay, TeacherDay } from "../../../updater/parser/types";
-import { closestJaroWinkler, getDayRasp, getFullSubjectName } from "../../../utils";
+import { closestJaroWinkler, getDayRasp, getFullSubjectName, getWeekdayNameByStrDate } from "../../../utils";
 import { AliceSkill } from "../skill";
 import { AliceUser } from "../user";
 
@@ -90,8 +90,10 @@ export default class extends AliceSkill {
             return Reply.text('Я не смогла найти указанный день')
         }
 
+        const weekday: string = getWeekdayNameByStrDate(day.day);
+
         const tts: string[] = [];
-        tts.push(`Расписание на ${day.weekday}${showGroup ? ` для ${group}-ей группы` : ''}`)
+        tts.push(`Расписание на ${weekday}${showGroup ? ` для ${group}-ей группы` : ''}`)
 
         let firstLesson: number | null = null;
         for (const i in day.lessons) {
@@ -136,7 +138,7 @@ export default class extends AliceSkill {
         }
 
         const text: string[] = [];
-        text.push(`Расписание на ${day.weekday}, ${day.day}${showGroup ? ` для ${group}-ей группы` : ''}:`);
+        text.push(`Расписание на ${weekday}, ${day.day}${showGroup ? ` для ${group}-ей группы` : ''}:`);
         //text.push(buildGroupsDaysText(day.lessons));
 
         return Reply.text(text.join('\n'), {
@@ -160,8 +162,10 @@ export default class extends AliceSkill {
             return Reply.text('Я не смогла найти указанный день')
         }
 
+        const weekday: string = getWeekdayNameByStrDate(day.day);
+
         const tts: string[] = [];
-        tts.push(`Расписание на ${day.weekday}${showTeacher ? ` для преподавателя "${teacher}"` : ''}`)
+        tts.push(`Расписание на ${weekday}${showTeacher ? ` для преподавателя "${teacher}"` : ''}`)
 
         let firstLesson: number | null = null;
         for (const i in day.lessons) {
@@ -188,7 +192,7 @@ export default class extends AliceSkill {
         }
 
         const text: string[] = [];
-        text.push(`Расписание на ${day.weekday}, ${day.day}${showTeacher ? ` для преподавателя "${teacher}"` : ''}:`);
+        text.push(`Расписание на ${weekday}, ${day.day}${showTeacher ? ` для преподавателя "${teacher}"` : ''}:`);
         //text.push(buildTeacherDaysText(day.lessons));
 
         return Reply.text(text.join('\n'), {
@@ -228,7 +232,7 @@ export default class extends AliceSkill {
                 }
 
                 return days
-                    .find(_ => _.weekday.toLowerCase() === matched)
+                    .find(_ => getWeekdayNameByStrDate(_.day).toLowerCase() === matched)
             default:
                 return false;
         }

@@ -6,7 +6,7 @@ import { readFile, writeFile } from "fs/promises";
 import path from "path";
 import { config } from "../../../config";
 import { Group, GroupDay, GroupLessonExplain, Teacher, TeacherDay } from "../../updater/parser/types";
-import { formatTime } from "../../utils";
+import { formatTime, getWeekdayNameByStrDate } from "../../utils";
 
 const groupColumns: IColumn[] = [
     {
@@ -321,7 +321,7 @@ export class ImageBuilder {
             bgColor: 'white',
             canvas: canvas,
             columns: columns,
-            text: `${day.weekday}, ${day.day}`,
+            text: `${getWeekdayNameByStrDate(day.day)}, ${day.day}`,
             textStyle: {
                 fontSize: '18px'
             },

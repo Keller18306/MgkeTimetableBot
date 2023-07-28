@@ -5,7 +5,7 @@ import { Updater } from "../../updater";
 import { GroupDay, GroupLesson, GroupLessonExplain, TeacherDay, TeacherLesson, TeacherLessonExplain } from "../../updater/parser/types";
 import { RaspCache, RaspGroupCache, RaspTeacherCache } from "../../updater/raspCache";
 import { randArray } from "../rand";
-import { formatSeconds } from "../time";
+import { formatSeconds, getWeekdayNameByStrDate } from "../time";
 
 export type InputFormatGroupOptions = {
     showHeader?: boolean,
@@ -76,7 +76,7 @@ export abstract class ScheduleFormatter {
         if (options.days.length > 0) {
             for (const day of options.days) {
                 text.push([
-                    this.DayHeader(day.day, day.weekday),
+                    this.DayHeader(day.day, getWeekdayNameByStrDate(day.day)),
                     this.formatGroupLessons(day.lessons)
                 ].join('\n'));
             }
@@ -100,7 +100,7 @@ export abstract class ScheduleFormatter {
         if (options.days.length > 0) {
             for (const day of options.days) {
                 text.push([
-                    this.DayHeader(day.day, day.weekday),
+                    this.DayHeader(day.day, getWeekdayNameByStrDate(day.day)),
                     this.formatTeacherLessons(day.lessons)
                 ].join('\n'));
             }
