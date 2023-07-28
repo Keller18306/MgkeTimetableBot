@@ -1,5 +1,6 @@
 import StatusCode from "status-code-enum";
 import { raspCache } from "../../../updater";
+import { getWeekdayNameByStrDate } from "../../../utils";
 import VKAppDefaultMethod, { HandlerParams } from "./_default";
 
 export default class VkAppAuthMethod extends VKAppDefaultMethod {
@@ -12,15 +13,19 @@ export default class VkAppAuthMethod extends VKAppDefaultMethod {
         if (body.teacher == null) {
             response.status(StatusCode.ClientErrorBadRequest).send({
                 error: 'Не указан преподаватель'
-            })
+            });
 
-            return 
+            return;
         }
 
-        const teacher = body.teacher
+        const days = raspCache.teachers.timetable[body.teacher]?.days.map(day => {
+            return Object.assign({}, {
+                weekday: getWeekdayNameByStrDate(day.day)
+            }, day);
+        }) || null;
 
         return {
-            days: raspCache.teachers.timetable[teacher]?.days || null,
+            days: days,
             update: raspCache.teachers.update,
             lastSuccess: raspCache.successUpdate
         }

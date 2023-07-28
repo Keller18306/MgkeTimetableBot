@@ -1,7 +1,7 @@
 import { config } from "../../../../config";
 import db from "../../../db";
 import { raspCache } from "../../../updater";
-import { sort } from "../../../utils";
+import { getWeekdayNameByStrDate, sort } from "../../../utils";
 import VKAppDefaultMethod, { HandlerParams } from "./_default";
 
 export default class VkAppAuthMethod extends VKAppDefaultMethod {
@@ -24,11 +24,19 @@ export default class VkAppAuthMethod extends VKAppDefaultMethod {
         return {
             rasp: {
                 student: {
-                    days: cfg.group != null ? (raspCache.groups.timetable[cfg.group]?.days || []) : [],
+                    days: cfg.group != null ? (raspCache.groups.timetable[cfg.group]?.days.map(day => {
+                        return Object.assign({}, {
+                            weekday: getWeekdayNameByStrDate(day.day)
+                        }, day);
+                    }) || []) : [],
                     update: raspCache.groups.update
                 },
                 teacher: {
-                    days: cfg.teacher != null ? (raspCache.teachers.timetable[cfg.teacher]?.days || []) : [],
+                    days: cfg.teacher != null ? (raspCache.teachers.timetable[cfg.teacher]?.days.map(day => {
+                        return Object.assign({}, {
+                            weekday: getWeekdayNameByStrDate(day.day)
+                        }, day);
+                    }) || []) : [],
                     update: raspCache.teachers.update
                 },
                 lastSuccess: raspCache.successUpdate

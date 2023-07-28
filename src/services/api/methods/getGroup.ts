@@ -1,5 +1,6 @@
 import StatusCode from "status-code-enum";
 import { raspCache } from "../../../updater";
+import { getWeekdayNameByStrDate } from "../../../utils";
 import VKAppDefaultMethod, { HandlerParams } from "./_default";
 
 export default class VkAppAuthMethod extends VKAppDefaultMethod {
@@ -12,22 +13,19 @@ export default class VkAppAuthMethod extends VKAppDefaultMethod {
         if (body.group == null) {
             response.status(StatusCode.ClientErrorBadRequest).send({
                 error: 'Не указана группа'
-            })
+            });
 
-            return 
+            return;
         }
 
-        const group = Number(body.group)
-        if (isNaN(group)) {
-            response.status(StatusCode.ClientErrorBadRequest).send({
-                error: 'Группа указана некорректно'
-            })
-
-            return 
-        }
+        const days = raspCache.groups.timetable[body.group]?.days.map(day => {
+            return Object.assign({}, {
+                weekday: getWeekdayNameByStrDate(day.day)
+            }, day);
+        }) || null;
 
         return {
-            days: raspCache.groups.timetable[group]?.days || null,
+            days: days,
             update: raspCache.groups.update,
             lastSuccess: raspCache.successUpdate
         }
