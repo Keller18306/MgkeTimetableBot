@@ -7,7 +7,6 @@ import { Service } from "../abstract";
 export class VkEventListener extends AbstractEventListener<VkDb> {
     protected _tableName: string = 'vk_bot_chats';
     protected service: Service = 'vk';
-    protected adminIds: number[] = config.vk.admin_ids;
 
     public enabled: boolean = config.vk.bot.noticer;
 

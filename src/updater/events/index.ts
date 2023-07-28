@@ -10,7 +10,6 @@ import { EventController } from "./controller";
 export abstract class AbstractEventListener<T extends DbChat = DbChat> {
     protected abstract _tableName: string;
     protected abstract service: Service;
-    protected abstract adminIds: (string | number)[];
 
     constructor(enabled: boolean) {
         if (!enabled) return;
@@ -35,6 +34,7 @@ export abstract class AbstractEventListener<T extends DbChat = DbChat> {
 
         const chats: T[] = db.prepare(
             "SELECT * FROM chat_options JOIN `" + this._tableName + "` ON chat_options.id = " + this._tableName + ".id WHERE `service` = ? AND `group` IN (" + Array(groups.length).fill('?') + ") AND (`deactivateSecondaryCheck` = 1 OR `mode` = 'student' OR `mode` = 'parent') AND `accepted` = 1 AND `noticeChanges` = 1 AND `allowSendMess` = 1"
+            + (config.dev ? ' AND `noticeParserErrors` = 1' : '')
         ).all(this.service, ...groups) as any;
 
         return chats;
@@ -45,6 +45,7 @@ export abstract class AbstractEventListener<T extends DbChat = DbChat> {
 
         const chats: T[] = db.prepare(
             "SELECT * FROM chat_options JOIN `" + this._tableName + "` ON chat_options.id = " + this._tableName + ".id WHERE `service` = ? AND `teacher` IN (" + Array(teachers.length).fill('?') + ") AND (`deactivateSecondaryCheck` = 1 OR `mode` = 'teacher') AND `accepted` = 1 AND `noticeChanges` = 1 AND `allowSendMess` = 1"
+            + (config.dev ? ' AND `noticeParserErrors` = 1' : '')
         ).all(this.service, ...teachers) as any;
 
         return chats;
@@ -227,6 +228,7 @@ export abstract class AbstractEventListener<T extends DbChat = DbChat> {
     public async sendNextWeek(chatMode: ChatMode) {
         const chats: T[] = db.prepare(
             "SELECT * FROM chat_options JOIN `" + this._tableName + "` ON chat_options.id = " + this._tableName + ".id WHERE `service` = ? AND `accepted` = 1 AND `allowSendMess` = 1 AND `noticeNextWeek` = 1 AND `mode` = ?"
+            + (config.dev ? ' AND `noticeParserErrors` = 1' : '')
         ).all(this.service, chatMode) as any;
 
         return this.sendMessages(chats, '🆕 Доступно расписание на следующую неделю');
@@ -235,6 +237,7 @@ export abstract class AbstractEventListener<T extends DbChat = DbChat> {
     public async sendDistribution(message: string) {
         const chats: T[] = db.prepare(
             "SELECT * FROM chat_options JOIN `" + this._tableName + "` ON chat_options.id = " + this._tableName + ".id WHERE `service` = ? AND `accepted` = 1 AND `allowSendMess` = 1 AND `subscribeDistribution` = 1"
+            + (config.dev ? ' AND `noticeParserErrors` = 1' : '')
         ).all(this.service) as any;
 
         return this.sendMessages(chats, message);

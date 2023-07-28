@@ -9,7 +9,6 @@ import { convertAbstractToViber } from './keyboard';
 export class ViberEventListener extends AbstractEventListener<ViberDb> {
     protected _tableName: string = 'viber_bot_chats';
     protected service: Service = 'viber';
-    protected adminIds: string[] = config.viber.admin_ids;
 
     private bot: Bot
 

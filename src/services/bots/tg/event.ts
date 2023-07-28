@@ -10,7 +10,6 @@ import { convertAbstractToTg } from "./keyboard";
 export class TgEventListener extends AbstractEventListener<TgDb> {
     protected _tableName: string = 'tg_bot_chats';
     protected service: Service = 'tg';
-    protected adminIds: number[] = config.telegram.admin_ids;
 
     public enabled: boolean = config.vk.bot.noticer;
 
