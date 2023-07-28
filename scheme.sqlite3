@@ -1,5 +1,5 @@
 --
--- Файл сгенерирован с помощью SQLiteStudio v3.4.4 в чт июль 20 22:32:03 2023
+-- Файл сгенерирован с помощью SQLiteStudio v3.4.4 в пт июль 28 03:27:11 2023
 --
 -- Использованная кодировка текста: System
 --
@@ -55,6 +55,7 @@ CREATE TABLE chat_options (
     noticeParserErrors       BOOLEAN      DEFAULT (0),
     needUpdateButtons        BOOLEAN      DEFAULT (0),
     showParserTime           BOOLEAN      DEFAULT (0),
+    showHints                BOOLEAN      DEFAULT (1),
     historyGroup             STRING       NOT NULL
                                           DEFAULT "[]",
     historyTeacher           STRING       NOT NULL
@@ -97,6 +98,16 @@ CREATE TABLE tg_bot_chats (
     firstName STRING,
     lastName  STRING,
     lang      STRING
+);
+
+
+-- Таблица: timetable_archive
+CREATE TABLE timetable_archive (
+    id      INTEGER PRIMARY KEY AUTOINCREMENT,
+    day     INTEGER NOT NULL,
+    [group] INTEGER,
+    teacher STRING,
+    data    TEXT
 );
 
 
@@ -146,6 +157,14 @@ CREATE TABLE vk_bot_chats (
 CREATE INDEX api_index ON api (
     service,
     fromId
+);
+
+
+-- Индекс: archive_index
+CREATE UNIQUE INDEX archive_index ON timetable_archive (
+    day,
+    "group",
+    teacher
 );
 
 
