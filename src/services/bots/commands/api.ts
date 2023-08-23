@@ -12,7 +12,7 @@ export default class extends AbstractCommand {
     public payload = null;
 
     handler({ context, service }: HandlerParams) {
-        if (context.isChat) return context.send('Команда недоступна в беседах')
+        if (context.isChat) return context.send('Команда недоступна в беседах');
 
         let limit: number = 2;
 

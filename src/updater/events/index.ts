@@ -1,5 +1,5 @@
 import { config } from "../../../config";
-import db from "../../db";
+import db, { getDistributionChats, getGroupsChats, getNoticeErrorsChats, getNoticeNextWeekChats, getTeachersChats } from "../../db";
 import { ChatMode, DbChat } from "../../services/bots/abstract/chat";
 import { Service } from "../../services/bots/abstract/command";
 import { createScheduleFormatter, getDayIndex, getNextDays, isNextWeek, prepareError, strDateToIndex } from "../../utils";
@@ -32,10 +32,7 @@ export abstract class AbstractEventListener<T extends DbChat = DbChat> {
     protected getGroupsChats<T>(groups: string | string[]): T[] {
         if (!Array.isArray(groups)) groups = [groups];
 
-        const chats: T[] = db.prepare(
-            "SELECT * FROM chat_options JOIN `" + this._tableName + "` ON chat_options.id = " + this._tableName + ".id WHERE `service` = ? AND `group` IN (" + Array(groups.length).fill('?') + ") AND (`deactivateSecondaryCheck` = 1 OR `mode` = 'student' OR `mode` = 'parent') AND `accepted` = 1 AND `noticeChanges` = 1 AND `allowSendMess` = 1"
-            + (config.dev ? ' AND `noticeParserErrors` = 1' : '')
-        ).all(this.service, ...groups) as any;
+        const chats: T[] = getGroupsChats(this._tableName, this.service, groups);
 
         return chats;
     }
@@ -43,10 +40,7 @@ export abstract class AbstractEventListener<T extends DbChat = DbChat> {
     protected getTeachersChats<T>(teachers: string | string[]): T[] {
         if (!Array.isArray(teachers)) teachers = [teachers];
 
-        const chats: T[] = db.prepare(
-            "SELECT * FROM chat_options JOIN `" + this._tableName + "` ON chat_options.id = " + this._tableName + ".id WHERE `service` = ? AND `teacher` IN (" + Array(teachers.length).fill('?') + ") AND (`deactivateSecondaryCheck` = 1 OR `mode` = 'teacher') AND `accepted` = 1 AND `noticeChanges` = 1 AND `allowSendMess` = 1"
-            + (config.dev ? ' AND `noticeParserErrors` = 1' : '')
-        ).all(this.service, ...teachers) as any;
+        const chats: T[] = getTeachersChats(this._tableName, this.service, teachers);
 
         return chats;
     }
@@ -223,30 +217,20 @@ export abstract class AbstractEventListener<T extends DbChat = DbChat> {
         }
     }
 
-    // public abstract addGroupWeek(data: { week: string, teacher: string }): any;
-    // public abstract addTeacherWeek(data: { week: string, teacher: string }): any;
     public async sendNextWeek(chatMode: ChatMode) {
-        const chats: T[] = db.prepare(
-            "SELECT * FROM chat_options JOIN `" + this._tableName + "` ON chat_options.id = " + this._tableName + ".id WHERE `service` = ? AND `accepted` = 1 AND `allowSendMess` = 1 AND `noticeNextWeek` = 1 AND `mode` = ?"
-            + (config.dev ? ' AND `noticeParserErrors` = 1' : '')
-        ).all(this.service, chatMode) as any;
+        const chats: T[] = getNoticeNextWeekChats(this._tableName, this.service, chatMode);
 
         return this.sendMessages(chats, '🆕 Доступно расписание на следующую неделю');
     }
 
     public async sendDistribution(message: string) {
-        const chats: T[] = db.prepare(
-            "SELECT * FROM chat_options JOIN `" + this._tableName + "` ON chat_options.id = " + this._tableName + ".id WHERE `service` = ? AND `accepted` = 1 AND `allowSendMess` = 1 AND `subscribeDistribution` = 1"
-            + (config.dev ? ' AND `noticeParserErrors` = 1' : '')
-        ).all(this.service) as any;
+        const chats: T[] = getDistributionChats(this._tableName, this.service);
 
         return this.sendMessages(chats, message);
     }
 
     public async sendError(error: Error) {
-        const chats: T[] = db.prepare(
-            "SELECT * FROM chat_options JOIN `" + this._tableName + "` ON chat_options.id = " + this._tableName + ".id WHERE `service` = ? AND `accepted` = 1 AND `allowSendMess` = 1 AND `noticeParserErrors` = 1"
-        ).all(this.service) as any;
+        const chats: T[] = getNoticeErrorsChats(this._tableName, this.service);
 
         return this.sendMessages(chats, [
             '‼️ Произошла ошибка парсера ‼️\n',

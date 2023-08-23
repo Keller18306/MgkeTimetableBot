@@ -3,7 +3,7 @@ import { arch, freemem, loadavg, uptime as osUptime, platform, release, totalmem
 import { uptime as botUptime, cpuUsage, memoryUsage, pid, resourceUsage, version, versions } from 'process';
 import { TelegramBotCommand } from 'puregram/generated';
 import { cpuTemperature } from 'systeminformation';
-import db from "../../../../db";
+import { getAllowSendMessCount, getRowsCountInTable } from "../../../../db";
 import { formatBytes, formatSeconds } from "../../../../utils";
 import { AbstractCommand, HandlerParams } from "../../abstract";
 
@@ -34,29 +34,28 @@ export default class extends AbstractCommand {
 
     public adminOnly: boolean = true;
 
-
     async handler({ context }: HandlerParams) {
-        const freeMem = freemem()
-        const botMemory = memoryUsage()
-        const totalMem = totalmem()
+        const freeMem = freemem();
+        const botMemory = memoryUsage();
+        const totalMem = totalmem();
 
         const [cpuTemp, resUsage] = await Promise.all([
             cpuTemperature(),
             resourceUsage()
-        ])
+        ]);
 
-        const { size: bdSize } = fs.statSync('./sqlite3.db')
+        const { size: bdSize } = fs.statSync('./sqlite3.db');
 
-        const vkBotChats = (db.prepare('SELECT COUNT(*) as `count` FROM `vk_bot_chats`').get() as any).count
-        const vkBotChatsAllowed = (db.prepare("SELECT COUNT(*) as `count` FROM `chat_options` WHERE `service` = 'vk' AND `allowSendMess` = 1").get() as any).count;
-        const vkAppUsers = (db.prepare('SELECT COUNT(*) as `count` FROM `vk_app_users`').get() as any).count;
-        const viberBotChats = (db.prepare('SELECT COUNT(*) as `count` FROM `viber_bot_chats`').get() as any).count;
-        const viberBotChatsAllowed = (db.prepare("SELECT COUNT(*) as `count` FROM `chat_options` WHERE `service` = 'viber' AND `allowSendMess` = 1").get() as any).count;
-        const apiKeys = (db.prepare('SELECT COUNT(*) as `count` FROM `api`').get() as any).count;
-        const tgBotChats = (db.prepare('SELECT COUNT(*) as `count` FROM `tg_bot_chats`').get() as any).count;
-        const tgBotChatsAllowed = (db.prepare("SELECT COUNT(*) as `count` FROM `chat_options` WHERE `service` = 'tg' AND `allowSendMess` = 1").get() as any).count;
+        const vkBotChats = getRowsCountInTable('vk_bot_chats');
+        const vkBotChatsAllowed = getAllowSendMessCount('vk');
+        const vkAppUsers = getRowsCountInTable('vk_app_users');
+        const viberBotChats = getRowsCountInTable('viber_bot_chats');
+        const viberBotChatsAllowed = getAllowSendMessCount('viber');
+        const apiKeys = getRowsCountInTable('api');
+        const tgBotChats = getRowsCountInTable('tg_bot_chats');
+        const tgBotChatsAllowed = getAllowSendMessCount('tg');
 
-        context.send([
+        return context.send([
             '-- Система --',
             `Температура ЦП: ${cpuTemp.main != null ? `${cpuTemp.main} °C` : 'Н/Д'}`,
             `Занято ОЗУ: ${formatBytes(totalMem - freeMem)}/${formatBytes(totalMem)}`,
@@ -92,6 +91,6 @@ export default class extends AbstractCommand {
             `Чатов бота Viber: ${viberBotChats} (${viberBotChatsAllowed})`,
             `Чатов бота Telegram: ${tgBotChats} (${tgBotChatsAllowed})`,
             `API ключей: ${apiKeys}`,
-        ].join('\n'))
+        ].join('\n'));
     }
 }

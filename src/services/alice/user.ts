@@ -1,5 +1,4 @@
-import db from "../../db";
-import { addslashes } from "../../utils";
+import { createAliceUserById, getAliceUserById, updateKeyInTableById } from "../../db";
 
 interface IAliceUserFields {
     id: string;
@@ -11,22 +10,16 @@ interface IAliceUserFields {
 }
 
 class AliceUser {
-    private static _tableName: string = 'alice_users';
-
     public static getById(userId: string): AliceUser {
-        const data = db.prepare('SELECT * FROM ' + this._tableName + ' WHERE `userId` = ?').get(userId);
+        const data = getAliceUserById(userId);
 
         if (!data) {
-            this.createUser(userId);
+            createAliceUserById(userId);
 
             return this.getById(userId);
         }
 
         return new this(data)
-    }
-
-    private static createUser(userId: string) {
-        db.prepare('INSERT INTO ' + this._tableName + ' (`userId`) VALUES (?)').run(userId)
     }
 
     private constructor(private data: any) {
@@ -38,19 +31,19 @@ class AliceUser {
 
                 return Reflect.get(target, p, receiver);
             },
-            set: (target: this, p: string, value: any, receiver: any) => {
-                if (Object.keys(this.data).includes(p)) {
+            set: (target: this, key: string, value: any, receiver: any) => {
+                if (Object.keys(this.data).includes(key)) {
                     if (typeof value === 'boolean') {
                         value = Number(value)
                     }
 
-                    db.prepare('UPDATE ' + AliceUser._tableName + ' SET `' + addslashes(p) + '` = ? WHERE `id` = ?').run(value, this.data.id)
-                    this.data[p] = value;
+                    updateKeyInTableById('alice_users', key, value, this.data.id);
+                    this.data[key] = value;
 
                     return true;
                 }
 
-                return Reflect.set(target, p, value, receiver);
+                return Reflect.set(target, key, value, receiver);
             }
         })
     }

@@ -9,33 +9,21 @@ export default class VkAppSetConfigMethod extends VKAppDefaultMethod {
     handler({ user, request, response }: HandlerParams) {
         const cfg = user.get();
 
-        if (
-            typeof request.body.group !== 'number' &&
-            request.body.group !== null
-        ) return false;
-        if (
-            typeof request.body.teacher !== 'string' &&
-            request.body.teacher !== null
-        ) return false;
-        if (
-            typeof request.body.firstPage !== 'string' &&
-            request.body.firstPage !== null
-        ) return false;
-        if (typeof request.body.theme_id !== 'number') return false;
+        const body = request.body;
+        const group = body.group;
+        const teacher = body.teacher;
+        const firstPage = body.firstPage;
+        const theme_id = body.theme_id;
 
-        if (
-            request.body.teacher !== null &&
-            String(request.body.group).length > 3) return false;
-        if (
-            request.body.teacher !== null &&
-            request.body.teacher.length > 255
-        ) return false;
-        if (request.body.theme_id > 3) return false;
-        if (
-            request.body.firstPage !== null &&
-            request.body.firstPage.length > 16
-        ) return false;
+        if ((typeof group !== 'number' && typeof group !== 'string') && group !== null) return false;
+        if (typeof teacher !== 'string' && teacher !== null) return false;
+        if (typeof firstPage !== 'string' && firstPage !== null) return false;
+        if (typeof theme_id !== 'number') return false;
 
+        if (teacher !== null && String(group).length > 255) return false;
+        if (teacher !== null && String(teacher).length > 255) return false;
+        if (theme_id > 3) return false;
+        if (firstPage !== null && String(firstPage).length > 16) return false;
 
         db.prepare([
             'UPDATE `vk_app_users` SET',
@@ -44,13 +32,7 @@ export default class VkAppSetConfigMethod extends VKAppDefaultMethod {
             '`theme_id` = ?,',
             '`firstPage` = ?',
             'WHERE `id` = ?'
-        ].join(' ')).run(
-            request.body.group,
-            request.body.teacher,
-            request.body.theme_id,
-            request.body.firstPage,
-            cfg.id
-        )
+        ].join(' ')).run(group, teacher, theme_id, firstPage, cfg.id);
 
         return true;
     }

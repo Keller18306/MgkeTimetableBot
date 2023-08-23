@@ -7,4 +7,9 @@ if (!existsSync('sqlite3.db')) {
     db.exec(readFileSync('scheme.sqlite3', 'utf8'));
 }
 
+export * from './alice';
+export * from './api';
+export * from './bot';
+export * from './common';
+export * from './storage';
 export default db;

@@ -1,6 +1,6 @@
 import fs from 'fs';
 import { TelegramBotCommand } from 'puregram/generated';
-import db from '../../../../db';
+import { vaccum } from '../../../../db';
 import { formatBytes } from '../../../../utils';
 import { AbstractCommand, HandlerParams } from "../../abstract";
 
@@ -16,7 +16,7 @@ export default class extends AbstractCommand {
     async handler({ context }: HandlerParams) {
         const { size: bdSize_before } = fs.statSync('./sqlite3.db')
 
-        db.prepare('VACUUM;').run();
+        vaccum();
 
         const { size: bdSize_after } = fs.statSync('./sqlite3.db')
 

@@ -1,4 +1,4 @@
-import db from "../../../db";
+import { addValueIntoStorageByKey, getValueFromStorageByKey } from "../../../db";
 
 export class FileCache {
     constructor(
@@ -6,13 +6,12 @@ export class FileCache {
     ) {}
 
     public get(key: string): string | null {
-        const entry: any = db.prepare("SELECT * FROM storage WHERE `storage` = ? AND `key` = ?").get(this.storageName, key);
+        const entry: any = getValueFromStorageByKey(this.storageName, key);
 
         return entry?.value || null;
     }
 
     public add(key: string, value: string) {
-        const time = Math.floor(Date.now() / 1e3);
-        db.prepare('INSERT INTO storage (`storage`, `key`, `value`, `time`) VALUES (?, ?, ?, ?)').run(this.storageName, key, value, time);
+        addValueIntoStorageByKey(this.storageName, key, value, Math.floor(Date.now() / 1e3))
     }
 }

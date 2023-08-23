@@ -1,7 +1,7 @@
 import { Service } from ".";
 import { config } from "../../../../config";
-import db from "../../../db";
-import { addslashes, arrayUnique } from "../../../utils";
+import { addNewBotUser, getBotUser, updateChatOptionsKeyByPeerId, updateKeyInTableByPeerId } from "../../../db";
+import { arrayUnique } from "../../../utils";
 
 export type ChatMode = 'student' | 'teacher' | 'parent' | 'guest'
 
@@ -136,42 +136,34 @@ abstract class AbstractChat {
 
                 return Reflect.get(target, p, receiver);
             },
-            set: (target: this, p: string, value: any, receiver: any) => {
-                if (Object.keys(this._cache).includes(p)) {
+            set: (target: this, key: string, value: any, receiver: any) => {
+                if (Object.keys(this._cache).includes(key)) {
                     if (typeof value === 'boolean') {
                         value = Number(value);
                     }
 
-                    const key: string = addslashes(p);
-
-                    if (this.columns.includes(p)) {
-                        db.prepare(`UPDATE ${this.db_table} SET \`${key}\` = ? WHERE peerId = ?`).run(value, this.peerId);
+                    if (this.columns.includes(key)) {
+                        updateKeyInTableByPeerId(this.db_table, key, value, this.peerId);
                     } else {
-                        db.prepare(`UPDATE chat_options SET \`${key}\` = ? WHERE id = (
-                            SELECT id FROM ${this.db_table} WHERE peerId = ?
-                        ) AND service = ?`).run(value, this.peerId, this.service);
+                        updateChatOptionsKeyByPeerId(this.db_table, this.service, key, value, this.peerId);
                     }
 
-                    this._cache[p] = value;
+                    this._cache[key] = value;
 
                     return true;
                 }
 
-                return Reflect.set(target, p, value, receiver);
+                return Reflect.set(target, key, value, receiver);
             }
         })
     }
 
     public resync(doNotCreate: boolean = false): this {
-        const chat: any = db.prepare(`SELECT * FROM ${this.db_table} JOIN chat_options ON ${this.db_table}.id = chat_options.id AND chat_options.service = ? WHERE ${this.db_table}.peerId = ?`).get(this.service, this.peerId);
+        const chat: any = getBotUser(this.db_table, this.service, this.peerId);
 
         if (!doNotCreate && chat == undefined) {
-            const { lastInsertRowid } = db.prepare(`INSERT INTO ${this.db_table} (peerId) VALUES (?)`).run(this.peerId);
-            db.prepare(
-                'INSERT INTO chat_options (`service`, `id`, `accepted`, `allowSendMess`) VALUES (?, ?, ?, ?)'
-            ).run(
-                this.service, lastInsertRowid, +(this.isChat ? config.accept.room : config.accept.private), +this.defaultAllowSendMess
-            )
+            const accepted: boolean = this.isChat ? config.accept.room : config.accept.private;
+            addNewBotUser(this.db_table, this.service, this.peerId, accepted, this.defaultAllowSendMess)
 
             return this.resync(true);
         }

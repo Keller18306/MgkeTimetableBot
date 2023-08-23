@@ -1,5 +1,5 @@
 import { config } from "../../../config";
-import db from "../../db";
+import { getApiKeyById, updateLastApiKeyUse } from "../../db";
 import { ApiKey } from "../../key";
 
 const keyTool = new ApiKey(config.encrypt_key)
@@ -10,9 +10,7 @@ export type KeyData = {
     fromId: bigint | null,
     limitPerSec: number,
     iv: string | null,
-    last_time: number | null,
-
-    resync: () => KeyData
+    last_time: number | null
 }
 
 export class Key {
@@ -45,17 +43,18 @@ export class Key {
     }
 
     get(): KeyData {
-        if (this._id == null) throw new Error('key is not valid')
+        if (this._id == null) {
+            throw new Error('key is not valid');
+        }
         
-        const data: any = db.prepare('SELECT * FROM `api` WHERE `id` = ?').get(this._id);
-
-        db.prepare('UPDATE `api` SET `last_time` = ? WHERE `id` = ?').run(Date.now(), this._id)
-
-        data.resync = (): KeyData => {
-            return Object.assign(data, this.get())
+        const data: any = getApiKeyById(this._id);
+        if (!data) {
+            throw new Error('api key not found');
         }
 
-        return data
+        updateLastApiKeyUse(this._id, Date.now());
+
+        return data;
     }
 
     get id(): bigint {
