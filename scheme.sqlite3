@@ -1,5 +1,5 @@
 --
--- Файл сгенерирован с помощью SQLiteStudio v3.4.4 в пт июль 28 03:27:11 2023
+-- Файл сгенерирован с помощью SQLiteStudio v3.4.4 в вт авг. 29 16:31:59 2023
 --
 -- Использованная кодировка текста: System
 --
@@ -35,7 +35,7 @@ CREATE TABLE chat_options (
     ref                      STRING (255),
     scene                    STRING,
     mode                     STRING (16),
-    [group]                  STRING (3),
+    [group]                  STRING (255),
     teacher                  STRING (255),
     showAbout                BOOLEAN      DEFAULT (1),
     showDaily                BOOLEAN      DEFAULT (1),
@@ -103,10 +103,10 @@ CREATE TABLE tg_bot_chats (
 
 -- Таблица: timetable_archive
 CREATE TABLE timetable_archive (
-    id      INTEGER PRIMARY KEY AUTOINCREMENT,
-    day     INTEGER NOT NULL,
-    [group] INTEGER,
-    teacher STRING,
+    id      INTEGER      PRIMARY KEY AUTOINCREMENT,
+    day     INTEGER      NOT NULL,
+    [group] STRING (255),
+    teacher STRING (255),
     data    TEXT
 );
 
@@ -133,7 +133,7 @@ CREATE TABLE vk_app_users (
     accepted       BOOLEAN      DEFAULT (0) 
                                 NOT NULL,
     ref            STRING (255),
-    [group]        STRING (3),
+    [group]        STRING (255),
     teacher        STRING (255),
     theme_id       INT          DEFAULT (0),
     adblock        BOOLEAN      DEFAULT (0),
@@ -160,10 +160,16 @@ CREATE INDEX api_index ON api (
 );
 
 
--- Индекс: archive_index
-CREATE UNIQUE INDEX archive_index ON timetable_archive (
+-- Индекс: archive_group_index
+CREATE UNIQUE INDEX archive_group_index ON timetable_archive (
     day,
-    "group",
+    "group"
+);
+
+
+-- Индекс: archive_teacher_index
+CREATE UNIQUE INDEX archive_teacher_index ON timetable_archive (
+    day,
     teacher
 );
 
