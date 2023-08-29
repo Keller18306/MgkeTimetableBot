@@ -3,9 +3,9 @@ import { GroupDay, TeacherDay } from "../updater/parser/types";
 /**
  * @description Перезаписывает старые дни, новыми, сохраняя старые неизменённые
  */
-export function mergeDays<T extends GroupDay | TeacherDay>(new_days: T[], old_days: T[]): { mergedDays: T[], added: string[], changes: string[] } {
-    const addedDays: string[] = [];
-    const changedDays: string[] = [];
+export function mergeDays<T extends GroupDay | TeacherDay>(new_days: T[], old_days: T[]): { mergedDays: T[], added: T[], changed: T[] } {
+    const addedDays: T[] = [];
+    const changedDays: T[] = [];
     const days: {
         [day: string]: T
     } = {};
@@ -18,9 +18,9 @@ export function mergeDays<T extends GroupDay | TeacherDay>(new_days: T[], old_da
         const oldDay: T = days[newDay.day];
 
         if (oldDay === undefined) {
-            addedDays.push(newDay.day);
+            addedDays.push(newDay);
         } else if (JSON.stringify(oldDay.lessons) !== JSON.stringify(newDay.lessons)) {
-            changedDays.push(newDay.day);
+            changedDays.push(newDay);
         }
 
         days[newDay.day] = newDay;
@@ -29,7 +29,7 @@ export function mergeDays<T extends GroupDay | TeacherDay>(new_days: T[], old_da
     return {
         mergedDays: Object.values(days),
         added: addedDays,
-        changes: changedDays
+        changed: changedDays
     }
 }
 

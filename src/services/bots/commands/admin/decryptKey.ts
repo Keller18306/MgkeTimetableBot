@@ -1,6 +1,6 @@
 import { config } from "../../../../../config";
 import { RequestKey, appType } from "../../../../key";
-import { formatTime } from "../../../../utils";
+import { formatDateTime } from "../../../../utils";
 import { AbstractCommand, HandlerParams } from "../../abstract";
 
 const acceptTool = new RequestKey(config.encrypt_key)
@@ -29,7 +29,7 @@ export default class extends AbstractCommand {
         context.send(
             `from: ${appType[data.from]}\n` +
             rows.join('\n') +
-            `\ntime: ${data.time} (${formatTime(new Date(Number(data.time)))})\n` +
+            `\ntime: ${data.time} (${formatDateTime(new Date(Number(data.time)))})\n` +
             `payload: ${data.payload}`
         )
     }

@@ -4,11 +4,12 @@ import { config } from "../../config"
 import { ChatMode } from "../services/bots/abstract"
 import { clearOldImages } from "../services/image/clear"
 import { getDayIndex, getStrWeekIndex, mergeDays, strDateToIndex } from "../utils"
+import { Archive, ArchiveAppendDay } from "./archive"
 import { EventController } from "./events/controller"
 import { NextDayUpdater } from "./nextDay"
 import StudentParser from "./parser/group"
 import TeacherParser from "./parser/teacher"
-import { Group, Groups, Teacher, Teachers } from "./parser/types"
+import { Group, GroupDay, Groups, Teacher, TeacherDay, Teachers } from "./parser/types"
 import { RaspGroupCache, RaspTeacherCache, loadCache, raspCache, saveCache } from "./raspCache"
 
 const MAX_LOG_LIMIT: number = 10;
@@ -41,6 +42,18 @@ function createDelayPromise(ms: number): Delay {
     }
 }
 
+function onParser<T>(Parser: typeof StudentParser | typeof TeacherParser, onStudent: T, onTeacher: T): T {
+    if (Parser === StudentParser) {
+        return onStudent;
+    }
+
+    if (Parser === TeacherParser) {
+        return onTeacher;
+    }
+
+    throw new Error('unknown parser')
+}
+
 export class Updater {
     private static instance?: Updater;
 
@@ -50,9 +63,15 @@ export class Updater {
         return this.instance
     }
 
+    public archive: Archive;
+
     private logs: { date: Date, result: string | Error }[] = [];
     private delayPromise?: Delay;
     private clearKeys: boolean = false;
+
+    constructor() {
+        this.archive = new Archive();
+    }
 
     public getLogs() {
         return this.logs.slice();
@@ -285,20 +304,7 @@ export class Updater {
 
         let data: Teachers | Groups;
         if (config.updater.localMode) {
-            let fileName: string | undefined;
-
-            if (Parser === StudentParser) {
-                fileName = 'groups';
-            }
-
-            if (Parser === TeacherParser) {
-                fileName = 'teachers';
-            }
-
-            if (!fileName) {
-                throw new Error('WHAT?!')
-            }
-
+            const fileName: string = onParser<string>(Parser, 'groups', 'teachers');
             const file: any = JSON.parse(readFileSync(`./cache/rasp/${fileName}.json`, 'utf8'));
 
             data = file.timetable;
@@ -325,9 +331,6 @@ export class Updater {
             return bounds;
         }, []));
 
-        //TODO сделать оповещения в чаты, когда изменения на день поступили
-        //const dump = Object.assign({}, rasp.timetable);
-
         // Полная очистка
         if (this.clearKeys) {
             for (const index in cache.timetable) {
@@ -337,6 +340,8 @@ export class Updater {
             }
         }
 
+        const archiveDays: ArchiveAppendDay[] = [];
+
         // добавление новых данных
         for (const index in data) {
             const newEntry = data[index];
@@ -345,16 +350,42 @@ export class Updater {
             if (!currentEntry) {
                 cache.timetable[index] = data[index];
             } else {
-                const { mergedDays, added, changes } = mergeDays(newEntry.days as any, currentEntry.days as any);
+                const { mergedDays, added, changed } = mergeDays(newEntry.days as any, currentEntry.days as any);
+
+                /*
+                TODO оповещения:
+                если на завтра расписание изменилось у большинства групп - оправить всем "расписание на завтра"
+                если на завтра расписание опять изменилось, но уже было отправлено прошлое - сообщить, что поступили правки
+                если на сегодня изменилось - сообщить, что поступили правки
+                */
+
+                const toArchive: (GroupDay | TeacherDay)[] = [...added, ...changed];
+                if (toArchive.length > 0) {
+                    archiveDays.push(...toArchive.map((day): ArchiveAppendDay => {
+                        return onParser<ArchiveAppendDay>(Parser, {
+                            type: 'group',
+                            group: index,
+                            day: day as GroupDay
+                        }, {
+                            type: 'teacher',
+                            teacher: index,
+                            day: day as TeacherDay
+                        });
+                    }));
+                }
 
                 //test
                 if (config.dev) {
-                    if (changes.length > 0) {
-                        console.log(`Для '${index}' были изменены дни:`, changes)
+                    if (changed.length > 0) {
+                        console.log(`Для '${index}' были изменены дни:`, changed.map(day => {
+                            return day.day
+                        }))
                     }
 
                     if (added.length > 0) {
-                        console.log(`Для '${index}' были добавлены дни:`, added)
+                        console.log(`Для '${index}' были добавлены дни:`, added.map(day => {
+                            return day.day
+                        }))
                     }
                 }
 
@@ -366,11 +397,24 @@ export class Updater {
         for (const index in cache.timetable) {
             const entry = cache.timetable[index];
 
-            //удаление старых дней (удаляются дни, которые старше указанных на сайте и старше сегодняшнего дня)
-            entry.days = (entry.days as any).filter((day: any) => {
+            //удаление старых дней (удаляются дни, которые одновременно старше указанных на сайте и старше сегодняшнего дня)
+            entry.days = (entry.days as any).filter((day: GroupDay | TeacherDay): boolean => {
                 const dayIndex: number = strDateToIndex(day.day);
+                const keep: boolean = (dayIndex >= todayIndex || dayIndex >= siteMinimalDayIndex);
 
-                return (dayIndex >= todayIndex || dayIndex >= siteMinimalDayIndex);
+                if (!keep) {
+                    archiveDays.push(onParser<ArchiveAppendDay>(Parser, {
+                        type: 'group',
+                        group: index,
+                        day: day as GroupDay
+                    }, {
+                        type: 'teacher',
+                        teacher: index,
+                        day: day as TeacherDay
+                    }));
+                }
+
+                return keep;
             }) as any;
 
             //удаление группы/учителя если все дни пустые и его нет в новых данных
@@ -378,6 +422,8 @@ export class Updater {
                 delete cache.timetable[index];
             }
         }
+
+        this.archive.appendDays(archiveDays);
 
         // проверка на то, что добавлена новая неделя
         const maxWeekNumber = Math.max(...(Object.values(cache.timetable) as (Group | Teacher)[])
@@ -392,19 +438,8 @@ export class Updater {
 
         // оповещение в чаты, что на сайте вывесили новую неделю
         if (cache.lastWeekIndex && maxWeekNumber > cache.lastWeekIndex) {
-            let chatMode: ChatMode | undefined;
-
-            if (Parser === StudentParser) {
-                chatMode = 'student';
-            }
-
-            if (Parser === TeacherParser) {
-                chatMode = 'teacher';
-            }
-
-            if (chatMode) {
-                EventController.sendNextWeek(chatMode);
-            }
+            const chatMode: ChatMode = onParser<ChatMode>(Parser, 'student', 'teacher');
+            EventController.sendNextWeek(chatMode);
         }
 
         cache.lastWeekIndex = maxWeekNumber;
@@ -415,3 +450,4 @@ export class Updater {
 }
 
 export { raspCache }
+

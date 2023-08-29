@@ -1,7 +1,7 @@
 import { config } from "../../../../config";
 import db from "../../../db";
 import { ApiKey } from "../../../key";
-import { formatTime } from "../../../utils";
+import { formatDateTime } from "../../../utils";
 import { KeyData } from "../../api/key";
 import { AbstractCommand, HandlerParams } from "../abstract";
 
@@ -36,7 +36,7 @@ export default class extends AbstractCommand {
             `${context.text.endsWith('_new') ? 'Новый ' : ''}API токен #${key.id}:`,
             keyTool.getKey(key.id, key.iv),
             `Запросов в сек: ${key.limitPerSec}`,
-            `Последнее использование: ${key.last_time ? formatTime(new Date(key.last_time)) : 'нет'}`,
+            `Последнее использование: ${key.last_time ? formatDateTime(new Date(key.last_time)) : 'нет'}`,
 
             '\nДокументация: https://vk.com/@mgke_slave-api',
             'Создать новый: /api_new'

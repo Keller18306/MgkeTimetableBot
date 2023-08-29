@@ -114,7 +114,7 @@ export abstract class ScheduleFormatter {
     }
 
     public formatGroupLessons(lessons: GroupLesson[]): string {
-        if (!lessons.length) {
+        if (!lessons || !lessons.length) {
             return this.NoLessons();
         }
 
@@ -171,8 +171,8 @@ export abstract class ScheduleFormatter {
         return text.join('\n').trim();
     }
 
-    public formatTeacherLessons(lessons: TeacherLesson[]): string {
-        if (!lessons.length) {
+    public formatTeacherLessons(lessons?: TeacherLesson[]): string {
+        if (!lessons || !lessons.length) {
             return this.NoLessons();
         }
 

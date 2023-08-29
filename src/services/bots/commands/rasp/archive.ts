@@ -1,7 +1,10 @@
 import { TelegramBotCommand } from "puregram/generated";
-import db from "../../../../db";
-import { dayIndexToDate, strDateToIndex } from "../../../../utils";
+import { Updater } from "../../../../updater";
+import { GroupLesson, TeacherLesson } from "../../../../updater/parser/types";
+import { dayIndexToDate, formatDate, strDateToIndex } from "../../../../utils";
 import { AbstractCommand, HandlerParams } from "../../abstract";
+
+const archive = Updater.getInstance().archive;
 
 export default class extends AbstractCommand {
     public regexp = /^((!|\/)archive)(\b|$|\s)/i;
@@ -20,40 +23,41 @@ export default class extends AbstractCommand {
 
         const dayIndex: number = strDateToIndex(day);
 
-        let condition: string | undefined;
-        let value: any | undefined;
-        let type: 'teacher' | 'group';
+        let entry: GroupLesson[] | TeacherLesson[] | null = null;
+        let text: string;
         if (chat.mode === 'student' || chat.mode === 'parent') {
-            condition = '`group` = ? AND `teacher` IS NULL';
-            value = chat.group;
-            type = 'group';
+            if (chat.group == null) {
+                return context.send(`Для данного чата группа не была выбрана.`);
+            }
+
+            entry = archive.getGroupDay(dayIndex, chat.group);
+            text = scheduleFormatter.formatGroupLessons(entry);
         } else if (chat.mode === 'teacher') {
-            condition = '`group` IS NULL AND `teacher` = ?';
-            value = chat.teacher;
-            type = 'teacher';
+            if (chat.teacher == null) {
+                return context.send(`Для данного чата учитель не был выбран.`);
+            }
+
+            entry = archive.getTeacherDay(dayIndex, chat.teacher);
+            text = scheduleFormatter.formatTeacherLessons(entry);
         } else {
             //todo get from args
-            return context.send(`Для данного режима чата (${chat.mode}) нельзя автоматически получить группу или учителя.`)
+            return context.send(`Для данного режима чата (${chat.mode}) нельзя автоматически получить группу или учителя.`);
         }
 
-        const entry = db.prepare('SELECT * FROM timetable_archive WHERE `day` = ? AND ' + condition).get(dayIndex, value) as any;
         if (!entry) {
-            const minimalDayIndex: number = (db.prepare('SELECT MIN(`day`) as `day` FROM timetable_archive').get() as any).day;
+            const minimalDayIndex: number = archive.getMinimalDayIndex();
+            
             if (dayIndex < minimalDayIndex) {
                 //todo another day format
                 return context.send([
                     'Вы указали день, который находится вне периода сохранённых дней.',
-                    `В базе хранятся дни, начиная с ${dayIndexToDate(minimalDayIndex)}`
+                    `В базе хранятся дни, начиная с ${formatDate(dayIndexToDate(minimalDayIndex))}`
                 ].join('\n'));
             }
 
-            return context.send('Ничего не найдено');
+            return context.send('Ничего не найдено на данный день');
         }
 
-        //entry.data
-        //scheduleFormatter.formatGroupLessons()
-        //scheduleFormatter.formatTeacherLessons()
-
-        return context.send(JSON.stringify(entry, null, 1));
+        return context.send(text);
     }
 }

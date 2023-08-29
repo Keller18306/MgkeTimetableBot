@@ -28,16 +28,19 @@ export function formatSeconds(sec: number, limit: number | null = null) {
     return end.join(' ');
 }
 
-export function formatTime(date: Date, microtime: boolean = false): string {
-    return `${date.getDate().toString().padStart(2, '0')}.` +
-        `${(date.getMonth() + 1).toString().padStart(2, '0')}.` +
-        `${date.getFullYear()} ` +
+export function formatDateTime(date: Date, microtime: boolean = false): string {
+    return formatDate(date) + ' ' +
         `${date.getHours().toString().padStart(2, '0')}:` +
         `${date.getMinutes().toString().padStart(2, '0')}:` +
         `${date.getSeconds().toString().padStart(2, '0')}` +
         (microtime ? `,${date.getMilliseconds().toString().padStart(3, '0')}` : '')
 }
 
+export function formatDate(date: Date): string {
+    return `${date.getDate().toString().padStart(2, '0')}.` +
+        `${(date.getMonth() + 1).toString().padStart(2, '0')}.` +
+        `${date.getFullYear()}`;
+}
 
 export function getDayIndex(date?: Date): number {
     if (!date) {
