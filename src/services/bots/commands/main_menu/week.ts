@@ -57,7 +57,7 @@ export default class extends AbstractCommand {
         actions.deleteUserMsg();
 
         const id = await context.send(message, {
-            keyboard: keyboard.GenerateImage('group', String(chat.group))
+            // keyboard: keyboard.GenerateImage('group', String(chat.group))
         }).then(id => {
             actions.handlerLastMsgUpdate(context)
             return id;
@@ -96,7 +96,7 @@ export default class extends AbstractCommand {
         actions.deleteUserMsg();
 
         return context.send(message, {
-            keyboard: keyboard.GenerateImage('teacher', chat.teacher)
+            // keyboard: keyboard.GenerateImage('teacher', chat.teacher)
         }).then(context => actions.handlerLastMsgUpdate(context));
     }
 }

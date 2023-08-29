@@ -47,7 +47,7 @@ export default class extends AbstractCommand {
         })
 
         return context.send(message, {
-            keyboard: keyboard.GenerateImage('teacher', teacher)
+            // keyboard: keyboard.GenerateImage('teacher', teacher)
         });
     }
 }

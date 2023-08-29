@@ -42,7 +42,7 @@ export default class extends AbstractCommand {
         })
 
         return context.send(message, {
-            keyboard: keyboard.GenerateImage('group', String(group))
+            // keyboard: keyboard.GenerateImage('group', String(group))
         })
     }
 }
