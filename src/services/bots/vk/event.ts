@@ -27,7 +27,7 @@ export class VkEventListener extends AbstractEventListener<VkDb> {
             message,
             random_id: getRandomId()
         }).catch((err: APIError) => {
-            if ([7, 901].includes(+err.code)) {
+            if ([7, 901, 936].includes(+err.code)) {
                 chat.allowSendMess = false;
                 return;
             }
