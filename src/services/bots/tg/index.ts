@@ -32,7 +32,7 @@ export class TgBot extends AbstractBot {
         if (TgBot._instance) throw new Error('TgBot is singleton')
 
         this.tg = new Telegram({
-            token: config.telegram.token,
+            token: config.telegram.token
         })
 
         this.tg.updates.on('message', (context, next) => this.messageHandler(context, next))

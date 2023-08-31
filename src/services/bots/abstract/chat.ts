@@ -122,7 +122,12 @@ abstract class AbstractChat {
 
     private initialized: boolean = false;
 
-    constructor() {
+    constructor(dbChat?: DbChat) {
+        if (dbChat) {
+            this._cache = dbChat;
+            this.initialized = true;
+        }
+
         return new Proxy(this, {
             get: (target: this, p: string, receiver: any) => {
                 if (!this.initialized) {
@@ -208,7 +213,6 @@ abstract class AbstractChat {
         history.unshift(value);
         this.teacherSearchHistory = history;
     }
-
 }
 
 interface AbstractChat extends DbChat { };

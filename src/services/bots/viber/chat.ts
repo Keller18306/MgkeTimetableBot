@@ -37,7 +37,13 @@ class ViberChat extends AbstractChat {
     private updateDITime: number = 12 * 60 * 60 * 1000;
     protected defaultAllowSendMess: boolean = false;
 
-    constructor(peerId: string) {
+    constructor(peerId: string | ViberDb) {
+        if (typeof peerId === 'object') {
+            super(peerId);
+            this.peerId = peerId.peerId;
+            return;
+        }
+        
         super()
         this.peerId = peerId;
     }

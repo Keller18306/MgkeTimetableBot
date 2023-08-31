@@ -4,6 +4,8 @@ import db from "../../../db";
 import { AbstractChat, DbChat, Service } from "../abstract";
 
 export type TgDb = DbChat & {
+    peerId: number; //переопределение как число
+    
     /** Юзернейм */
     domain: string | null;
 
@@ -26,7 +28,13 @@ class TgChat extends AbstractChat {
         'domain', 'firstName', 'lastName', 'lang'
     ];
 
-    constructor(peerId: number) {
+    constructor(peerId: number | TgDb) {
+        if (typeof peerId === 'object') {
+            super(peerId);
+            this.peerId = peerId.peerId;
+            return;
+        }
+
         super()
         this.peerId = peerId;
     }

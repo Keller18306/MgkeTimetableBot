@@ -12,7 +12,7 @@ export const SCHEDULE_FORMATTERS = [
     DefaultScheduleFormatter, VisualScheduleFormatter
 ];
 
-export function createScheduleFormatter(service: Service, raspCache: RaspCache, chat?: AbstractChat): ScheduleFormatter {
+export function createScheduleFormatter(service: Service, raspCache: RaspCache, chat: AbstractChat): ScheduleFormatter {
     if (!chat) {
         return new DefaultScheduleFormatter(service, raspCache, chat);
     }

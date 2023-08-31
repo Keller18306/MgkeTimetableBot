@@ -1,8 +1,8 @@
 import { APIError, getRandomId, VK } from "vk-io";
 import { config } from "../../../../config";
 import { AbstractEventListener } from "../../../updater/events";
-import { VkDb } from './chat';
-import { Service } from "../abstract";
+import { AbstractChat, Service } from "../abstract";
+import { VkChat, VkDb } from './chat';
 
 export class VkEventListener extends AbstractEventListener<VkDb> {
     protected _tableName: string = 'vk_bot_chats';
@@ -15,6 +15,10 @@ export class VkEventListener extends AbstractEventListener<VkDb> {
     constructor(vk: VK) {
         super(config.vk.bot.noticer)
         this.vk = vk
+    }
+    
+    protected createChat(chat: VkDb): AbstractChat {
+        return new VkChat(chat);
     }
 
     protected async sendMessage(chat: VkDb, message: string) {

@@ -17,8 +17,14 @@ class VkChat extends AbstractChat {
         'allowVkAppAccept'
     ];
 
-    constructor(peerId: number) {
-        super()
+    constructor(peerId: number | VkDb) {
+        if (typeof peerId === 'object') {
+            super(peerId);
+            this.peerId = peerId.peerId;
+            return;
+        }
+
+        super();
         this.peerId = peerId;
     }
 
