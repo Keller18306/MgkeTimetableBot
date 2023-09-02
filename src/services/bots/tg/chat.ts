@@ -32,6 +32,7 @@ class TgChat extends AbstractChat {
         if (typeof peerId === 'object') {
             super(peerId);
             this.peerId = peerId.peerId;
+            this._initialized = true;
             return;
         }
 

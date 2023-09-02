@@ -1,5 +1,5 @@
 import { config } from "../../../config";
-import db, { getDistributionChats, getGroupsChats, getNoticeErrorsChats, getNoticeNextWeekChats, getTeachersChats } from "../../db";
+import { getDistributionChats, getGroupsChats, getNoticeErrorsChats, getNoticeNextWeekChats, getTeachersChats } from "../../db";
 import { AbstractChat, ChatMode, DbChat } from "../../services/bots/abstract/chat";
 import { Service } from "../../services/bots/abstract/command";
 import { createScheduleFormatter, getDayIndex, getNextDays, isNextWeek, prepareError, strDateToIndex } from "../../utils";

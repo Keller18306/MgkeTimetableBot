@@ -120,19 +120,17 @@ abstract class AbstractChat {
     public abstract get isAdmin(): boolean;
     public abstract get isChat(): boolean;
 
-    private initialized: boolean = false;
+    public _initialized: boolean = false;
 
     constructor(dbChat?: DbChat) {
         if (dbChat) {
             this._cache = dbChat;
-            this.initialized = true;
         }
 
         return new Proxy(this, {
             get: (target: this, p: string, receiver: any) => {
-                if (!this.initialized) {
+                if (!this._initialized) {
                     this.resync();
-                    this.initialized = true;
                 }
 
                 if (Object.keys(this._cache).includes(p)) {
@@ -142,7 +140,7 @@ abstract class AbstractChat {
                 return Reflect.get(target, p, receiver);
             },
             set: (target: this, key: string, value: any, receiver: any) => {
-                if (Object.keys(this._cache).includes(key)) {
+                if (this._initialized && Object.keys(this._cache).includes(key)) {
                     if (typeof value === 'boolean') {
                         value = Number(value);
                     }
@@ -174,6 +172,7 @@ abstract class AbstractChat {
         }
 
         this._cache = chat;
+        this._initialized = true;
 
         return this;
     }
