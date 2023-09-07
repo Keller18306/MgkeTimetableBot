@@ -2,6 +2,7 @@ import { DOMWindow } from "jsdom";
 import { parseStrToDate } from "../../utils";
 import { GroupLesson, Groups } from "./types/group";
 import { TeacherLesson, Teachers } from "./types/teacher";
+import { createHash } from "crypto";
 
 export abstract class AbstractParser {
     protected readonly window: Window | DOMWindow;
@@ -11,8 +12,25 @@ export abstract class AbstractParser {
         this.window = window;
     }
 
+    public abstract run(): object;
+
+    public getContentHash(): string {
+        const content = this.content.innerHTML;
+        const hash = createHash('sha256').update(content).digest('base64url');
+        return hash;
+    }
+
     protected get document() {
         return this.window.document;
+    }
+
+    protected get content(): Element {
+        const content = this.window.document.querySelector('#main-p .content');
+        if (!content) {
+            throw new Error('cannot get page content');
+        }
+
+        return content;
     }
 
     protected querySelectorAll(selector: string): NodeListOf<HTMLElement> {
@@ -26,7 +44,7 @@ export abstract class AbstractParser {
     protected parseBodyTables(_forceCache: boolean = false) {
         if (_forceCache || this._bodyTables === undefined) {
             this._bodyTables = Array.from(
-                this.document.querySelectorAll('body table') as NodeListOf<HTMLTableElement>
+                this.content.querySelectorAll('body table') as NodeListOf<HTMLTableElement>
             )
         }
 
@@ -99,6 +117,4 @@ export abstract class AbstractParser {
             days.splice(sundayIndex, 1);
         }
     }
-
-    abstract run(): object
 }

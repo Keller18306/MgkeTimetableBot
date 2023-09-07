@@ -47,9 +47,9 @@ export function getDayIndex(date?: Date): number {
         date = new Date();
     }
 
-    date.setHours(0, 0, 0, 0);
+    date.setUTCHours(0, 0, 0, 0);
     
-    return date.getTime() / 1e3 / 1e2;
+    return date.getTime() / 1e3 / 24 / 60 / 60;
 }
 
 export function getWeekIndex(date?: Date): number {
@@ -66,7 +66,7 @@ export function getWeekIndex(date?: Date): number {
     return weekNumber;
 }
 
-export function parseStrToDate(str_date: string): Date {
+export function parseStrToDate(str_date: string, utc: boolean = false): Date {
     const date = new Date();
 
     const parts = str_date.split('.').map((value: string): number => {
@@ -75,25 +75,36 @@ export function parseStrToDate(str_date: string): Date {
     parts[1] -= 1; //js format
 
     date.setFullYear(...parts);
-    date.setHours(0, 0, 0, 0);
+    if (utc) {
+        date.setUTCHours(0, 0, 0, 0);
+    } else {
+        date.setHours(0, 0, 0, 0);
+    }
 
     return date;
 }
     
 export function strDateToIndex(str_date: string): number {
-    const date = parseStrToDate(str_date);
+    const date = parseStrToDate(str_date, true);
 
-    return date.getTime() / 1e3 / 1e2;
+    return date.getTime() / 1e3 / 24 / 60 / 60;
 }
 
-export function dayIndexToDate(dayIndex: number) {
-    return new Date(dayIndex * 1e3 * 1e2);
+export function dayIndexToDate(dayIndex: number): Date {
+    return new Date(dayIndex * 1e3 * 24 * 60 * 60);
 }
 
 export function getStrWeekIndex(str_date: string): number {
     const date = parseStrToDate(str_date);
 
     return getWeekIndex(date);
+}
+
+export function isToday(str_date: string): boolean {
+    const todayIndex = getDayIndex();
+    const dayIndex = strDateToIndex(str_date);
+
+    return todayIndex === dayIndex;
 }
 
 export function isNextWeek(str_date: string): boolean {

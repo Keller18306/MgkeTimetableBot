@@ -10,7 +10,7 @@ import { NextDayUpdater } from "./nextDay"
 import StudentParser from "./parser/group"
 import TeacherParser from "./parser/teacher"
 import { Group, GroupDay, Groups, Teacher, TeacherDay, Teachers } from "./parser/types"
-import { RaspGroupCache, RaspTeacherCache, loadCache, raspCache, saveCache } from "./raspCache"
+import { RaspEntryCache, loadCache, raspCache, saveCache } from "./raspCache"
 
 const MAX_LOG_LIMIT: number = 10;
 const LOG_COUNT_SEND: number = 3;
@@ -67,7 +67,7 @@ export class Updater {
 
     private logs: { date: Date, result: string | Error }[] = [];
     private delayPromise?: Delay;
-    private clearKeys: boolean = false;
+    private _forceParse: boolean = false;
 
     constructor() {
         this.archive = new Archive();
@@ -126,8 +126,8 @@ export class Updater {
         return errorsCount === need;
     }
 
-    public forceParse(clearKeys: boolean = false) {
-        this.clearKeys = clearKeys;
+    public forceParse(forceParse: boolean = false) {
+        this._forceParse = forceParse;
         this.delayPromise?.resolve();
     }
 
@@ -233,7 +233,7 @@ export class Updater {
             this.log(e)
         }
 
-        this.clearKeys = false;
+        this._forceParse = false;
         this.removeOldLogs();
 
         this.delayPromise = this.getDelayTime(error);
@@ -296,7 +296,7 @@ export class Updater {
         return Promise.all(promises);
     }
 
-    private async processParse(Parser: typeof TeacherParser | typeof StudentParser, url: string, cache: RaspGroupCache | RaspTeacherCache) {
+    private async processParse(Parser: typeof TeacherParser | typeof StudentParser, url: string, cache: RaspEntryCache<Teachers | Groups>) {
         const date = new Date();
         const todayIndex = getDayIndex(date);
 
@@ -314,8 +314,20 @@ export class Updater {
             });
 
             const parser = new Parser(jsdom.window);
+            const hash = parser.getContentHash();
 
+            if (!this._forceParse && hash === cache.hash) {
+                return true;
+            }
+
+            cache.hash = hash;
+
+            const parserName = onParser<string>(Parser, 'Student', 'Teacher');
+
+            console.log(`[${parserName}Parser] Start parsing (newHash: ${hash})...`);
             data = parser.run();
+
+            console.log(`[${parserName}Parser] Start data processing...`);
         }
 
         if (Object.keys(data).length == 0) return false;
@@ -332,7 +344,7 @@ export class Updater {
         }, []));
 
         // Полная очистка
-        if (this.clearKeys) {
+        if (this._forceParse) {
             for (const index in cache.timetable) {
                 if (!data[index]) {
                     delete cache.timetable[index];
@@ -372,6 +384,49 @@ export class Updater {
                             day: day as TeacherDay
                         });
                     }));
+                }
+
+                for (const day of changed) {
+                    const todayIndex = getDayIndex();
+                    const dayIndex = strDateToIndex(day.day);
+
+                    let sendFunc: ((data: any) => Promise<void>) | undefined;
+                    let sendData = onParser(Parser, {
+                        day: day as GroupDay,
+                        group: index
+                    }, {
+                        day: day as TeacherDay,
+                        teacher: index
+                    });
+
+                    if (dayIndex === todayIndex) {
+                        //расписание на сегодня изменено
+
+                        sendFunc = onParser<any>(Parser,
+                            EventController.updateGroupDay,
+                            EventController.updateTeacherDay
+                        );
+                    } else if (dayIndex === todayIndex + 1) {
+                        //расписание на завтра изменилось
+
+                        if (currentEntry.lastNoticedDay === dayIndex) {
+                            //уже расписание было отправлено ранее, а значит поступили новые правки
+                            sendFunc = onParser<any>(Parser,
+                                EventController.updateGroupDay,
+                                EventController.updateTeacherDay
+                            );
+                        } else {
+                            //новое расписание на завтра
+                            sendFunc = onParser<any>(Parser,
+                                EventController.sendGroupDay,
+                                EventController.sendTeacherDay
+                            );
+                        }
+                    }
+
+                    if (sendFunc) {
+                        sendFunc.call(EventController, sendData);
+                    }
                 }
 
                 //test

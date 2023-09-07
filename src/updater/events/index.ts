@@ -2,7 +2,7 @@ import { config } from "../../../config";
 import { getDistributionChats, getGroupsChats, getNoticeErrorsChats, getNoticeNextWeekChats, getTeachersChats } from "../../db";
 import { AbstractChat, ChatMode, DbChat } from "../../services/bots/abstract/chat";
 import { Service } from "../../services/bots/abstract/command";
-import { createScheduleFormatter, getDayIndex, getNextDays, isNextWeek, prepareError, strDateToIndex } from "../../utils";
+import { createScheduleFormatter, getDayIndex, getNextDays, isNextWeek, isToday, prepareError, strDateToIndex } from "../../utils";
 import { GroupDay, TeacherDay } from "../parser/types";
 import { raspCache } from "../raspCache";
 import { EventController } from "./controller";
@@ -22,11 +22,11 @@ export abstract class AbstractEventListener<T extends DbChat = DbChat> {
 
     protected async sendMessages(chats: T | T[], message: string): Promise<void> {
         if (!Array.isArray(chats)) {
-            chats = [chats]
+            chats = [chats];
         }
 
         for (const chat of chats) {
-            await this.sendMessage(chat, message)
+            await this.sendMessage(chat, message);
         }
     }
 
@@ -70,7 +70,7 @@ export abstract class AbstractEventListener<T extends DbChat = DbChat> {
             const group: string = String(chat.group!);
 
             if (!obj[group]) {
-                obj[group] = []
+                obj[group] = [];
             }
 
             obj[group].push(chat);
@@ -79,9 +79,10 @@ export abstract class AbstractEventListener<T extends DbChat = DbChat> {
         }, {});
 
         for (const group in chatsKeyed) {
+            const groupEntry = raspCache.groups.timetable[group];
             const chats: T[] = chatsKeyed[group];
 
-            const nextDays = getNextDays(raspCache.groups.timetable[group].days);
+            const nextDays = getNextDays(groupEntry.days);
             if (!nextDays.length) continue;
 
             //если дальше всё расписание пустое, то больше не оповещаем
@@ -89,6 +90,13 @@ export abstract class AbstractEventListener<T extends DbChat = DbChat> {
             if (isEmpty) continue;
 
             const day = nextDays[0];
+
+            const dayIndex = strDateToIndex(day.day);
+            if (groupEntry.lastNoticedDay && dayIndex <= groupEntry.lastNoticedDay) {
+                continue;
+            }
+            groupEntry.lastNoticedDay = dayIndex;
+
             const phrase: string = isNextWeek(day.day) ? 'следующую неделю' : 'следующий день';
 
             for (const chat of chats) {
@@ -100,14 +108,21 @@ export abstract class AbstractEventListener<T extends DbChat = DbChat> {
                         showHeader: false,
                         days: [day]
                     })
-                ].join('\n')
+                ].join('\n');
 
-                await this.sendMessage(chat, message)
+                await this.sendMessage(chat, message);
             }
         }
     }
 
-    public async updateGroupDay({ day, group }: { day: GroupDay, group: string }) {
+    public async sendGroupDay({ day, group }: { day: GroupDay, group: string }) {
+        const groupEntry = raspCache.groups.timetable[group];
+        const dayIndex = strDateToIndex(day.day);
+        if (groupEntry.lastNoticedDay && dayIndex <= groupEntry.lastNoticedDay) {
+            return;
+        }
+        groupEntry.lastNoticedDay = dayIndex;
+
         const chats: T[] = this.getGroupsChats(group);
         if (chats.length === 0) return;
 
@@ -120,9 +135,30 @@ export abstract class AbstractEventListener<T extends DbChat = DbChat> {
                     showHeader: false,
                     days: [day]
                 })
-            ].join('\n')
+            ].join('\n');
 
-            await this.sendMessage(chat, message)
+            await this.sendMessage(chat, message);
+        }
+    }
+
+    public async updateGroupDay({ day, group }: { day: GroupDay, group: string }) {
+        const chats: T[] = this.getGroupsChats(group);
+        if (chats.length === 0) return;
+
+        const phrase: string = isToday(day.day) ? 'на сегодня' : 'на день';
+
+        for (const chat of chats) {
+            const formatter = createScheduleFormatter(this.service, raspCache, this.createChat(chat));
+
+            const message: string = [
+                `🆕 Изменено расписание ${phrase}\n`,
+                formatter.formatGroupFull(group, {
+                    showHeader: false,
+                    days: [day]
+                })
+            ].join('\n');
+
+            await this.sendMessage(chat, message);
         }
     }
 
@@ -162,7 +198,7 @@ export abstract class AbstractEventListener<T extends DbChat = DbChat> {
             const teacher: string = String(chat.teacher!);
 
             if (!obj[teacher]) {
-                obj[teacher] = []
+                obj[teacher] = [];
             }
 
             obj[teacher].push(chat);
@@ -171,9 +207,10 @@ export abstract class AbstractEventListener<T extends DbChat = DbChat> {
         }, {});
 
         for (const teacher in chatsKeyed) {
+            const teacherEntry = raspCache.teachers.timetable[teacher];
             const chats: T[] = chatsKeyed[teacher];
 
-            const nextDays = getNextDays(raspCache.teachers.timetable[teacher].days);
+            const nextDays = getNextDays(teacherEntry.days);
             if (!nextDays.length) continue;
 
             //если дальше всё расписание пустое, то больше не оповещаем
@@ -181,6 +218,13 @@ export abstract class AbstractEventListener<T extends DbChat = DbChat> {
             if (isEmpty) continue;
 
             const day = nextDays[0];
+
+            const dayIndex = strDateToIndex(day.day);
+            if (teacherEntry.lastNoticedDay && dayIndex <= teacherEntry.lastNoticedDay) {
+                continue;
+            }
+            teacherEntry.lastNoticedDay = dayIndex;
+
             const phrase: string = isNextWeek(day.day) ? 'следующую неделю' : 'следующий день';
 
             for (const chat of chats) {
@@ -192,14 +236,21 @@ export abstract class AbstractEventListener<T extends DbChat = DbChat> {
                         showHeader: false,
                         days: [day]
                     })
-                ].join('\n')
+                ].join('\n');
 
-                await this.sendMessage(chat, message)
+                await this.sendMessage(chat, message);
             }
         }
     }
 
-    public async updateTeacherDay({ day, teacher }: { day: TeacherDay, teacher: string }) {
+    public async sendTeacherDay({ day, teacher }: { day: TeacherDay, teacher: string }) {
+        const teacherEntry = raspCache.teachers.timetable[teacher];
+        const dayIndex = strDateToIndex(day.day);
+        if (teacherEntry.lastNoticedDay && dayIndex <= teacherEntry.lastNoticedDay) {
+            return;
+        }
+        teacherEntry.lastNoticedDay = dayIndex;
+
         const chats: T[] = this.getTeachersChats(teacher);
         if (chats.length === 0) return;
 
@@ -207,14 +258,35 @@ export abstract class AbstractEventListener<T extends DbChat = DbChat> {
             const formatter = createScheduleFormatter(this.service, raspCache, this.createChat(chat));
 
             const message: string = [
-                '🆕 Изменено расписание на день\n',
+                '📢 Расписание на следующий день\n',
                 formatter.formatTeacherFull(teacher, {
                     showHeader: false,
                     days: [day]
                 })
-            ].join('\n')
+            ].join('\n');
 
-            await this.sendMessage(chat, message)
+            await this.sendMessage(chat, message);
+        }
+    }
+
+    public async updateTeacherDay({ day, teacher }: { day: TeacherDay, teacher: string }) {
+        const chats: T[] = this.getTeachersChats(teacher);
+        if (chats.length === 0) return;
+
+        const phrase: string = isToday(day.day) ? 'на сегодня' : 'на день';
+
+        for (const chat of chats) {
+            const formatter = createScheduleFormatter(this.service, raspCache, this.createChat(chat));
+
+            const message: string = [
+                `🆕 Изменено расписание ${phrase}\n`,
+                formatter.formatTeacherFull(teacher, {
+                    showHeader: false,
+                    days: [day]
+                })
+            ].join('\n');
+
+            await this.sendMessage(chat, message);
         }
     }
 

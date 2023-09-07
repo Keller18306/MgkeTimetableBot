@@ -2,8 +2,8 @@ import { hints } from "../../defines";
 import { AbstractChat } from "../../services/bots/abstract/chat";
 import { Service } from "../../services/bots/abstract/command";
 import { Updater } from "../../updater";
-import { GroupDay, GroupLesson, GroupLessonExplain, TeacherDay, TeacherLesson, TeacherLessonExplain } from "../../updater/parser/types";
-import { RaspCache, RaspGroupCache, RaspTeacherCache } from "../../updater/raspCache";
+import { GroupDay, GroupLesson, GroupLessonExplain, Groups, TeacherDay, TeacherLesson, TeacherLessonExplain, Teachers } from "../../updater/parser/types";
+import { RaspCache, RaspEntryCache } from "../../updater/raspCache";
 import { randArray } from "../rand";
 import { formatSeconds, getWeekdayNameByStrDate } from "../time";
 
@@ -205,7 +205,7 @@ export abstract class ScheduleFormatter {
         }, options)
     }
 
-    protected footer(rasp: RaspGroupCache | RaspTeacherCache) {
+    protected footer(rasp: RaspEntryCache<Groups | Teachers>) {
         const text: string[] = []
 
         if (this.chat && this.chat.showParserTime) {

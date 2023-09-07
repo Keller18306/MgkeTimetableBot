@@ -2,27 +2,16 @@ import { existsSync, readFileSync, unlinkSync } from 'fs'
 import { mkdir, writeFile } from 'fs/promises'
 import { Groups, Teachers } from './parser/types'
 
-export type RaspGroupCache = {
-    timetable: Groups,
+export type RaspEntryCache<T = Groups | Teachers> = {
+    timetable: T,
     update: number,
     lastWeekIndex: number,
-    hashes: {
-        [key: string]: string
-    }
-}
-
-export type RaspTeacherCache = {
-    timetable: Teachers,
-    update: number,
-    lastWeekIndex: number,
-    hashes: {
-        [key: string]: string
-    }
+    hash: string,
 }
 
 export type RaspCache = {
-    groups: RaspGroupCache,
-    teachers: RaspTeacherCache,
+    groups: RaspEntryCache<Groups>,
+    teachers: RaspEntryCache<Teachers>,
     successUpdate: boolean
 }
 
@@ -31,13 +20,13 @@ export const raspCache: RaspCache = {
         timetable: {},
         update: 0,
         lastWeekIndex: 0,
-        hashes: {}
+        hash: ''
     },
     teachers: {
         timetable: {},
         update: 0,
         lastWeekIndex: 0,
-        hashes: {}
+        hash: ''
     },
     successUpdate: true
 }

@@ -4,7 +4,8 @@ export type Groups = {
 
 export type Group = {
     group: string,
-    days: GroupDay[]
+    days: GroupDay[],
+    lastNoticedDay?: number
 }
 
 export type GroupDay = {

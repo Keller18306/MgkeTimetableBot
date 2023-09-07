@@ -4,7 +4,8 @@ export type Teachers = {
 
 export type Teacher = {
     teacher: string,
-    days: TeacherDay[]
+    days: TeacherDay[],
+    lastNoticedDay?: number
 }
 
 export type TeacherDay = {

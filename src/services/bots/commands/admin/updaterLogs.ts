@@ -29,6 +29,8 @@ export default class extends AbstractCommand {
             )
         }
 
-        return context.send(message.join('\n').slice(0, 4096));
+        return context.send(message.join('\n').slice(0, 4096), {
+            disableHtmlParser: true
+        });
     }
 }

@@ -15,6 +15,12 @@ export class EventController {
         }
     }
 
+    public static async sendGroupDay(data: { day: GroupDay, group: string }) {
+        for (const service of this.serviceList) {
+            await service.sendGroupDay(data);
+        }
+    }
+
     public static async updateGroupDay(data: { day: GroupDay, group: string }) {
         for (const service of this.serviceList) {
             await service.updateGroupDay(data);
@@ -24,6 +30,12 @@ export class EventController {
     public static async nextTeacherDay(data: { index: number }) {
         for (const service of this.serviceList) {
             await service.nextTeacherDay(data);
+        }
+    }
+
+    public static async sendTeacherDay(data: { day: TeacherDay, teacher: string }) {
+        for (const service of this.serviceList) {
+            await service.sendTeacherDay(data);
         }
     }
 

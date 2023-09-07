@@ -50,7 +50,9 @@ export class TgCommandContext extends AbstractCommandContext {
         }
 
         const result: MessageContext = await this.context.send(text, {
-            parse_mode: 'HTML',
+            ...(!options.disableHtmlParser ? {
+                parse_mode: 'HTML',
+            } : {}),
             ...(reply_to ? {
                 allow_sending_without_reply: true,
                 reply_to_message_id: reply_to,
