@@ -6,7 +6,8 @@ import { BotInput, InputCancel } from "../input";
 import { StaticKeyboard } from "../keyboard";
 import { FileCache } from "./cache";
 import { AbstractChat } from "./chat";
-import { AbstractCommand, AbstractCommandContext, HandlerParams, Service } from "./command";
+import { AbstractCommand, HandlerParams, Service } from "./command";
+import { AbstractCommandContext } from "./context";
 
 export type HandleMessageOptions = {
     /** Есть ли упоминание бота в сообщении (для ВК) */
