@@ -1,5 +1,6 @@
 import { config } from "../../../config";
 import { getDistributionChats, getGroupsChats, getNoticeErrorsChats, getNoticeNextWeekChats, getTeachersChats } from "../../db";
+import { MessageOptions } from "../../services/bots/abstract";
 import { AbstractChat, ChatMode, DbChat } from "../../services/bots/abstract/chat";
 import { Service } from "../../services/bots/abstract/command";
 import { createScheduleFormatter, getDayIndex, getNextDays, isNextWeek, isToday, prepareError, strDateToIndex } from "../../utils";
@@ -18,15 +19,15 @@ export abstract class AbstractEventListener<T extends DbChat = DbChat> {
     }
 
     protected abstract createChat(chat: T): AbstractChat;
-    protected abstract sendMessage(chat: T, message: string): Promise<any>;
+    protected abstract sendMessage(chat: T, message: string, options?: MessageOptions): Promise<any>;
 
-    protected async sendMessages(chats: T | T[], message: string): Promise<void> {
+    protected async sendMessages(chats: T | T[], message: string, options?: MessageOptions): Promise<void> {
         if (!Array.isArray(chats)) {
             chats = [chats];
         }
 
         for (const chat of chats) {
-            await this.sendMessage(chat, message);
+            await this.sendMessage(chat, message, options);
         }
     }
 

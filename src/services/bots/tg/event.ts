@@ -2,7 +2,7 @@ import { APIError, Telegram } from "puregram";
 import StatusCode from "status-code-enum";
 import { config } from "../../../../config";
 import { AbstractEventListener } from "../../../updater/events";
-import { AbstractChat, Service } from "../abstract";
+import { AbstractChat, MessageOptions, Service } from "../abstract";
 import { Keyboard } from '../keyboard';
 import { TgChat, TgDb } from './chat';
 import { convertAbstractToTg } from "./keyboard";
@@ -24,13 +24,15 @@ export class TgEventListener extends AbstractEventListener<TgDb> {
         return new TgChat(chat);
     }
 
-    public async sendMessage(chat: TgChat, message: string) {
+    public async sendMessage(chat: TgChat, message: string, options: MessageOptions) {
         const keyboard = new Keyboard(undefined, chat)
 
         return this.tg.api.sendMessage({
             text: message,
             chat_id: chat.peerId,
-            parse_mode: 'HTML',
+            ...(!options.disableHtmlParser ? {
+                parse_mode: 'HTML',
+            } : {}),
             reply_markup: convertAbstractToTg(keyboard.MainMenu)
         }).catch((err: APIError) => {
             if (err.code === StatusCode.ClientErrorForbidden) {

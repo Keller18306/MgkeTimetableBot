@@ -1,7 +1,7 @@
 import { APIError, getRandomId, VK } from "vk-io";
 import { config } from "../../../../config";
 import { AbstractEventListener } from "../../../updater/events";
-import { AbstractChat, Service } from "../abstract";
+import { AbstractChat, MessageOptions, Service } from "../abstract";
 import { VkChat, VkDb } from './chat';
 
 export class VkEventListener extends AbstractEventListener<VkDb> {
@@ -21,7 +21,7 @@ export class VkEventListener extends AbstractEventListener<VkDb> {
         return new VkChat(chat);
     }
 
-    protected async sendMessage(chat: VkDb, message: string) {
+    protected async sendMessage(chat: VkDb, message: string, options: MessageOptions) {
         return this.vk.api.messages.send({
             peer_id: chat.peerId,
             message,
