@@ -1,3 +1,6 @@
+type DayCall = [[string, string], [string, string]];
+type DayCallShort = [string, string];
+
 export type ConfigScheme = {
     dev: boolean,
     http: {
@@ -63,8 +66,9 @@ export type ConfigScheme = {
         lessonIndexIfEmpty: number
     },
     timetable: {
-        weekdays: [[string, string], [string, string]][],
-        saturday: [[string, string], [string, string]][],
+        weekdays: DayCall[],
+        saturday: DayCall[],
+        shortened: DayCallShort[]
     },
     encrypt_key: Buffer,
     globalNoticer: boolean,
