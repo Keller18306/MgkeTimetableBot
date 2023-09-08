@@ -24,7 +24,7 @@ export class TgEventListener extends AbstractEventListener<TgDb> {
         return new TgChat(chat);
     }
 
-    public async sendMessage(chat: TgChat, message: string, options: MessageOptions) {
+    public async sendMessage(chat: TgChat, message: string, options: MessageOptions = {}) {
         const keyboard = new Keyboard(undefined, chat)
 
         return this.tg.api.sendMessage({

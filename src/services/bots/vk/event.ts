@@ -21,7 +21,7 @@ export class VkEventListener extends AbstractEventListener<VkDb> {
         return new VkChat(chat);
     }
 
-    protected async sendMessage(chat: VkDb, message: string, options: MessageOptions) {
+    protected async sendMessage(chat: VkDb, message: string, options: MessageOptions = {}) {
         return this.vk.api.messages.send({
             peer_id: chat.peerId,
             message,
