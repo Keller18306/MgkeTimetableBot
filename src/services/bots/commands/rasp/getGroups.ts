@@ -20,7 +20,8 @@ export default class extends AbstractCommand {
             '__ Группы в кэше __\n',
             Object.keys(raspCache.groups.timetable).join(', '),
 
-            `\nЗагружено: ${formatSeconds(Math.ceil((Date.now() - raspCache.groups.update) / 1e3))} назад`
+            `\nЗагружено: ${formatSeconds(Math.ceil((Date.now() - raspCache.groups.update) / 1e3))} назад`,
+            `Изменено: ${formatSeconds(Math.ceil((Date.now() - raspCache.groups.changed) / 1e3))} назад`
         ].join('\n'))
     }
 }

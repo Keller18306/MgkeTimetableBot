@@ -67,7 +67,9 @@ export class Updater {
 
     private logs: { date: Date, result: string | Error }[] = [];
     private delayPromise?: Delay;
+
     private _forceParse: boolean = false;
+    private _clearKeys: boolean = false;
 
     constructor() {
         this.archive = new Archive();
@@ -126,8 +128,9 @@ export class Updater {
         return errorsCount === need;
     }
 
-    public forceParse(forceParse: boolean = false) {
-        this._forceParse = forceParse;
+    public forceParse(clearKeys: boolean = false) {
+        this._forceParse = true;
+        this._clearKeys = clearKeys;
         this.delayPromise?.resolve();
     }
 
@@ -233,6 +236,7 @@ export class Updater {
             this.log(e)
         }
 
+        this._clearKeys = false;
         this._forceParse = false;
         this.removeOldLogs();
 
@@ -317,7 +321,10 @@ export class Updater {
             const hash = parser.getContentHash();
 
             if (!this._forceParse && hash === cache.hash) {
+                cache.update = Date.now();
                 return true;
+            } else if (hash !== cache.hash) {
+                cache.changed = Date.now();
             }
 
             cache.hash = hash;
@@ -344,7 +351,7 @@ export class Updater {
         }, []));
 
         // Полная очистка
-        if (this._forceParse) {
+        if (this._clearKeys) {
             for (const index in cache.timetable) {
                 if (!data[index]) {
                     delete cache.timetable[index];

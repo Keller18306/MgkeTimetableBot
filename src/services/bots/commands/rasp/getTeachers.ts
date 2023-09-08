@@ -23,7 +23,8 @@ export default class extends AbstractCommand {
         context.send([
             '__ Преподаватели в кэше __\n',
             teachers.join('\n'),
-            `\nЗагружено: ${formatSeconds(Math.ceil((Date.now() - raspCache.teachers.update) / 1e3))} назад\n`
+            `\nЗагружено: ${formatSeconds(Math.ceil((Date.now() - raspCache.teachers.update) / 1e3))} назад\n`,
+            `Изменено: ${formatSeconds(Math.ceil((Date.now() - raspCache.teachers.changed) / 1e3))} назад`
         ].join('\n'))
     }
 }

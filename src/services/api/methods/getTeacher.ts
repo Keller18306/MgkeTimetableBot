@@ -27,6 +27,7 @@ export default class VkAppAuthMethod extends VKAppDefaultMethod {
         return {
             days: days,
             update: raspCache.teachers.update,
+            changed: raspCache.teachers.changed,
             lastSuccess: raspCache.successUpdate
         }
     }
