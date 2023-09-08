@@ -8,7 +8,7 @@ import { GroupDay, TeacherDay } from "../parser/types";
 import { raspCache } from "../raspCache";
 import { EventController } from "./controller";
 
-export abstract class AbstractEventListener<T extends DbChat = DbChat> {
+export abstract class AbstractEventListener<T extends AbstractChat = AbstractChat> {
     protected abstract _tableName: string;
     protected abstract service: Service;
 
@@ -18,7 +18,7 @@ export abstract class AbstractEventListener<T extends DbChat = DbChat> {
         EventController.registerService(this);
     }
 
-    protected abstract createChat(chat: T): AbstractChat;
+    protected abstract createChat(chat: DbChat): T;
     protected abstract sendMessage(chat: T, message: string, options?: MessageOptions): Promise<any>;
 
     protected async sendMessages(chats: T | T[], message: string, options?: MessageOptions): Promise<void> {
@@ -34,7 +34,8 @@ export abstract class AbstractEventListener<T extends DbChat = DbChat> {
     protected getGroupsChats<T>(groups: string | string[]): T[] {
         if (!Array.isArray(groups)) groups = [groups];
 
-        const chats: T[] = getGroupsChats(this._tableName, this.service, groups);
+        const chats: T[] = getGroupsChats(this._tableName, this.service, groups)
+            .map((chat: any) => this.createChat(chat));
 
         return chats;
     }
@@ -42,7 +43,8 @@ export abstract class AbstractEventListener<T extends DbChat = DbChat> {
     protected getTeachersChats<T>(teachers: string | string[]): T[] {
         if (!Array.isArray(teachers)) teachers = [teachers];
 
-        const chats: T[] = getTeachersChats(this._tableName, this.service, teachers);
+        const chats: T[] = getTeachersChats(this._tableName, this.service, teachers)
+            .map((chat: any) => this.createChat(chat));;
 
         return chats;
     }
@@ -101,7 +103,7 @@ export abstract class AbstractEventListener<T extends DbChat = DbChat> {
             const phrase: string = isNextWeek(day.day) ? 'следующую неделю' : 'следующий день';
 
             for (const chat of chats) {
-                const formatter = createScheduleFormatter(this.service, raspCache, this.createChat(chat));
+                const formatter = createScheduleFormatter(this.service, raspCache, chat);
 
                 const message: string = [
                     `📢 Расписание на ${phrase}\n`,
@@ -128,7 +130,7 @@ export abstract class AbstractEventListener<T extends DbChat = DbChat> {
         if (chats.length === 0) return;
 
         for (const chat of chats) {
-            const formatter = createScheduleFormatter(this.service, raspCache, this.createChat(chat));
+            const formatter = createScheduleFormatter(this.service, raspCache, chat);
 
             const message: string = [
                 '📢 Расписание на следующий день\n',
@@ -149,7 +151,7 @@ export abstract class AbstractEventListener<T extends DbChat = DbChat> {
         const phrase: string = isToday(day.day) ? 'на сегодня' : 'на день';
 
         for (const chat of chats) {
-            const formatter = createScheduleFormatter(this.service, raspCache, this.createChat(chat));
+            const formatter = createScheduleFormatter(this.service, raspCache, chat);
 
             const message: string = [
                 `🆕 Изменено расписание ${phrase}\n`,
@@ -229,7 +231,7 @@ export abstract class AbstractEventListener<T extends DbChat = DbChat> {
             const phrase: string = isNextWeek(day.day) ? 'следующую неделю' : 'следующий день';
 
             for (const chat of chats) {
-                const formatter = createScheduleFormatter(this.service, raspCache, this.createChat(chat));
+                const formatter = createScheduleFormatter(this.service, raspCache, chat);
 
                 const message: string = [
                     `📢 Расписание на ${phrase}\n`,
@@ -256,7 +258,7 @@ export abstract class AbstractEventListener<T extends DbChat = DbChat> {
         if (chats.length === 0) return;
 
         for (const chat of chats) {
-            const formatter = createScheduleFormatter(this.service, raspCache, this.createChat(chat));
+            const formatter = createScheduleFormatter(this.service, raspCache, chat);
 
             const message: string = [
                 '📢 Расписание на следующий день\n',
@@ -277,7 +279,7 @@ export abstract class AbstractEventListener<T extends DbChat = DbChat> {
         const phrase: string = isToday(day.day) ? 'на сегодня' : 'на день';
 
         for (const chat of chats) {
-            const formatter = createScheduleFormatter(this.service, raspCache, this.createChat(chat));
+            const formatter = createScheduleFormatter(this.service, raspCache, chat);
 
             const message: string = [
                 `🆕 Изменено расписание ${phrase}\n`,
@@ -292,19 +294,22 @@ export abstract class AbstractEventListener<T extends DbChat = DbChat> {
     }
 
     public async sendNextWeek(chatMode: ChatMode) {
-        const chats: T[] = getNoticeNextWeekChats(this._tableName, this.service, chatMode);
+        const chats: T[] = getNoticeNextWeekChats(this._tableName, this.service, chatMode)
+            .map((chat: any) => this.createChat(chat));
 
         return this.sendMessages(chats, '🆕 Доступно расписание на следующую неделю');
     }
 
     public async sendDistribution(message: string) {
-        const chats: T[] = getDistributionChats(this._tableName, this.service);
+        const chats: T[] = getDistributionChats(this._tableName, this.service)
+            .map((chat: any) => this.createChat(chat));
 
         return this.sendMessages(chats, message);
     }
 
     public async sendError(error: Error) {
-        const chats: T[] = getNoticeErrorsChats(this._tableName, this.service);
+        const chats: T[] = getNoticeErrorsChats(this._tableName, this.service)
+            .map((chat: any) => this.createChat(chat));
 
         return this.sendMessages(chats, [
             '‼️ Произошла ошибка парсера ‼️\n',

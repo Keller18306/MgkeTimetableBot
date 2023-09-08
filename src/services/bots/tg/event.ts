@@ -2,12 +2,12 @@ import { APIError, Telegram } from "puregram";
 import StatusCode from "status-code-enum";
 import { config } from "../../../../config";
 import { AbstractEventListener } from "../../../updater/events";
-import { AbstractChat, MessageOptions, Service } from "../abstract";
+import { MessageOptions, Service } from "../abstract";
 import { Keyboard } from '../keyboard';
 import { TgChat, TgDb } from './chat';
 import { convertAbstractToTg } from "./keyboard";
 
-export class TgEventListener extends AbstractEventListener<TgDb> {
+export class TgEventListener extends AbstractEventListener<TgChat> {
     protected _tableName: string = 'tg_bot_chats';
     protected service: Service = 'tg';
 
@@ -19,8 +19,8 @@ export class TgEventListener extends AbstractEventListener<TgDb> {
         super(config.telegram.noticer)
         this.tg = tg
     }
-    
-    protected createChat(chat: TgDb): AbstractChat {
+
+    protected createChat(chat: TgDb): TgChat {
         return new TgChat(chat);
     }
 

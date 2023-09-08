@@ -1,12 +1,12 @@
 import { Bot, Message } from 'viber-bot';
 import { config } from "../../../../config";
 import { AbstractEventListener } from "../../../updater/events";
-import { AbstractChat, MessageOptions, Service } from '../abstract';
+import { MessageOptions, Service } from '../abstract';
 import { Keyboard } from "../keyboard";
 import { ViberChat, ViberDb } from "./chat";
 import { convertAbstractToViber } from './keyboard';
 
-export class ViberEventListener extends AbstractEventListener<ViberDb> {
+export class ViberEventListener extends AbstractEventListener<ViberChat> {
     protected _tableName: string = 'viber_bot_chats';
     protected service: Service = 'viber';
 
@@ -16,8 +16,8 @@ export class ViberEventListener extends AbstractEventListener<ViberDb> {
         super(config.viber.noticer)
         this.bot = bot
     }
-    
-    protected createChat(chat: ViberDb): AbstractChat {
+
+    protected createChat(chat: ViberDb): ViberChat {
         return new ViberChat(chat);
     }
 
