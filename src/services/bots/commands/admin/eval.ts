@@ -53,7 +53,7 @@ export default class extends AbstractCommand {
             if (typeof result === 'object') result = JSON.stringify(result, null, 4)
         } catch (e) { }
 
-        if (result !== undefined) context.send(`${result}`.substr(0, 4096))
+        if (result !== undefined && result !== '') context.send(`${result}`.substr(0, 4096))
 
         context.send(
             'Выполнено без ошибок\n' +
