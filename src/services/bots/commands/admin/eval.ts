@@ -3,7 +3,7 @@ import * as fs from 'fs';
 import { TelegramBotCommand } from 'puregram/generated';
 import { runInNewContext } from 'vm';
 import db from '../../../../db';
-import { raspCache } from "../../../../updater";
+import { raspCache, saveCache, loadCache } from "../../../../updater/raspCache";
 import { AbstractCommand, HandlerParams } from "../../abstract";
 import { CommandController } from "../../command";
 import { VkBot } from "../../vk";
@@ -34,7 +34,8 @@ export default class extends AbstractCommand {
                 global, clearInterval, clearTimeout, setInterval,
                 setTimeout, queueMicrotask, clearImmediate, setImmediate,
                 context, vk, fs, crypto, require, process, Buffer,
-                cmds, console, db, raspCache, chat, CommandController
+                cmds, console, db, chat, CommandController,
+                raspCache, saveCache, loadCache
             }, {
                 timeout: 10000
             })
