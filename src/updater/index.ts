@@ -209,6 +209,7 @@ export class Updater {
         }
 
         if (hits === LOG_COUNT_SEND) {
+            console.error('update error', error);
             EventController.sendError(error);
         }
     }
@@ -232,7 +233,6 @@ export class Updater {
             raspCache.successUpdate = false
             error = true;
 
-            console.error('update error', e)
             this.log(e)
         }
 
