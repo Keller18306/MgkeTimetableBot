@@ -98,7 +98,10 @@ export abstract class AbstractEventListener<T extends AbstractChat = AbstractCha
             if (groupEntry.lastNoticedDay && dayIndex <= groupEntry.lastNoticedDay) {
                 continue;
             }
-            groupEntry.lastNoticedDay = dayIndex;
+
+            EventController.deferFunction(`updateLastGroupNoticedDay_${group}`, () => {
+                groupEntry.lastNoticedDay = dayIndex;
+            })
 
             const phrase: string = isNextWeek(day.day) ? 'следующую неделю' : 'следующий день';
 
@@ -124,7 +127,10 @@ export abstract class AbstractEventListener<T extends AbstractChat = AbstractCha
         if (groupEntry.lastNoticedDay && dayIndex <= groupEntry.lastNoticedDay) {
             return;
         }
-        groupEntry.lastNoticedDay = dayIndex;
+
+        EventController.deferFunction(`updateLastGroupNoticedDay_${group}`, () => {
+            groupEntry.lastNoticedDay = dayIndex;
+        })
 
         const chats: T[] = this.getGroupsChats(group);
         if (chats.length === 0) return;
@@ -226,7 +232,10 @@ export abstract class AbstractEventListener<T extends AbstractChat = AbstractCha
             if (teacherEntry.lastNoticedDay && dayIndex <= teacherEntry.lastNoticedDay) {
                 continue;
             }
-            teacherEntry.lastNoticedDay = dayIndex;
+
+            EventController.deferFunction(`updateLastTeacherNoticedDay_${teacher}`, () => {
+                teacherEntry.lastNoticedDay = dayIndex;
+            })
 
             const phrase: string = isNextWeek(day.day) ? 'следующую неделю' : 'следующий день';
 
@@ -252,7 +261,10 @@ export abstract class AbstractEventListener<T extends AbstractChat = AbstractCha
         if (teacherEntry.lastNoticedDay && dayIndex <= teacherEntry.lastNoticedDay) {
             return;
         }
-        teacherEntry.lastNoticedDay = dayIndex;
+
+        EventController.deferFunction(`updateLastTeacherNoticedDay_${teacher}`, () => {
+            teacherEntry.lastNoticedDay = dayIndex;
+        })
 
         const chats: T[] = this.getTeachersChats(teacher);
         if (chats.length === 0) return;
