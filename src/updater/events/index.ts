@@ -8,13 +8,17 @@ import { GroupDay, TeacherDay } from "../parser/types";
 import { raspCache, saveCache } from "../raspCache";
 import { EventController } from "./controller";
 
-function getDayPhrase(day: string, nextDayPhrase: string = 'на день'): string {
+function getDayPhrase(day: string, nextDayPhrase: string = 'день'): string {
+    if (isNextWeek(day)) {
+        return 'следующую неделю';
+    }
+
     if (isToday(day)) {
-        return 'на сегодня';
+        return 'сегодня';
     }
 
     if (isTomorrow(day)) {
-        return 'на завтра';
+        return 'завтра';
     }
 
     return nextDayPhrase;
@@ -116,7 +120,7 @@ export abstract class AbstractEventListener<T extends AbstractChat = AbstractCha
                 await saveCache();
             })
 
-            const phrase: string = isNextWeek(day.day) ? 'следующую неделю' : 'следующий день';
+            const phrase: string = getDayPhrase(day.day, 'следующий день');
 
             for (const chat of chats) {
                 const formatter = createScheduleFormatter(this.service, raspCache, chat);
@@ -242,7 +246,7 @@ export abstract class AbstractEventListener<T extends AbstractChat = AbstractCha
                 await saveCache();
             })
 
-            const phrase: string = isNextWeek(day.day) ? 'следующую неделю' : 'следующий день';
+            const phrase: string = getDayPhrase(day.day, 'следующий день');
 
             for (const chat of chats) {
                 const formatter = createScheduleFormatter(this.service, raspCache, chat);
