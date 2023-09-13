@@ -107,6 +107,13 @@ export function isToday(str_date: string): boolean {
     return todayIndex === dayIndex;
 }
 
+export function isTomorrow(str_date: string): boolean {
+    const todayIndex = getDayIndex() + 1;
+    const dayIndex = strDateToIndex(str_date);
+
+    return todayIndex === dayIndex;
+}
+
 export function isNextWeek(str_date: string): boolean {
     const todayWeekNumber = getWeekIndex();
     const weekNumber = getStrWeekIndex(str_date);

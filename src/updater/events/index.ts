@@ -3,10 +3,22 @@ import { getDistributionChats, getGroupsChats, getNoticeErrorsChats, getNoticeNe
 import { MessageOptions } from "../../services/bots/abstract";
 import { AbstractChat, ChatMode, DbChat } from "../../services/bots/abstract/chat";
 import { Service } from "../../services/bots/abstract/command";
-import { createScheduleFormatter, getDayIndex, getNextDays, isNextWeek, isToday, prepareError, strDateToIndex } from "../../utils";
+import { createScheduleFormatter, getDayIndex, getNextDays, isNextWeek, isToday, isTomorrow, prepareError, strDateToIndex } from "../../utils";
 import { GroupDay, TeacherDay } from "../parser/types";
-import { raspCache } from "../raspCache";
+import { raspCache, saveCache } from "../raspCache";
 import { EventController } from "./controller";
+
+function getDayPhrase(day: string, nextDayPhrase: string = 'на день'): string {
+    if (isToday(day)) {
+        return 'на сегодня';
+    }
+
+    if (isTomorrow(day)) {
+        return 'на завтра';
+    }
+
+    return nextDayPhrase;
+}
 
 export abstract class AbstractEventListener<T extends AbstractChat = AbstractChat> {
     protected abstract _tableName: string;
@@ -99,8 +111,9 @@ export abstract class AbstractEventListener<T extends AbstractChat = AbstractCha
                 continue;
             }
 
-            EventController.deferFunction(`updateLastGroupNoticedDay_${group}`, () => {
+            EventController.deferFunction(`updateLastGroupNoticedDay_${group}`, async () => {
                 groupEntry.lastNoticedDay = dayIndex;
+                await saveCache();
             })
 
             const phrase: string = isNextWeek(day.day) ? 'следующую неделю' : 'следующий день';
@@ -128,18 +141,21 @@ export abstract class AbstractEventListener<T extends AbstractChat = AbstractCha
             return;
         }
 
-        EventController.deferFunction(`updateLastGroupNoticedDay_${group}`, () => {
+        EventController.deferFunction(`updateLastGroupNoticedDay_${group}`, async () => {
             groupEntry.lastNoticedDay = dayIndex;
+            await saveCache();
         })
 
         const chats: T[] = this.getGroupsChats(group);
         if (chats.length === 0) return;
 
+        const phrase: string = getDayPhrase(day.day, 'следующий день');
+
         for (const chat of chats) {
             const formatter = createScheduleFormatter(this.service, raspCache, chat);
 
             const message: string = [
-                '📢 Расписание на следующий день\n',
+                `📢 Расписание на ${phrase}\n`,
                 formatter.formatGroupFull(group, {
                     showHeader: false,
                     days: [day]
@@ -154,7 +170,7 @@ export abstract class AbstractEventListener<T extends AbstractChat = AbstractCha
         const chats: T[] = this.getGroupsChats(group);
         if (chats.length === 0) return;
 
-        const phrase: string = isToday(day.day) ? 'на сегодня' : 'на день';
+        const phrase: string = getDayPhrase(day.day);
 
         for (const chat of chats) {
             const formatter = createScheduleFormatter(this.service, raspCache, chat);
@@ -170,18 +186,6 @@ export abstract class AbstractEventListener<T extends AbstractChat = AbstractCha
             await this.sendMessage(chat, message);
         }
     }
-
-    // public async nextTeacherDay({ day, teacher }: { day: TeacherDay, teacher: string }) {
-    //     const chats: T[] = this.getTeachersChats(teacher);
-    //     if (chats.length === 0) return;
-
-    //     const message: string = [
-    //         '📢 Расписание на следующий день\n',
-    //         buildTeacherTextRasp(teacher, [day], false, false)
-    //     ].join('\n')
-
-    //     await this.sendMessages(chats, message)
-    // }
 
     public async nextTeacherDay({ index }: { index: number }) {
         const today: number = getDayIndex();
@@ -233,8 +237,9 @@ export abstract class AbstractEventListener<T extends AbstractChat = AbstractCha
                 continue;
             }
 
-            EventController.deferFunction(`updateLastTeacherNoticedDay_${teacher}`, () => {
+            EventController.deferFunction(`updateLastTeacherNoticedDay_${teacher}`, async () => {
                 teacherEntry.lastNoticedDay = dayIndex;
+                await saveCache();
             })
 
             const phrase: string = isNextWeek(day.day) ? 'следующую неделю' : 'следующий день';
@@ -262,18 +267,21 @@ export abstract class AbstractEventListener<T extends AbstractChat = AbstractCha
             return;
         }
 
-        EventController.deferFunction(`updateLastTeacherNoticedDay_${teacher}`, () => {
+        EventController.deferFunction(`updateLastTeacherNoticedDay_${teacher}`, async () => {
             teacherEntry.lastNoticedDay = dayIndex;
+            await saveCache();
         })
 
         const chats: T[] = this.getTeachersChats(teacher);
         if (chats.length === 0) return;
 
+        const phrase: string = getDayPhrase(day.day, 'следующий день');
+
         for (const chat of chats) {
             const formatter = createScheduleFormatter(this.service, raspCache, chat);
 
             const message: string = [
-                '📢 Расписание на следующий день\n',
+                `📢 Расписание на ${phrase}\n`,
                 formatter.formatTeacherFull(teacher, {
                     showHeader: false,
                     days: [day]
@@ -288,7 +296,7 @@ export abstract class AbstractEventListener<T extends AbstractChat = AbstractCha
         const chats: T[] = this.getTeachersChats(teacher);
         if (chats.length === 0) return;
 
-        const phrase: string = isToday(day.day) ? 'на сегодня' : 'на день';
+        const phrase: string = getDayPhrase(day.day);
 
         for (const chat of chats) {
             const formatter = createScheduleFormatter(this.service, raspCache, chat);
