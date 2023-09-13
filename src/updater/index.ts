@@ -268,7 +268,7 @@ export class Updater {
                 return reject(e);
             }
 
-            saveCache();
+            await saveCache();
             resolve(ms);
         })
     }
