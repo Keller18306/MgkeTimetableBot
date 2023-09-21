@@ -320,7 +320,7 @@ export class Updater {
             const parser = new Parser(jsdom.window);
             const hash = parser.getContentHash();
 
-            if (!this._forceParse && hash === cache.hash) {
+            if (!config.updater.ignoreHash && !this._forceParse && hash === cache.hash) {
                 cache.update = Date.now();
                 return true;
             } else if (hash !== cache.hash) {

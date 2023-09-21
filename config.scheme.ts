@@ -56,6 +56,7 @@ export type ConfigScheme = {
         enabled: boolean,
         syncMode: boolean,
         localMode: boolean,
+        ignoreHash: boolean,
         end_hour: number,
         activity: [number, number],
         update_interval: {

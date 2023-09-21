@@ -55,6 +55,7 @@ export const config: ConfigScheme = {
         enabled: true,
         syncMode: false, // Режим парсинга. false - параллельный (все запросы выполняются одновременно), true - последовательный (все запросы выполняются по очереди)
         localMode: false, // Используется только во время разработки (парсер не делает запросы к сайту, а читает json файл)
+        ignoreHash: false,
         end_hour: 17,
         activity: [9, 17],
         update_interval: {
