@@ -80,7 +80,7 @@ export class EventController {
         await this.runDeferredFunctions();
     }
 
-    public static async deferFunction(id: string, func: () => any) {
+    public static deferFunction(id: string, func: () => any) {
         if (this.deferred[id]) return;
 
         this.deferred[id] = func;
@@ -90,7 +90,13 @@ export class EventController {
         for (const id in this.deferred) {
             const defer = this.deferred[id];
 
-            await defer();
+            try {
+                await defer();
+            } catch (e) {
+                console.log('deferred function error', e)
+            }
+
+            delete this.deferred[id];
         }
     }
 }
