@@ -76,7 +76,7 @@ export abstract class ScheduleFormatter {
         if (options.days.length > 0) {
             for (const day of options.days) {
                 text.push([
-                    this.DayHeader(day.day, getWeekdayNameByStrDate(day.day)),
+                    this.formatDayHeader(day.day),
                     this.formatGroupLessons(day.lessons)
                 ].join('\n'));
             }
@@ -100,7 +100,7 @@ export abstract class ScheduleFormatter {
         if (options.days.length > 0) {
             for (const day of options.days) {
                 text.push([
-                    this.DayHeader(day.day, getWeekdayNameByStrDate(day.day)),
+                    this.formatDayHeader(day.day),
                     this.formatTeacherLessons(day.lessons)
                 ].join('\n'));
             }
@@ -111,6 +111,10 @@ export abstract class ScheduleFormatter {
         text.push(this.footer(this.raspCache.teachers));
 
         return text.join('\n\n');
+    }
+
+    public formatDayHeader(day: string) {
+        return this.DayHeader(day, getWeekdayNameByStrDate(day));
     }
 
     public formatGroupLessons(lessons: GroupLesson[]): string {

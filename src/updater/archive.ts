@@ -39,8 +39,8 @@ export class Archive {
         return entry ? JSON.parse(entry.data) : null;
     }
 
-    public getMinimalDayIndex(): number {
-        return (db.prepare('SELECT MIN(`day`) as `day` FROM timetable_archive').get() as any).day
+    public getDayIndexBounds(): { min: number, max: number } {
+        return (db.prepare('SELECT MIN(`day`) as `min`, MAX(`day`) as `max` FROM timetable_archive').get() as any);
     }
 
     public appendDays(entries: ArchiveAppendDay[]) {

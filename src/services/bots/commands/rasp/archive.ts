@@ -45,18 +45,23 @@ export default class extends AbstractCommand {
         }
 
         if (!entry) {
-            const minimalDayIndex: number = archive.getMinimalDayIndex();
+            const { min: minDayIndex, max: maxDayIndex } = archive.getDayIndexBounds();
             
-            if (dayIndex < minimalDayIndex) {
+            if (dayIndex < minDayIndex || dayIndex > maxDayIndex) {
+                const fromDay = formatDate(dayIndexToDate(minDayIndex));
+                const toDay = formatDate(dayIndexToDate(maxDayIndex));
+
                 //todo another day format
                 return context.send([
                     'Вы указали день, который находится вне периода сохранённых дней.',
-                    `В базе хранятся дни, начиная с ${formatDate(dayIndexToDate(minimalDayIndex))}`
+                    `В базе хранятся дни, начиная с ${fromDay} по ${toDay}`
                 ].join('\n'));
             }
 
             return context.send('Ничего не найдено на данный день');
         }
+
+        text = scheduleFormatter.formatDayHeader(formatDate(dayIndexToDate(dayIndex))) + '\n' + text;
 
         return context.send(text);
     }
