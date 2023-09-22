@@ -1,5 +1,5 @@
 import db from "../../../../db";
-import { AbstractCommand, HandlerParams } from "../../abstract";
+import { AbstractCommand, CmdHandlerParams } from "../../abstract";
 
 export default class extends AbstractCommand {
     public regexp = /^(!|\/)acceptBot($|\s)/i
@@ -7,7 +7,7 @@ export default class extends AbstractCommand {
 
     public adminOnly: boolean = true;
 
-    handler({ context, chat, service }: HandlerParams) {
+    handler({ context, chat, service }: CmdHandlerParams) {
         let id: string | undefined | number = context.text?.replace(this.regexp, '').trim()
         if (id == undefined || id === '') id = context.peerId
         if (isNaN(+id)) return context.send('это не число');

@@ -1,11 +1,11 @@
-import { AbstractCommand, HandlerParams } from "../../abstract";
+import { AbstractCommand, CmdHandlerParams } from "../../abstract";
 
 export default class extends AbstractCommand {
     public regexp = /^(✅|🚫)\sВремя последней загрузки расписания$/i
     public payload = null;
     public scene?: string | null = 'settings';
 
-    handler({ context, chat, keyboard }: HandlerParams) {
+    handler({ context, chat, keyboard }: CmdHandlerParams) {
         chat.showParserTime = !chat.showParserTime
 
         return context.send(

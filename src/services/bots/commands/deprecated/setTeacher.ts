@@ -1,12 +1,12 @@
 import { raspCache } from "../../../../updater";
 import { randArray } from "../../../../utils";
-import { AbstractCommand, HandlerParams } from "../../abstract";
+import { AbstractCommand, CmdHandlerParams } from "../../abstract";
 
 export default class extends AbstractCommand {
     public regexp = /^\/setTeacher/i
     public payload = null;
 
-    handler({ context, chat, keyboard }: HandlerParams) {
+    handler({ context, chat, keyboard }: CmdHandlerParams) {
         if (Object.keys(raspCache.teachers.timetable).length == 0) {
             return context.send('Данные с сервера ещё не загружены, ожидайте...')
         }

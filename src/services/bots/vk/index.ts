@@ -1,17 +1,14 @@
-import { readdirSync } from 'fs';
 import { NextMiddleware } from 'middleware-io';
-import path from 'path';
-import { ContextDefaultState, MessageContext, MessageEventContext, VK, getRandomId } from 'vk-io';
+import { ContextDefaultState, MessageContext, MessageEventContext, VK } from 'vk-io';
 import { config } from '../../../../config';
 import { defines } from '../../../defines';
 import { FromType, InputRequestKey } from '../../../key';
 import { raspCache } from '../../../updater';
 import { createScheduleFormatter } from '../../../utils';
 import { AbstractBot, AbstractCommand } from '../abstract';
-import { CommandController } from '../command';
+import { CommandController } from '../controller';
 import { Keyboard } from '../keyboard';
 import { VkBotAction } from './action';
-import { DefaultCallback } from './callbacks/_default';
 import { VkChat } from './chat';
 import { VkCommandContext } from './context';
 import { VkEventListener } from './event';
@@ -19,10 +16,7 @@ import { VkEventListener } from './event';
 export class VkBot extends AbstractBot {
     private static _instance?: VkBot;
 
-    public vk: VK
-    private callbacks: {
-        [id: string]: DefaultCallback;
-    } = {}
+    public vk: VK;
 
     public static get instance() {
         if (!this._instance) {
@@ -33,51 +27,27 @@ export class VkBot extends AbstractBot {
     }
 
     constructor() {
-        super('vk')
-        if (VkBot._instance) throw new Error('VkBot is singleton')
+        super('vk');
+        if (VkBot._instance) throw new Error('VkBot is singleton');
 
         this.vk = new VK({
             pollingGroupId: config.vk.bot.id,
             token: config.vk.bot.access_token,
-        })
+        });
 
         this.vk.updates.on('message_new', (context, next) => this.messageHandler(context, next))
         this.vk.updates.on('message_event', (context, next) => this.eventHandler(context, next))
         this.vk.updates.on('chat_invite_user', (context, next) => this.inviteUser(context, next))
 
-        new VkEventListener(this.vk)
+        new VkEventListener(this.vk);
     }
 
     public run() {
-        this.loadCallbacks()
-
         this.vk.updates.startPolling().then(() => {
             console.log('[VK Bot] Start polling...')
         }).catch(err => {
             console.error('polling error', err)
-        })
-    }
-
-    private loadCallbacks() {
-        const callbacksPath = path.join(__dirname, 'callbacks')
-
-        const dir = readdirSync(callbacksPath)
-
-        for (const file of dir) {
-            const { default: callbackClass } = require(path.join(callbacksPath, file))
-
-            if (callbackClass == undefined) continue;
-
-            const callback: DefaultCallback = new callbackClass()
-
-            if (callback.id == undefined) continue;
-
-            if (Object.keys(this.callbacks).includes(callback.id)) throw new Error(`cmd id '${callback.id}' is already registred`)
-
-            this.callbacks[callback.id] = callback
-        }
-
-        console.log(`[VK] Loaded ${Object.keys(this.callbacks).length} callbacks`)
+        });
     }
 
     private parseMessage(text?: string) {
@@ -146,31 +116,31 @@ export class VkBot extends AbstractBot {
     private eventHandler(context: MessageEventContext<ContextDefaultState>, next: NextMiddleware) {
         if (context.eventPayload?.action == undefined) return next();
 
-        for (const id in this.callbacks) {
-            const callback = this.callbacks[id]
+        // for (const id in this.callbacks) {
+        //     const callback = this.callbacks[id]
 
-            if (callback.action !== context.eventPayload?.action) continue;
+        //     if (callback.action !== context.eventPayload?.action) continue;
 
-            (async () => {
-                try {
-                    const chat = new VkChat(context.peerId)
-                    if (!chat.accepted) return;
+        //     (async () => {
+        //         try {
+        //             const chat = new VkChat(context.peerId)
+        //             if (!chat.accepted) return;
 
-                    chat.lastMsgTime = Date.now()
+        //             chat.lastMsgTime = Date.now()
 
-                    await callback.handler({ context, chat })
-                } catch (e: any) {
-                    console.error(id, e)
-                    this.vk.api.messages.send({
-                        peer_id: context.peerId,
-                        random_id: getRandomId(),
-                        message: `Произошла ошибка во время выполнения Callback #${id}: ${e.toString()}`
-                    })
-                }
-            })()
+        //             await callback.handler({ context, chat })
+        //         } catch (e: any) {
+        //             console.error(id, e)
+        //             this.vk.api.messages.send({
+        //                 peer_id: context.peerId,
+        //                 random_id: getRandomId(),
+        //                 message: `Произошла ошибка во время выполнения Callback #${id}: ${e.toString()}`
+        //             })
+        //         }
+        //     })()
 
-            return;
-        }
+        //     return;
+        // }
     }
 
     private inviteUser(context: MessageContext<ContextDefaultState>, next: NextMiddleware) {

@@ -1,20 +1,26 @@
 import { existsSync, readdirSync, statSync } from "fs";
 import path from "path";
 import { TelegramBotCommand } from "puregram/generated";
-import { AbstractCommand } from "./abstract";
+import { AbstractCallback, AbstractCommand } from "./abstract";
 
-const cmdsPath = path.join(__dirname, 'commands');
-type CommandValue = {
+const cmdRootPath = path.join(__dirname, 'commands');
+const cbRootPath = path.join(__dirname, 'callbacks');
+
+type LoadedInstance<T> = {
     id: string,
     path: string,
-    command: AbstractCommand
+    instance: T
 }
 
 export class CommandController {
     private static _instance?: CommandController;
 
     public commands: {
-        [id: string]: CommandValue
+        [id: string]: LoadedInstance<AbstractCommand>
+    } = {};
+
+    public callbacks: {
+        [id: string]: LoadedInstance<AbstractCallback>
     } = {};
 
     public static get instance(): CommandController {
@@ -30,7 +36,7 @@ export class CommandController {
 
         if (!cmd) throw new Error(`Command with id '${id}' not found`);
 
-        return cmd.command;
+        return cmd.instance;
     }
 
     public static searchCommandByMessage(message?: string, scene?: string | null): AbstractCommand | null {
@@ -39,7 +45,7 @@ export class CommandController {
         const cmds = this.instance.commands;
 
         for (const id in cmds) {
-            const cmd = cmds[id].command;
+            const cmd = cmds[id].instance;
 
             if (scene !== undefined && cmd.scene !== undefined) {
                 if (scene !== cmd.scene) continue;
@@ -59,7 +65,7 @@ export class CommandController {
         const cmds = this.instance.commands;
 
         for (const id in cmds) {
-            const cmd = cmds[id].command;
+            const cmd = cmds[id].instance;
 
             if (cmd.payload == null || cmd.payload != payload) continue;
 
@@ -69,16 +75,38 @@ export class CommandController {
         return null;
     }
 
-    public static getBotCommands(showAdminCommands: boolean = false): TelegramBotCommand[] {
-        return Object.values(this.instance.commands).reduce<TelegramBotCommand[]>((commands, { command }) => {
-            const tgCommand = command.tgCommand;
+    public static getCallbackById(id: string): AbstractCallback {
+        const cb = this.instance.callbacks[id];
 
-            if (tgCommand && (!command.adminOnly || showAdminCommands)) {
+        if (!cb) throw new Error(`Command with id '${id}' not found`);
+
+        return cb.instance;
+    }
+
+    public static getCallbackByAction(action: string): AbstractCallback | null {
+        const cbs = this.instance.callbacks;
+
+        for (const id in cbs) {
+            const cb = cbs[id].instance;
+
+            if (cb.action != action) continue;
+
+            return cb;
+        }
+
+        return null;
+    }
+
+    public static getBotCommands(showAdminCommands: boolean = false): TelegramBotCommand[] {
+        return Object.values(this.instance.commands).reduce<TelegramBotCommand[]>((commands, { instance }) => {
+            const tgCommand = instance.tgCommand;
+
+            if (tgCommand && (!instance.adminOnly || showAdminCommands)) {
                 tgCommand.command = tgCommand.command.toLowerCase();
-                if (command.adminOnly) {
+                if (instance.adminOnly) {
                     tgCommand.description = '[адм] ' + tgCommand.description;
                 }
-                
+
                 commands.push(tgCommand)
             }
 
@@ -87,44 +115,48 @@ export class CommandController {
     }
 
     public static reloadCommandById(id: string) {
-        this.instance.reloadCommand(id);
+        this.instance.reloadCommandById(id);
     }
 
     constructor() {
         if (CommandController._instance) throw new Error('CommandController is singleton');
         CommandController._instance = this;
 
-        this.loadCommands(cmdsPath);
+        this.loadFromDirectory(AbstractCommand, cmdRootPath)
+        console.log(`[BOTS] Loaded ${Object.keys(this.commands).length} commands`)
+
+        this.loadFromDirectory(AbstractCallback, cbRootPath)
+        console.log(`[BOTS] Loaded ${Object.keys(this.callbacks).length} callbacks`)
 
         // if (config.dev) {
         //     this.initFolderWatcher(cmdsPath);
         // }
     }
 
-    protected loadCommands(cmdsPath: string) {
-        this.loadFromDirectory(cmdsPath)
+    private loadFromDirectory(classType: typeof AbstractCommand | typeof AbstractCallback, dir: string, rootPath?: string) {
+        if (!rootPath) {
+            if (!existsSync(dir)) {
+                return;
+            }
 
-        console.log(`[BOTS] Loaded ${Object.keys(this.commands).length} commands`)
+            rootPath = dir;
+        }
 
-        return this.commands
-    }
-
-    private loadFromDirectory(dir: string) {
         const files = readdirSync(dir);
 
         for (const file of files) {
             const filePath: string = path.join(dir, file);
 
             if (statSync(filePath).isDirectory()) {
-                this.loadFromDirectory(filePath)
+                this.loadFromDirectory(classType, filePath, rootPath);
                 continue;
             }
 
-            this.loadCommand(filePath)
+            this.loadClassFromFile(classType, rootPath, filePath)
         }
     }
 
-    public loadCommand(filePath: string) {
+    public loadClassFromFile(classType: typeof AbstractCommand | typeof AbstractCallback, rootPath: string, filePath: string) {
         if (!filePath.endsWith('.ts') && !filePath.endsWith('.js')) {
             return;
         }
@@ -136,45 +168,53 @@ export class CommandController {
         const { default: cmdClass } = require(filePath);
         if (cmdClass == undefined) return;
 
-        const cmd: AbstractCommand = new cmdClass();
-        if (!(cmd instanceof AbstractCommand)) {
+        const cmd = new cmdClass();
+        if (!(cmd instanceof classType)) {
             throw new Error(`incorrect command class: ${filePath}`);
         }
-        
-        const id = this.pathToId(filePath);
-        cmd.id = id;
 
-        const value: CommandValue = {
-            id: id,
-            path: filePath,
-            command: cmd
-        };
+        const id = this.pathToId(rootPath, filePath);
+        cmd.id = id;
 
         // if (config.dev) {
         //     this.initCommandWatcher(value);
         // }
 
-        this.commands[id] = value;
+        if (cmd instanceof AbstractCommand) {
+            this.commands[id] = {
+                id: id,
+                path: filePath,
+                instance: cmd
+            };
+        }
+
+        if (cmd instanceof AbstractCallback) {
+            this.callbacks[id] = {
+                id: id,
+                path: filePath,
+                instance: cmd
+            };
+        }
     }
 
-    public unloadCommand(cmd: CommandValue) {
+    public unloadCommand(cmd: LoadedInstance<AbstractCommand>) {
         delete require.cache[cmd.path];
         delete this.commands[cmd.id];
     }
 
-    public reloadCommand(id: string) {
+    public reloadCommandById(id: string) {
         const cmd = this.commands[id];
         if (!cmd) {
             throw new Error(`command with id '${id}' not found`)
         }
 
         this.unloadCommand(cmd);
-        this.loadCommand(cmd.path);
+        this.loadClassFromFile(AbstractCommand, cmdRootPath, cmd.path);
     }
 
-    private pathToId(filePath: string) {
+    private pathToId(rootPath: string, filePath: string) {
         return filePath
-            .replace(cmdsPath, '')
+            .replace(rootPath, '')
             .replace(/^(\\|\/)/i, '')
             .replace(/(\.(ts|js))$/i, '')
             .replace(/\\|\//ig, '_');

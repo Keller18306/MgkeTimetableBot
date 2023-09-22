@@ -1,6 +1,6 @@
 import { TelegramBotCommand } from "puregram/generated";
 import db from "../../../../db";
-import { AbstractCommand, HandlerParams } from "../../abstract";
+import { AbstractCommand, CmdHandlerParams } from "../../abstract";
 
 export default class extends AbstractCommand {
     public regexp = /^(!|\/)(sql|db)_?get/i
@@ -12,7 +12,7 @@ export default class extends AbstractCommand {
 
     public adminOnly: boolean = true;
 
-    handler({ context }: HandlerParams) {
+    handler({ context }: CmdHandlerParams) {
         const sql = context.text?.replace(this.regexp, '').trim()
         if (sql === undefined) return;
 

@@ -1,7 +1,7 @@
 import { config } from "../../../../../config";
 import { RequestKey, appType } from "../../../../key";
 import { formatDateTime } from "../../../../utils";
-import { AbstractCommand, HandlerParams } from "../../abstract";
+import { AbstractCommand, CmdHandlerParams } from "../../abstract";
 
 const acceptTool = new RequestKey(config.encrypt_key)
 
@@ -11,7 +11,7 @@ export default class extends AbstractCommand {
 
     public adminOnly: boolean = true;
 
-    handler({ context }: HandlerParams) {
+    handler({ context }: CmdHandlerParams) {
         const key = context.text?.replace(this.regexp, '').trim()
         if (key === undefined) return;
 

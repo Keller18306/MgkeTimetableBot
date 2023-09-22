@@ -7,7 +7,7 @@ import { raspCache } from '../../../updater';
 import { createScheduleFormatter } from '../../../utils';
 import { ImageBuilder, ImageFile } from '../../image/builder';
 import { AbstractBot, AbstractCommand, AbstractCommandContext } from '../abstract';
-import { CommandController } from '../command';
+import { CommandController } from '../controller';
 import { Keyboard } from '../keyboard';
 import { TgBotAction } from './action';
 import { TgChat } from './chat';

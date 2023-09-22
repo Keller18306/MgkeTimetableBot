@@ -1,7 +1,7 @@
 import { TelegramBotCommand } from "puregram/generated";
 import { raspCache } from "../../../../updater";
 import { formatSeconds } from "../../../../utils";
-import { AbstractCommand, HandlerParams } from "../../abstract";
+import { AbstractCommand, CmdHandlerParams } from "../../abstract";
 
 export default class extends AbstractCommand {
     public regexp = /^(!|\/)(get)?groups$/i
@@ -11,7 +11,7 @@ export default class extends AbstractCommand {
         description: 'Получить полный список групп в кэше бота'
     };
 
-    async handler({ context }: HandlerParams) {
+    async handler({ context }: CmdHandlerParams) {
         if (
             Object.keys(raspCache.groups.timetable).length == 0
         ) return context.send('Данные с сервера ещё не загружены, ожидайте...')

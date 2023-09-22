@@ -6,7 +6,7 @@ import { FromType, InputRequestKey } from '../../../key/index';
 import { raspCache } from '../../../updater';
 import { createScheduleFormatter } from '../../../utils';
 import { AbstractBot, AbstractCommand } from '../abstract';
-import { CommandController } from '../command';
+import { CommandController } from '../controller';
 import { Keyboard, StaticKeyboard } from '../keyboard';
 import { ViberAction } from './action';
 import { ViberChat } from './chat';

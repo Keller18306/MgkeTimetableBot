@@ -1,7 +1,7 @@
 import { defines } from "../../../../defines";
 import { raspCache } from "../../../../updater";
 import { randArray } from "../../../../utils";
-import { AbstractCommand, HandlerParams } from "../../abstract";
+import { AbstractCommand, CmdHandlerParams } from "../../abstract";
 import { StaticKeyboard } from "../../keyboard";
 
 export default class extends AbstractCommand {
@@ -9,7 +9,7 @@ export default class extends AbstractCommand {
     public payload = null;
     public scene?: string | null = 'setup';
 
-    async handler({ context, chat, keyboard, service }: HandlerParams) {
+    async handler({ context, chat, keyboard, service }: CmdHandlerParams) {
         if (Object.keys(raspCache.teachers.timetable).length == 0) return context.send('Данные с сервера ещё не загружены, ожидайте...')
 
         const randTeacher = randArray(Object.keys(raspCache.teachers.timetable))

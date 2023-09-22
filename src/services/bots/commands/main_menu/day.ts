@@ -2,7 +2,7 @@ import { TelegramBotCommand } from 'puregram/generated';
 import { raspCache } from '../../../../updater';
 import { getDayRasp, randArray } from "../../../../utils";
 import { ScheduleFormatter } from '../../../../utils/formatters/abstract';
-import { AbstractAction, AbstractChat, AbstractCommand, AbstractCommandContext, HandlerParams } from "../../abstract";
+import { AbstractAction, AbstractChat, AbstractCommand, AbstractCommandContext, CmdHandlerParams } from "../../abstract";
 
 export default class extends AbstractCommand {
     public regexp = /^((!|\/)(get)?(rasp)?day|(📄\s)?(расписание\s)?на день)$/i
@@ -12,7 +12,7 @@ export default class extends AbstractCommand {
         description: 'Ваше расписание на день'
     };
 
-    async handler({ context, chat, actions, scheduleFormatter }: HandlerParams) {
+    async handler({ context, chat, actions, scheduleFormatter }: CmdHandlerParams) {
         if (Object.keys(raspCache.groups.timetable).length == 0 && Object.keys(raspCache.teachers.timetable).length == 0) {
             return context.send('Данные с сервера ещё не загружены, ожидайте...');
         }
@@ -74,6 +74,6 @@ export default class extends AbstractCommand {
 
         actions.deleteUserMsg()
 
-        context.send(message).then(context => actions.handlerLastMsgUpdate(context))
+        return context.send(message).then(context => actions.handlerLastMsgUpdate(context))
     }
 }

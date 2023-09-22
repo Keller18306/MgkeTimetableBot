@@ -1,4 +1,4 @@
-import { AbstractCommand, HandlerParams } from "../../abstract";
+import { AbstractCommand, CmdHandlerParams } from "../../abstract";
 
 //const activateTool = new ActivateKey(config.encrypt_key)
 
@@ -6,7 +6,7 @@ export default class extends AbstractCommand {
     public regexp = /^(!|\/)activate/i
     public payload = null;
 
-    handler({ context }: HandlerParams) {
+    handler({ context }: CmdHandlerParams) {
         /*let id: string | undefined | number = context.text?.replace(this.regexp, '').trim()
         if (id === undefined || id === '') id = context.peerId
         

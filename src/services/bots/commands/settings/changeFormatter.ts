@@ -1,5 +1,5 @@
 import { SCHEDULE_FORMATTERS, escapeRegex } from "../../../../utils";
-import { AbstractCommand, HandlerParams } from "../../abstract";
+import { AbstractCommand, CmdHandlerParams } from "../../abstract";
 
 export default class extends AbstractCommand {
     public regexp: RegExp | null = null;
@@ -20,7 +20,7 @@ export default class extends AbstractCommand {
         this.regexp = new RegExp(`^((${regexp.join('|')})(\\s\\(выбран\\))?)$`, 'i');
     }
 
-    handler({ context, chat, keyboard }: HandlerParams) {
+    handler({ context, chat, keyboard }: CmdHandlerParams) {
         const formatterName: string | undefined = this.regexp?.exec(context.text)?.[2];
 
         let formatterIndex: number | undefined;

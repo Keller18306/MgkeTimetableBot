@@ -1,5 +1,5 @@
 import { TelegramBotCommand } from "puregram/generated";
-import { AbstractCommand, HandlerParams } from "../../abstract";
+import { AbstractCommand, CmdHandlerParams } from "../../abstract";
 import { StaticKeyboard } from "../../keyboard";
 
 export default class extends AbstractCommand {
@@ -10,7 +10,7 @@ export default class extends AbstractCommand {
         description: 'Сменить группу или преподавателя'
     };
 
-    handler({ context, chat }: HandlerParams) {
+    handler({ context, chat }: CmdHandlerParams) {
         //if (chat.isChat) return context.send('Недоступно в беседе');
 
         chat.scene = 'setup';

@@ -1,4 +1,4 @@
-import { AbstractCommand, HandlerParams } from "../../abstract";
+import { AbstractCommand, CmdHandlerParams } from "../../abstract";
 
 export default class extends AbstractCommand {
     public regexp = /^(!|\/)(vtt?|voice(to)?text)$/i
@@ -6,7 +6,7 @@ export default class extends AbstractCommand {
 
     public services: ("vk" | "tg" | "viber")[] = ['vk'];
 
-    handler({ context, service, realContext }: HandlerParams) {
+    handler({ context, service, realContext }: CmdHandlerParams) {
         if (service != 'vk') throw new Error('Команда доступна только в ВК')
 
         if (!realContext.replyMessage) return context.send('На сообщение нужно ответить')
@@ -20,9 +20,8 @@ export default class extends AbstractCommand {
 
         if (!audio.isTranscriptDone) return context.send('Транскрипция ещё не готова')
 
-        context.send(
+        return context.send(
             `Текст голосовой:\n${audio.transcript}`
         )
-        return;
     }
 }

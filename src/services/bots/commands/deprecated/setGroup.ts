@@ -1,12 +1,12 @@
 import { raspCache } from "../../../../updater";
 import { randArray } from "../../../../utils";
-import { AbstractCommand, HandlerParams } from "../../abstract";
+import { AbstractCommand, CmdHandlerParams } from "../../abstract";
 
 export default class extends AbstractCommand {
     public regexp = /^\/setGroup/i
     public payload = null;
 
-    handler({ context, chat, keyboard }: HandlerParams) {
+    handler({ context, chat, keyboard }: CmdHandlerParams) {
         const group = context.text!.split(' ')[1]
 
         if (group == '' || group == undefined || group.length > 3 || isNaN(+group)) {
@@ -27,7 +27,7 @@ export default class extends AbstractCommand {
         chat.mode = 'student';
         chat.scene = null;
 
-        context.send(`Группа этого чата была успешно изменена на '${group}'`, {
+        return context.send(`Группа этого чата была успешно изменена на '${group}'`, {
             keyboard: keyboard.MainMenu
         })
     }

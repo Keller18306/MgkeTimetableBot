@@ -1,6 +1,6 @@
 import { TelegramBotCommand } from 'puregram/generated';
-import { AbstractCommand, HandlerParams } from "../../abstract";
-import { CommandController } from '../../command';
+import { AbstractCommand, CmdHandlerParams } from "../../abstract";
+import { CommandController } from '../../controller';
 
 export default class extends AbstractCommand {
     public regexp = /^(!|\/)reloadCmd/i
@@ -11,7 +11,7 @@ export default class extends AbstractCommand {
         description: 'Перезагрузить команду без перезапуска бота'
     };
 
-    async handler({ context, chat }: HandlerParams) {
+    async handler({ context, chat }: CmdHandlerParams) {
         const id = context.text?.replace(this.regexp, '').trim();
         if (!id) return context.send('id команды не введён');
 

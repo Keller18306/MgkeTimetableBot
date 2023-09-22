@@ -2,7 +2,7 @@ import fs from 'fs';
 import { TelegramBotCommand } from 'puregram/generated';
 import { vaccum } from '../../../../db';
 import { formatBytes } from '../../../../utils';
-import { AbstractCommand, HandlerParams } from "../../abstract";
+import { AbstractCommand, CmdHandlerParams } from "../../abstract";
 
 export default class extends AbstractCommand {
     public regexp = /^(!|\/)vacuum/i
@@ -13,7 +13,7 @@ export default class extends AbstractCommand {
         description: 'Сжать базу данных'
     };
 
-    async handler({ context }: HandlerParams) {
+    async handler({ context }: CmdHandlerParams) {
         const { size: bdSize_before } = fs.statSync('./sqlite3.db')
 
         vaccum();

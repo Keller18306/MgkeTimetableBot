@@ -3,9 +3,9 @@ import * as fs from 'fs';
 import { TelegramBotCommand } from 'puregram/generated';
 import { runInNewContext } from 'vm';
 import db from '../../../../db';
-import { raspCache, saveCache, loadCache } from "../../../../updater/raspCache";
-import { AbstractCommand, HandlerParams } from "../../abstract";
-import { CommandController } from "../../command";
+import { loadCache, raspCache, saveCache } from "../../../../updater/raspCache";
+import { AbstractCommand, CmdHandlerParams } from "../../abstract";
+import { CommandController } from "../../controller";
 import { VkBot } from "../../vk";
 
 const cmds = CommandController.instance.commands
@@ -20,7 +20,7 @@ export default class extends AbstractCommand {
         description: 'Выполнение произвольного JavaScript кода в услово изолированной среде'
     };
 
-    async handler({ context, chat }: HandlerParams) {
+    async handler({ context, chat }: CmdHandlerParams) {
         const code = context.text?.replace(this.regexp, '').trim()
         if (code === undefined) return context.send('Код для выполнения не введён');
 

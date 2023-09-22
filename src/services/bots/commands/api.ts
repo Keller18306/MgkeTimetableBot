@@ -3,7 +3,7 @@ import db from "../../../db";
 import { ApiKey } from "../../../key";
 import { formatDateTime } from "../../../utils";
 import { KeyData } from "../../api/key";
-import { AbstractCommand, HandlerParams } from "../abstract";
+import { AbstractCommand, CmdHandlerParams } from "../abstract";
 
 const keyTool = new ApiKey(config.encrypt_key);
 
@@ -11,7 +11,7 @@ export default class extends AbstractCommand {
     public regexp = /^(!|\/)api(_new)?$/i
     public payload = null;
 
-    handler({ context, service }: HandlerParams) {
+    handler({ context, service }: CmdHandlerParams) {
         if (context.isChat) return context.send('Команда недоступна в беседах');
 
         let limit: number = 2;

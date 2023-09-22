@@ -10,10 +10,8 @@ export type MessageOptions = {
     disableHtmlParser?: boolean
 }
 
-export abstract class AbstractCommandContext {
+export abstract class AbstractContext {
     public abstract id: string;
-    public abstract text: string
-    public abstract payload?: { [key: string]: any };
 
     public abstract peerId: number | string;
     public abstract userId: number | string;
@@ -46,4 +44,15 @@ export abstract class AbstractCommandContext {
     public async waitInput() {
         return this._input.create(String(this.peerId));
     }
+}
+
+export abstract class AbstractCommandContext extends AbstractContext {
+    public abstract text: string
+    public abstract payload?: { [key: string]: any };
+}
+
+export abstract class AbstractCallbackContext extends AbstractContext {
+    public abstract payload: any;
+    public abstract answer(text: string): Promise<string>
+
 }

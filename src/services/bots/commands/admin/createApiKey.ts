@@ -2,7 +2,7 @@ import { config } from "../../../../../config";
 import db from "../../../../db";
 import { ApiKey } from "../../../../key";
 import { KeyData } from "../../../api/key";
-import { AbstractCommand, HandlerParams } from "../../abstract";
+import { AbstractCommand, CmdHandlerParams } from "../../abstract";
 
 const keyTool = new ApiKey(config.encrypt_key);
 
@@ -11,7 +11,7 @@ export default class extends AbstractCommand {
     public payload = null;
     public adminOnly: boolean = true;
 
-    handler({ context }: HandlerParams) {
+    handler({ context }: CmdHandlerParams) {
         const args = context.text.split(' ');
 
         const service: string | undefined = args[1];

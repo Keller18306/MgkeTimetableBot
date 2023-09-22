@@ -1,11 +1,11 @@
 import { strDateToIndex } from "../../../../utils";
-import { AbstractCommand, HandlerParams } from "../../abstract";
+import { AbstractCommand, CmdHandlerParams } from "../../abstract";
 
 export default class extends AbstractCommand {
     public regexp = /^(!|\/)(date|str(Date)?)ToIndex/i
     public payload = null;
 
-    handler({ context }: HandlerParams) {
+    handler({ context }: CmdHandlerParams) {
         const day = context.text?.replace(this.regexp, '').trim()
         if (day === undefined) return context.send('День не введён');
 

@@ -1,5 +1,5 @@
 import db from "../../../../db";
-import { AbstractCommand, HandlerParams, Service } from "../../abstract";
+import { AbstractCommand, CmdHandlerParams, Service } from "../../abstract";
 
 export default class extends AbstractCommand {
     public regexp = /^(!|\/)acceptApp($|\s)/i
@@ -9,7 +9,7 @@ export default class extends AbstractCommand {
 
     public services: Service[] = ['vk'];
 
-    handler({ context }: HandlerParams) {
+    handler({ context }: CmdHandlerParams) {
         let id: string | undefined | number = context.text?.replace(this.regexp, '').trim()
         if (id == undefined || id === '') return context.send('id не введен')
 

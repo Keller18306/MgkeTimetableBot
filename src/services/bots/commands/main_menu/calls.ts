@@ -2,7 +2,7 @@ import { TelegramBotCommand } from "puregram/generated";
 import { config } from "../../../../../config";
 import { raspCache } from "../../../../updater";
 import { nowInTime } from "../../../../utils";
-import { AbstractCommand, HandlerParams } from "../../abstract";
+import { AbstractCommand, CmdHandlerParams } from "../../abstract";
 
 export default class extends AbstractCommand {
     public regexp = /^((!|\/)(get)?(times|calls)|(🕐\s)?звонки)$/i
@@ -12,7 +12,7 @@ export default class extends AbstractCommand {
         description: 'Расписание звонков'
     };
 
-    handler({ context, chat, actions }: HandlerParams) {
+    handler({ context, chat, actions }: CmdHandlerParams) {
         actions.deleteUserMsg()
 
         const message: string[] = [];
@@ -58,7 +58,7 @@ export default class extends AbstractCommand {
             message.push(this.setSelected(lineStr, nowInTime([6], lesson[0][0], lesson[1][1])))
         }
 
-        context.send(message.join('\n'))
+        return context.send(message.join('\n'))
     }
 
     private setSelected(text: string, selected: boolean): string {

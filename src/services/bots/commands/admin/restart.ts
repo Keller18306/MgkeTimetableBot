@@ -1,7 +1,7 @@
 import { execSync } from "child_process";
 import { TelegramBotCommand } from "puregram/generated";
 import { saveCache } from "../../../../updater/raspCache";
-import { AbstractCommand, HandlerParams } from "../../abstract";
+import { AbstractCommand, CmdHandlerParams } from "../../abstract";
 
 export default class extends AbstractCommand {
     public regexp = /^(!|\/)restart$/i
@@ -13,7 +13,7 @@ export default class extends AbstractCommand {
         description: 'Перезапуск бота (только при использовании PM2)'
     };
 
-    async handler({ context }: HandlerParams) {
+    async handler({ context }: CmdHandlerParams) {
         await saveCache();
 
         await context.send('Restarting...');

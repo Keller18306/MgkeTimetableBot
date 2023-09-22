@@ -3,7 +3,7 @@ import { raspCache } from '../../../../updater';
 import { GroupDay, TeacherDay } from '../../../../updater/parser/types';
 import { randArray, removePastDays } from "../../../../utils";
 import { ScheduleFormatter } from '../../../../utils/formatters/abstract';
-import { AbstractAction, AbstractChat, AbstractCommand, AbstractCommandContext, HandlerParams } from "../../abstract";
+import { AbstractAction, AbstractChat, AbstractCommand, AbstractCommandContext, CmdHandlerParams } from "../../abstract";
 import { Keyboard } from '../../keyboard';
 
 export default class extends AbstractCommand {
@@ -14,7 +14,7 @@ export default class extends AbstractCommand {
         description: 'Ваше расписание на неделю'
     };
 
-    async handler({ context, chat, actions, scheduleFormatter, keyboard }: HandlerParams) {
+    async handler({ context, chat, actions, scheduleFormatter, keyboard }: CmdHandlerParams) {
         if (Object.keys(raspCache.groups.timetable).length == 0 &&
             Object.keys(raspCache.teachers.timetable).length == 0) {
             return context.send('Данные с сервера ещё не загружены, ожидайте...');
@@ -57,9 +57,9 @@ export default class extends AbstractCommand {
         actions.deleteUserMsg();
 
         const id = await context.send(message, {
-            // keyboard: keyboard.GenerateImage('group', String(chat.group))
+            // keyboard: keyboard.WeekControl('group', String(chat.group))
         }).then(id => {
-            actions.handlerLastMsgUpdate(context)
+            actions.handlerLastMsgUpdate(context);
             return id;
         });
 

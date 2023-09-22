@@ -1,4 +1,4 @@
-import { AbstractCommand, HandlerParams, Service } from "../../abstract";
+import { AbstractCommand, CmdHandlerParams, Service } from "../../abstract";
 
 export default class extends AbstractCommand {
     public regexp = /^(!|\/)deleteLastMsg$/i
@@ -6,7 +6,7 @@ export default class extends AbstractCommand {
 
     public services: Service[] = ['vk'];
 
-    handler({ context, chat, keyboard }: HandlerParams) {
+    handler({ context, chat, keyboard }: CmdHandlerParams) {
         if (!chat.deleteLastMsg && !context.isChat) return context.send('Это недоступно в ЛС бота')
 
         chat.deleteLastMsg = !chat.deleteLastMsg

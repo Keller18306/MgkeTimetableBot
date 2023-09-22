@@ -1,7 +1,7 @@
 import { TelegramBotCommand } from "puregram/generated";
 import { raspCache } from "../../../../updater";
 import { getDayRasp } from "../../../../utils";
-import { AbstractCommand, HandlerParams } from "../../abstract";
+import { AbstractCommand, CmdHandlerParams } from "../../abstract";
 
 export default class extends AbstractCommand {
     public regexp = /^(!|\/)endings$/i;
@@ -12,7 +12,7 @@ export default class extends AbstractCommand {
     };
     public scene?: string | null = null;
 
-    async handler({ context }: HandlerParams) {
+    async handler({ context }: CmdHandlerParams) {
         const groups = raspCache.groups.timetable;
 
         const stat: {

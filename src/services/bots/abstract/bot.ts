@@ -5,9 +5,10 @@ import { InputRequestKey, RequestKey } from "../../../key";
 import { BotInput, InputCancel } from "../input";
 import { StaticKeyboard } from "../keyboard";
 import { FileCache } from "./cache";
+import { AbstractCallback, CbHandlerParams } from "./callback";
 import { AbstractChat } from "./chat";
-import { AbstractCommand, HandlerParams, Service } from "./command";
-import { AbstractCommandContext } from "./context";
+import { AbstractCommand, CmdHandlerParams, Service } from "./command";
+import { AbstractCallbackContext, AbstractCommandContext } from "./context";
 
 export type HandleMessageOptions = {
     /** Есть ли упоминание бота в сообщении (для ВК) */
@@ -32,7 +33,7 @@ export abstract class AbstractBot {
         this.cache = new FileCache(this.service);
     }
 
-    protected async handleMessage(cmd: AbstractCommand | null, handlerParams: HandlerParams, options: HandleMessageOptions = {}) {
+    protected async handleMessage(cmd: AbstractCommand | null, handlerParams: CmdHandlerParams, options: HandleMessageOptions = {}) {
         const { chat, context, keyboard } = handlerParams;
         const { selfMention } = Object.assign({}, {
             selfMention: true
@@ -44,16 +45,18 @@ export abstract class AbstractBot {
             }
 
             if (chat.accepted && !chat.eula) {
-                context.send(defines['eula']);
                 chat.eula = true;
+
+                context.send(defines['eula']).catch(() => {});
             }
         
             if (chat.accepted && chat.needUpdateButtons) {
                 chat.needUpdateButtons = false;
                 chat.scene = null;
+
                 context.send('Клавиатура была принудительно пересоздана (обновлена)', {
                     keyboard: keyboard.MainMenu
-                });
+                }).catch(() => { });
             }
 
             if (!cmd) {
@@ -74,7 +77,7 @@ export abstract class AbstractBot {
                 return this.notAccepted(context)
             }
 
-            chat.lastMsgTime = Date.now()
+            chat.lastMsgTime = Date.now();
 
             try {
                 if (!cmd.preHandle(handlerParams)) {
@@ -93,8 +96,43 @@ export abstract class AbstractBot {
         }
     }
 
-    protected handleMessageError(cmd: AbstractCommand, context: AbstractCommandContext, err: Error) {
-        context.send(`Произошла ошибка во время выполнения Command #${cmd.id}: ${err.toString()}`).catch(() => { })
+    protected async handleCallback(cb: AbstractCallback | null, handlerParams: CbHandlerParams) {
+        const { chat, context, keyboard } = handlerParams;
+        try {
+            if (!chat.allowSendMess) {
+                chat.allowSendMess = true
+            }
+
+            if (chat.accepted && !chat.eula) {
+                chat.eula = true;
+                context.send(defines['eula']).catch(() => { });
+            }
+
+            if (!cb || !chat.accepted) {
+                return;
+            }
+
+            chat.lastMsgTime = Date.now();
+
+            try {
+                if (!cb.preHandle(handlerParams)) {
+                    return;
+                }
+
+                await cb.handler(handlerParams)
+            } catch (err: any) {
+                if (err instanceof InputCancel) return;
+                console.error(cb.id, context.peerId, err);
+
+                this.handleMessageError(cb, context, err)
+            }
+        } catch (err: any) {
+            console.error('sys send error', context.peerId, err);
+        }
+    }
+
+    protected handleMessageError(cmd: AbstractCommand | AbstractCallback, context: AbstractCommandContext | AbstractCallbackContext, err: Error) {
+        context.send(`Произошла ошибка во время выполнения #${cmd.id}: ${err.toString()}`).catch(() => { })
     }
 
     protected notFound(chat: AbstractChat, context: AbstractCommandContext, keyboard: any, selfMention: boolean = true) {
@@ -108,7 +146,7 @@ export abstract class AbstractBot {
     }
 
     protected notAccepted(context: AbstractCommandContext) {
-        context.send(format(defines['need.accept'],
+        return context.send(format(defines['need.accept'],
             this.acceptTool.getKey(this._getAcceptKeyParams(context))
         ), {
             disable_mentions: true,

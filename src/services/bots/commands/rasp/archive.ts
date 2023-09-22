@@ -2,7 +2,7 @@ import { TelegramBotCommand } from "puregram/generated";
 import { Updater } from "../../../../updater";
 import { GroupLesson, TeacherLesson } from "../../../../updater/parser/types";
 import { dayIndexToDate, formatDate, strDateToIndex } from "../../../../utils";
-import { AbstractCommand, HandlerParams } from "../../abstract";
+import { AbstractCommand, CmdHandlerParams } from "../../abstract";
 
 const archive = Updater.getInstance().archive;
 
@@ -15,7 +15,7 @@ export default class extends AbstractCommand {
     };
     public scene?: string | null = null;
 
-    async handler({ context, chat, scheduleFormatter }: HandlerParams) {
+    async handler({ context, chat, scheduleFormatter }: CmdHandlerParams) {
         const day: string | undefined = context.text?.replace(this.regexp, '').trim();
         if (!day) {
             return context.send('День не указан');

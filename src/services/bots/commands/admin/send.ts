@@ -1,6 +1,6 @@
 import { TelegramBotCommand } from 'puregram/generated';
 import { EventController } from '../../../../updater/events/controller';
-import { AbstractCommand, HandlerParams } from "../../abstract";
+import { AbstractCommand, CmdHandlerParams } from "../../abstract";
 
 export default class extends AbstractCommand {
     public regexp = /^(!|\/)send/i
@@ -11,7 +11,7 @@ export default class extends AbstractCommand {
         description: 'Рассылка всем пользователям в боте'
     };
 
-    async handler({ context, chat }: HandlerParams) {
+    async handler({ context, chat }: CmdHandlerParams) {
         const message = context.text?.replace(this.regexp, '').trim();
         if (!message) return context.send('Сообщение не введено');
 

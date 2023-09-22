@@ -246,6 +246,50 @@ export class Keyboard {
             color: KeyboardColor.PRIMARY_COLOR
         });
     }
+
+    public WeekControl(type: string, value: string): KeyboardBuilder | undefined {
+        const keyboard: KeyboardBuilder = new KeyboardBuilder('WeekControl', true);
+
+        let newLine: boolean = false;
+
+        if (true) {
+            keyboard.add({
+                text: '⬅️',
+                payload: {},
+                color: KeyboardColor.PRIMARY_COLOR
+            });
+
+            newLine = true;
+        }
+
+        //🔼🔽
+
+        if (true) {
+            keyboard.add({
+                text: '➡️',
+                payload: {},
+                color: KeyboardColor.PRIMARY_COLOR
+            });
+
+            newLine = true;
+        }
+
+        if (newLine) {
+            keyboard.row();
+        }
+
+        keyboard.add({
+            text: '📷 Сгенерировать изображение',
+            payload: {
+                action: 'image',
+                type: type,
+                value: value
+            },
+            color: KeyboardColor.PRIMARY_COLOR
+        });
+
+        return keyboard;
+    }
 }
 
 export class StaticKeyboard {

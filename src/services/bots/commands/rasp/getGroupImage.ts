@@ -2,7 +2,7 @@ import { TelegramBotCommand } from "puregram/generated";
 import { raspCache } from "../../../../updater";
 import { randArray } from "../../../../utils";
 import { ImageBuilder, ImageFile } from "../../../image/builder";
-import { AbstractCommand, HandlerParams } from "../../abstract";
+import { AbstractCommand, CmdHandlerParams } from "../../abstract";
 
 export default class extends AbstractCommand {
     public regexp = /^(((!|\/)(get)?(groupImage|imageGroup))|(Группа(фото(графия)?|таблица)))(\b|$|\s)/i;
@@ -12,7 +12,7 @@ export default class extends AbstractCommand {
         description: 'Сгенерировать фотографию расписания группы (не зависит от текущего вашего)'
     };
 
-    async handler({ context, chat }: HandlerParams) {
+    async handler({ context, chat }: CmdHandlerParams) {
         if (Object.keys(raspCache.groups.timetable).length == 0) {
             return context.send('Данные с сервера ещё не загружены, ожидайте...');
         }

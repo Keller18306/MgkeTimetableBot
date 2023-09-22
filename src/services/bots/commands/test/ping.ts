@@ -1,5 +1,5 @@
 import { TelegramBotCommand } from "puregram/generated";
-import { AbstractCommand, HandlerParams } from "../../abstract";
+import { AbstractCommand, CmdHandlerParams } from "../../abstract";
 
 export default class extends AbstractCommand {
     public regexp = /^(!|\/)ping$/i
@@ -9,7 +9,7 @@ export default class extends AbstractCommand {
         description: 'Проверка работоспособности бота'
     };
 
-    handler({ context }: HandlerParams) {
+    handler({ context }: CmdHandlerParams) {
         return context.send('pong')
     }
 }

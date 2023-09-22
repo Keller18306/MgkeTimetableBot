@@ -1,5 +1,5 @@
 import { TelegramBotCommand } from "puregram/generated";
-import { AbstractCommand, HandlerParams } from "../abstract";
+import { AbstractCommand, CmdHandlerParams } from "../abstract";
 
 export default class extends AbstractCommand {
     public regexp = /^\/cancel$/i;
@@ -9,7 +9,7 @@ export default class extends AbstractCommand {
         description: 'Отменить действие ввода (если таковое имеется)'
     };
 
-    handler({ context, keyboard, chat }: HandlerParams) {
+    handler({ context, keyboard, chat }: CmdHandlerParams) {
         context.cancelInput()
         chat.scene = null;
 

@@ -1,7 +1,7 @@
 import { TelegramBotCommand } from "puregram/generated";
 import { raspCache } from "../../../../updater";
 import { randArray } from "../../../../utils";
-import { AbstractCommand, HandlerParams } from "../../abstract";
+import { AbstractCommand, CmdHandlerParams } from "../../abstract";
 import { withCancelButton } from "../../keyboard";
 
 export default class extends AbstractCommand {
@@ -12,7 +12,7 @@ export default class extends AbstractCommand {
         description: 'Узнать расписание на неделю указанного преподавателя (не зависит от текущего вашего)'
     };
 
-    async handler({ context, chat, keyboard, scheduleFormatter }: HandlerParams) {
+    async handler({ context, chat, keyboard, scheduleFormatter }: CmdHandlerParams) {
         if (Object.keys(raspCache.teachers.timetable).length == 0) {
             return context.send('Данные с сервера ещё не загружены, ожидайте...');
         }

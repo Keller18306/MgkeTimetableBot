@@ -1,5 +1,5 @@
 import { NextDayUpdater } from "../../../../updater/nextDay";
-import { AbstractCommand, HandlerParams } from "../../abstract";
+import { AbstractCommand, CmdHandlerParams } from "../../abstract";
 
 export default class extends AbstractCommand {
     public regexp = /^(!|\/)trigger/i
@@ -7,7 +7,7 @@ export default class extends AbstractCommand {
 
     public adminOnly: boolean = true;
 
-    async handler({ context, chat }: HandlerParams) {
+    async handler({ context, chat }: CmdHandlerParams) {
         const [trigger, arg] = context.text?.replace(this.regexp, '').trim().split(' ');
 
         switch (trigger) {

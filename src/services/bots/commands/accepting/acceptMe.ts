@@ -2,7 +2,7 @@ import { config } from "../../../../../config";
 import db from "../../../../db";
 import { FromType, RequestKey } from "../../../../key";
 import { UserData } from '../../../vk_app/user';
-import { AbstractCommand, HandlerParams, Service } from "../../abstract";
+import { AbstractCommand, CmdHandlerParams, Service } from "../../abstract";
 
 const acceptTool = new RequestKey(config.encrypt_key)
 
@@ -12,7 +12,7 @@ export default class extends AbstractCommand {
 
     public services: Service[] = ['vk'];
 
-    handler({ context, chat, service }: HandlerParams) {
+    handler({ context, chat, service }: CmdHandlerParams) {
         if (service != 'vk') throw new Error('Service is not vk')
 
         if (context.isChat) return context.send('Это недоступно в беседах')

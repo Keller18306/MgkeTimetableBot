@@ -5,7 +5,7 @@ import { TelegramBotCommand } from 'puregram/generated';
 import { cpuTemperature } from 'systeminformation';
 import { getAllowSendMessCount, getRowsCountInTable } from "../../../../db";
 import { formatBytes, formatSeconds } from "../../../../utils";
-import { AbstractCommand, HandlerParams } from "../../abstract";
+import { AbstractCommand, CmdHandlerParams } from "../../abstract";
 
 let latestUsage = cpuUsage()
 let latestTime = Date.now()
@@ -34,7 +34,7 @@ export default class extends AbstractCommand {
 
     public adminOnly: boolean = true;
 
-    async handler({ context }: HandlerParams) {
+    async handler({ context }: CmdHandlerParams) {
         const freeMem = freemem();
         const botMemory = memoryUsage();
         const totalMem = totalmem();

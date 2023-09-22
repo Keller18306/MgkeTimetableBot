@@ -2,7 +2,7 @@ import { config } from "../config";
 import { HttpServer } from "./http";
 import { AliceApp } from "./services/alice";
 import { Api } from "./services/api";
-import { CommandController } from "./services/bots/command";
+import { CommandController } from "./services/bots/controller";
 import { TgBot } from "./services/bots/tg";
 import { ViberBot } from './services/bots/viber';
 import { VkBot } from './services/bots/vk';

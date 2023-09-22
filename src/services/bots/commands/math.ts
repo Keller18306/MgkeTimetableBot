@@ -1,11 +1,11 @@
 import { runInNewContext } from 'vm';
-import { AbstractCommand, HandlerParams } from '../abstract';
+import { AbstractCommand, CmdHandlerParams } from '../abstract';
 
 export default class extends AbstractCommand {
     public regexp = /^(!|\/)math/i
     public payload = null;
 
-    async handler({ context }: HandlerParams) {
+    async handler({ context }: CmdHandlerParams) {
         const cmd = context.text!.split(' ')[0]
 
         let text = context.text!.split(' ').slice(1).join(' ')

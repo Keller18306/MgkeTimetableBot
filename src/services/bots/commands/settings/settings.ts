@@ -1,5 +1,5 @@
 import { TelegramBotCommand } from "puregram/generated";
-import { AbstractCommand, HandlerParams } from "../../abstract";
+import { AbstractCommand, CmdHandlerParams } from "../../abstract";
 
 export default class extends AbstractCommand {
     public regexp = /^((!|\/)settings)|((⚙️\s)?Настройки|Меню настроек)$/i
@@ -9,7 +9,7 @@ export default class extends AbstractCommand {
         description: 'Персональные настройки бота'
     };
 
-    handler({ context, chat, keyboard }: HandlerParams) {
+    handler({ context, chat, keyboard }: CmdHandlerParams) {
         chat.scene = 'settings';
 
         return context.send('Вы перешли в меню настроек.', {

@@ -1,5 +1,5 @@
 import { TelegramBotCommand } from "puregram/generated";
-import { AbstractCommand, HandlerParams } from "../abstract";
+import { AbstractCommand, CmdHandlerParams } from "../abstract";
 
 export default class extends AbstractCommand {
     public regexp = /^(!|\/)button(s)?$/i
@@ -9,7 +9,7 @@ export default class extends AbstractCommand {
         description: 'Обновить клавиатуру бота'
     };
 
-    handler({ context, chat, keyboard }: HandlerParams) {
+    handler({ context, chat, keyboard }: CmdHandlerParams) {
         return context.send('Клавиатура показана', {
             keyboard: keyboard.MainMenu
         })

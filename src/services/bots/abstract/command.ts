@@ -17,7 +17,7 @@ import { KeyboardBuilder } from './keyboardBuilder';
 
 export type Service = 'tg' | 'vk' | 'viber';
 
-export type HandlerParams = {
+export type CmdHandlerParams = {
     context: AbstractCommandContext,
     realContext: any,
     chat: AbstractChat,
@@ -64,7 +64,9 @@ export abstract class AbstractCommand {
      */
     public scene?: string | null;
 
-    public preHandle({ service, chat }: HandlerParams) {
+    public abstract handler(params: CmdHandlerParams): any | Promise<any>
+
+    public preHandle({ service, chat }: CmdHandlerParams) {
         if (!this.services.includes(service)) {
             return false;
         }
@@ -75,8 +77,6 @@ export abstract class AbstractCommand {
 
         return true;
     }
-
-    public abstract handler(params: HandlerParams): any | Promise<any>
 
     protected async findGroup(context: AbstractCommandContext, keyboard: Keyboard, group: string | undefined, errorKeyboard: KeyboardBuilder | undefined = StaticKeyboard.Cancel): Promise<false | number> {
         if (!group || isNaN(+group)) {

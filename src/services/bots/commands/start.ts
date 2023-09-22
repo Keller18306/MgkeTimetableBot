@@ -1,5 +1,5 @@
 import { TelegramBotCommand } from "puregram/generated";
-import { AbstractCommand, HandlerParams } from "../abstract";
+import { AbstractCommand, CmdHandlerParams } from "../abstract";
 import { StaticKeyboard } from "../keyboard";
 
 export default class extends AbstractCommand {
@@ -10,7 +10,7 @@ export default class extends AbstractCommand {
         description: 'Запустить бота'
     };
 
-    handler({ context, chat, keyboard }: HandlerParams) {
+    handler({ context, chat, keyboard }: CmdHandlerParams) {
         //if (context.isChat) return;
 
         if (chat.mode !== null) {

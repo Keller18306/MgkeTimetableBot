@@ -1,11 +1,11 @@
-import { AbstractCommand, HandlerParams } from "../../../abstract";
+import { AbstractCommand, CmdHandlerParams } from "../../../abstract";
 
 export default class extends AbstractCommand {
     public regexp = /^(🔇|🔈)\sОповещение о новых днях(\:\s(да|нет))?$/i
     public payload = null;
     public scene?: string | null = 'settings';
 
-    handler({ context, chat, keyboard }: HandlerParams) {
+    handler({ context, chat, keyboard }: CmdHandlerParams) {
         chat.noticeChanges = !chat.noticeChanges
 
         return context.send(

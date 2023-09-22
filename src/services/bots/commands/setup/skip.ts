@@ -1,12 +1,12 @@
 import { defines } from "../../../../defines";
-import { AbstractCommand, HandlerParams } from "../../abstract";
+import { AbstractCommand, CmdHandlerParams } from "../../abstract";
 
 export default class extends AbstractCommand {
     public regexp = /^(🔙\s)?Пропустить$/i
     public payload = null;
     public scene?: string | null = 'setup';
 
-    handler({ context, chat, keyboard, service }: HandlerParams) {
+    handler({ context, chat, keyboard, service }: CmdHandlerParams) {
         if (context.isChat) return;
 
         chat.scene = null;

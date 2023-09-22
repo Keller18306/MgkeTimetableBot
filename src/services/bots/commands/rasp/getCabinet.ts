@@ -1,8 +1,8 @@
 import { TelegramBotCommand } from "puregram/generated";
 import { raspCache } from "../../../../updater";
 import { TeacherLessonExplain } from "../../../../updater/parser/types";
-import { AbstractCommand, HandlerParams } from "../../abstract";
 import { getWeekdayNameByStrDate } from "../../../../utils";
+import { AbstractCommand, CmdHandlerParams } from "../../abstract";
 
 export default class extends AbstractCommand {
     public regexp = /^((!|\/)(get)?cabinet)(\b|$|\s)/i;
@@ -13,7 +13,7 @@ export default class extends AbstractCommand {
     };
     public scene?: string | null = null;
 
-    async handler({ context }: HandlerParams) {
+    async handler({ context }: CmdHandlerParams) {
         if (Object.keys(raspCache.teachers.timetable).length == 0) {
             return context.send('Данные с сервера ещё не загружены, ожидайте...');
         }

@@ -1,6 +1,6 @@
 import { TelegramBotCommand } from "puregram/generated";
-import { AbstractCommand, HandlerParams } from "../abstract";
-import { CommandController } from "../command";
+import { AbstractCommand, CmdHandlerParams } from "../abstract";
+import { CommandController } from "../controller";
 
 export default class extends AbstractCommand {
     public regexp = /^(!|\/)help$/i
@@ -10,18 +10,18 @@ export default class extends AbstractCommand {
         description: 'Отобразить все команды бота'
     };
 
-    handler({ context, chat }: HandlerParams) {
+    handler({ context, chat }: CmdHandlerParams) {
         const commands = CommandController.instance.commands;
 
         const message: string[] = ['Список команд бота:'];
         for (const id in commands) {
-            const { command } = commands[id];
-            if (!command.tgCommand) continue;
+            const { instance } = commands[id];
+            if (!instance.tgCommand) continue;
 
             //todo bot admin help
-            if (command.adminOnly) continue;
+            if (instance.adminOnly) continue;
 
-            const { tgCommand } = command;
+            const { tgCommand } = instance;
 
             message.push(`/${tgCommand.command} - ${tgCommand.description}`)
         }

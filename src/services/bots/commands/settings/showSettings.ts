@@ -1,10 +1,10 @@
-import { AbstractCommand, HandlerParams } from "../../abstract";
+import { AbstractCommand, CmdHandlerParams } from "../../abstract";
 
 export default class extends AbstractCommand {
     public regexp = /^((!|\/)(show|current)Settings)|(Показать текущие)$/i
     public payload = null;
 
-    handler({ context, chat, service }: HandlerParams) {
+    handler({ context, chat, service }: CmdHandlerParams) {
         return context.send([
             `Показывать кнопку расписания "📄 На день": ${chat.showDaily ? 'да' : 'нет'}`,
             `Показывать кнопку расписания "📑 На неделю": ${chat.showWeekly ? 'да' : 'нет'}`,

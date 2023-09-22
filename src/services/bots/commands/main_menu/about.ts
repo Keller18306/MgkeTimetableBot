@@ -1,6 +1,6 @@
 import { TelegramBotCommand } from "puregram/generated";
 import { defines } from "../../../../defines";
-import { AbstractCommand, HandlerParams } from "../../abstract";
+import { AbstractCommand, CmdHandlerParams } from "../../abstract";
 
 export default class extends AbstractCommand {
     public regexp = /^((!|\/)(get)?about|(💡\s)?О боте)$/i
@@ -10,7 +10,7 @@ export default class extends AbstractCommand {
         description: 'О боте и его создателе'
     };
 
-    handler({ context, service }: HandlerParams) {
+    handler({ context, service }: CmdHandlerParams) {
         return context.send(defines[`${service}.message.about`], { disable_mentions: true })
     }
 }
