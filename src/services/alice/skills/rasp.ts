@@ -106,7 +106,7 @@ export default class extends AliceSkill {
             if (firstLesson === null) {
                 firstLesson = +i + 1
                 if (firstLesson > 1) {
-                    tts.push(`Уроки начинаются с ${firstLesson}-й пары`)
+                    tts.push(`Начало с ${firstLesson}-й пары`)
                 }
             }
 
@@ -117,15 +117,15 @@ export default class extends AliceSkill {
             } else {
                 if (lesson.length === 1) {
                     const sub = lesson[0];
-                    tts.push(`Только для ${sub.subgroup}-й подгруппы ${getFullSubjectName(sub.lesson)}`)
+                    tts.push(`Только ${sub.subgroup}-я подгруппа ${getFullSubjectName(sub.lesson)}`)
                  } else {
                     const isEqual = lesson.every(_ => _.lesson === lesson[0].lesson);
 
                     if (isEqual) {
-                        tts.push(getFullSubjectName(lesson[0].lesson) + ' по подгруппам');
+                        tts.push(getFullSubjectName(lesson[0].lesson) + ' для всех подгрупп');
                     } else {
                         for (const sub of lesson) {
-                            tts.push(`Для ${sub.subgroup}-й подгруппы ${getFullSubjectName(sub.lesson)}`)
+                            tts.push(`${sub.subgroup}-я подгруппа ${getFullSubjectName(sub.lesson)}`)
                         }
                     }
                 }
