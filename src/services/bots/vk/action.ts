@@ -49,7 +49,7 @@ export class VkBotAction extends AbstractAction {
             if (err.code == 15) {
                 if (err.message.includes('(admin message)')) return false;
 
-                if (!await this._context.isAdmin()) {
+                if (!await this._context.isChatAdmin()) {
                     this.chat.deleteUserMsg = false;
                     await this.context.send('Удаление сообщений при нажатии кнопки выключено.\nПричина: нет прав администратора')
                     return false

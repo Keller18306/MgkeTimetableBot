@@ -78,7 +78,7 @@ export class ViberCommandContext extends AbstractCommandContext {
         return false;
     }
 
-    public async isAdmin(): Promise<boolean> {
+    public async isChatAdmin(): Promise<boolean> {
         return false;
     }
 }

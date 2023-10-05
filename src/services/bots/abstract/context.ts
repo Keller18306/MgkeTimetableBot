@@ -11,8 +11,6 @@ export type MessageOptions = {
 }
 
 export abstract class AbstractContext {
-    public abstract id: string;
-
     public abstract peerId: number | string;
     public abstract userId: number | string;
 
@@ -21,7 +19,7 @@ export abstract class AbstractContext {
     public abstract send(text: string, options?: MessageOptions): Promise<string>
     public abstract sendPhoto(image: ImageFile, options?: MessageOptions): Promise<string>
     public abstract delete(id: string): Promise<boolean>
-    public abstract isAdmin(): Promise<boolean>
+    public abstract isChatAdmin(): Promise<boolean>
 
     public readonly _input: BotInput;
 
@@ -53,6 +51,6 @@ export abstract class AbstractCommandContext extends AbstractContext {
 
 export abstract class AbstractCallbackContext extends AbstractContext {
     public abstract payload: any;
-    public abstract answer(text: string): Promise<string>
+    public abstract answer(text: string): Promise<boolean>
 
 }

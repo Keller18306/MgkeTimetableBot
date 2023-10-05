@@ -15,7 +15,7 @@ import { AbstractChat } from './chat';
 import { AbstractCommandContext } from './context';
 import { KeyboardBuilder } from './keyboardBuilder';
 
-export type Service = 'tg' | 'vk' | 'viber';
+export type Service = 'tg' | 'vk' | 'viber' | 'alice';
 
 export type CmdHandlerParams = {
     context: AbstractCommandContext,

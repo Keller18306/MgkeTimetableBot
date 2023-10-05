@@ -97,7 +97,8 @@ export abstract class AbstractBot {
     }
 
     protected async handleCallback(cb: AbstractCallback | null, handlerParams: CbHandlerParams) {
-        const { chat, context, keyboard } = handlerParams;
+        const { chat, context } = handlerParams;
+        
         try {
             if (!chat.allowSendMess) {
                 chat.allowSendMess = true

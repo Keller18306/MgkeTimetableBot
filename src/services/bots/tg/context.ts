@@ -1,29 +1,23 @@
-import { MediaInput, MediaSourceType, MessageContext, PhotoAttachment, Telegram } from "puregram";
-import { TgBot } from ".";
+import { CallbackQueryContext, MediaInput, MediaSourceType, MessageContext, PhotoAttachment } from "puregram";
 import { ImageFile } from "../../image/builder";
-import { AbstractCommandContext, FileCache, MessageOptions } from "../abstract";
+import { AbstractCallbackContext, AbstractCommandContext, FileCache, MessageOptions } from "../abstract";
 import { BotInput } from "../input";
 import { StaticKeyboard } from "../keyboard";
 import { convertAbstractToTg } from "./keyboard";
 
 export class TgCommandContext extends AbstractCommandContext {
-    public id: string;
     public text: string
     public payload = undefined;
     public peerId: number;
     public userId: number;
 
     private context: MessageContext;
-    private tg: Telegram;
 
-    private _isAdmin: boolean | undefined;
     private cache: FileCache;
 
     constructor(context: MessageContext, input: BotInput, cache: FileCache) {
         super(input)
-        this.tg = TgBot.instance.tg
         this.context = context
-        this.id = context.chatId.toString()
         this.text = context.text || ''
 
         this.cache = cache;
@@ -105,25 +99,119 @@ export class TgCommandContext extends AbstractCommandContext {
         })
     }
 
-    public async isAdmin(): Promise<boolean> {
+    public async isChatAdmin(): Promise<boolean> {
         return false;
         //TO DO
-        /*if (this._isAdmin !== undefined) return this._isAdmin
+    }
+}
 
-        const res = (await this.vk.api.messages.getConversationsById({ peer_ids: this.context.peerId })).items[0]
+export class TgCallbackContext extends AbstractCallbackContext {
+    public payload: any;
+    public peerId: number;
+    public userId: number;
 
-        if (res?.peer.type != 'chat') {
-            this._isAdmin = false
-            return false;
+    private context: CallbackQueryContext;
+    private messageContext: MessageContext;
+
+    private cache: FileCache;
+
+    constructor(context: CallbackQueryContext, input: BotInput, cache: FileCache) {
+        super(input)
+
+        this.context = context;
+
+        if (!context.message) {
+            throw new Error('there are no message context');
+        }
+        this.messageContext = context.message;
+
+        this.cache = cache;
+
+        /*if (typeof context.messagePayload === 'object' && context.messagePayload.action != null) {
+            this.payload = context.messagePayload
+        }*/
+
+        this.peerId = context.message!.chat.id;
+        this.userId = context.from.id;
+    }
+
+    get isChat(): boolean {
+        return this.messageContext.isChannel() || this.messageContext.isSupergroup() || this.messageContext.isGroup();
+    }
+
+    public async answer(text: string): Promise<boolean> {
+        return this.context.answerCallbackQuery({
+            text: text
+        })
+    }
+
+    public async send(text: string, options: MessageOptions = {}): Promise<string> {
+        let reply_to: number | string | undefined = options.reply_to
+        if (typeof reply_to === 'string') reply_to = Number(reply_to)
+
+        if (options?.keyboard?.name === StaticKeyboard.Cancel.name) {
+            text += '\n\nНапишите /cancel для отмены';
+            delete options.keyboard;
         }
 
-        if (!res.chat_settings.admin_ids.includes(-config.vk.bot.id)) {
-            this._isAdmin = false
-            return false;
+        const result: MessageContext = await this.messageContext.send(text, {
+            ...(!options.disableHtmlParser ? {
+                parse_mode: 'HTML',
+            } : {}),
+            ...(reply_to ? {
+                allow_sending_without_reply: true,
+                reply_to_message_id: reply_to,
+            } : {}),
+            disable_notification: options.disable_mentions,
+            reply_markup: convertAbstractToTg(options.keyboard)
+        });
+
+        return result.id.toString();
+    }
+
+    public async sendPhoto(image: ImageFile, options: MessageOptions = {}): Promise<string> {
+        let reply_to: number | string | undefined = options.reply_to
+        if (typeof reply_to === 'string') reply_to = Number(reply_to)
+
+        let fileId = this.cache.get(image.id);
+
+        let photo: MediaInput;
+        if (fileId) {
+            photo = {
+                type: MediaSourceType.FileId,
+                value: fileId
+            }
+        } else {
+            photo = {
+                type: MediaSourceType.Buffer,
+                value: await image.data()
+            }
         }
 
-        this._isAdmin = true
+        const result: MessageContext = await this.messageContext.sendPhoto(photo, {
+            reply_to_message_id: reply_to,
+            disable_notification: options.disable_mentions,
+            reply_markup: convertAbstractToTg(options.keyboard)
+        });
 
-        return true;*/
+        const attachment = result.attachment;
+        if (!fileId && attachment instanceof PhotoAttachment) {
+            fileId = attachment.bigSize.fileId;
+
+            this.cache.add(image.id, fileId);
+        }
+
+        return result.id.toString();
+    }
+
+    public async delete(id: string): Promise<boolean> {
+        return this.messageContext.delete({
+            message_id: Number(id)
+        })
+    }
+
+    public async isChatAdmin(): Promise<boolean> {
+        return false;
+        //TO DO
     }
 }

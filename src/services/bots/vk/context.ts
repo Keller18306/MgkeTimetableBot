@@ -84,7 +84,7 @@ export class VkCommandContext extends AbstractCommandContext {
         })
     }
 
-    public async isAdmin(): Promise<boolean> {
+    public async isChatAdmin(): Promise<boolean> {
         if (this._isAdmin !== undefined) return this._isAdmin
 
         const res = (await this.vk.api.messages.getConversationsById({ peer_ids: this.context.peerId })).items?.[0]

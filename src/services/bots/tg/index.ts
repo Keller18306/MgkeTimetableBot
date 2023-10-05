@@ -217,6 +217,8 @@ export class TgBot extends AbstractBot {
             await context.message.delete().catch(() => { });
 
             return;
+        } else {
+            
         }
     }
 

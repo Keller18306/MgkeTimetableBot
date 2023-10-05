@@ -4,6 +4,7 @@ import { GroupDay, TeacherDay } from "../../../updater/parser/types";
 import { closestJaroWinkler, getDayRasp, getFullSubjectName, getWeekdayNameByStrDate } from "../../../utils";
 import { AliceSkill } from "../skill";
 import { AliceUser } from "../user";
+import { DefaultScheduleFormatter } from "../../../utils/formatters/default";
 
 type MatchResult = {
     day?: string,
@@ -139,7 +140,9 @@ export default class extends AliceSkill {
 
         const text: string[] = [];
         text.push(`Расписание на ${weekday}, ${day.day}${showGroup ? ` для ${group}-ей группы` : ''}:`);
-        //text.push(buildGroupsDaysText(day.lessons));
+
+        const formatter = new DefaultScheduleFormatter('alice', raspCache);
+        text.push(formatter.formatGroupLessons(day.lessons));
 
         return Reply.text(text.join('\n'), {
             tts: tts.join('. ')
@@ -193,7 +196,9 @@ export default class extends AliceSkill {
 
         const text: string[] = [];
         text.push(`Расписание на ${weekday}, ${day.day}${showTeacher ? ` для преподавателя "${teacher}"` : ''}:`);
-        //text.push(buildTeacherDaysText(day.lessons));
+
+        const formatter = new DefaultScheduleFormatter('alice', raspCache);
+        text.push(formatter.formatTeacherLessons(day.lessons));
 
         return Reply.text(text.join('\n'), {
             tts: tts.join('. ')
