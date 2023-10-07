@@ -139,17 +139,6 @@ export abstract class AbstractEventListener<T extends AbstractChat = AbstractCha
     }
 
     public async sendGroupDay({ day, group }: { day: GroupDay, group: string }) {
-        const groupEntry = raspCache.groups.timetable[group];
-        const dayIndex = strDateToIndex(day.day);
-        if (groupEntry.lastNoticedDay && dayIndex <= groupEntry.lastNoticedDay) {
-            return;
-        }
-
-        EventController.deferFunction(`updateLastGroupNoticedDay_${group}`, async () => {
-            groupEntry.lastNoticedDay = dayIndex;
-            await saveCache();
-        })
-
         const chats: T[] = this.getGroupsChats(group);
         if (chats.length === 0) return;
 
@@ -265,17 +254,6 @@ export abstract class AbstractEventListener<T extends AbstractChat = AbstractCha
     }
 
     public async sendTeacherDay({ day, teacher }: { day: TeacherDay, teacher: string }) {
-        const teacherEntry = raspCache.teachers.timetable[teacher];
-        const dayIndex = strDateToIndex(day.day);
-        if (teacherEntry.lastNoticedDay && dayIndex <= teacherEntry.lastNoticedDay) {
-            return;
-        }
-
-        EventController.deferFunction(`updateLastTeacherNoticedDay_${teacher}`, async () => {
-            teacherEntry.lastNoticedDay = dayIndex;
-            await saveCache();
-        })
-
         const chats: T[] = this.getTeachersChats(teacher);
         if (chats.length === 0) return;
 

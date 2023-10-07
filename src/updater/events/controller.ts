@@ -1,6 +1,8 @@
 import { AbstractEventListener } from ".";
 import { ChatMode } from "../../services/bots/abstract";
+import { strDateToIndex } from "../../utils";
 import { GroupDay, TeacherDay } from "../parser/types";
+import { raspCache, saveCache } from "../raspCache";
 
 export class EventController {
     protected static serviceList: AbstractEventListener[] = [];
@@ -19,65 +21,75 @@ export class EventController {
     }
 
     public static async sendGroupDay(data: { day: GroupDay, group: string }) {
+        const { day, group } = data;
+
+        const groupEntry = raspCache.groups.timetable[group];
+        const dayIndex = strDateToIndex(day.day);
+        if (groupEntry.lastNoticedDay && dayIndex <= groupEntry.lastNoticedDay) {
+            return;
+        }
+
+        groupEntry.lastNoticedDay = dayIndex;
+
         for (const service of this.serviceList) {
             await service.sendGroupDay(data);
         }
 
-        await this.runDeferredFunctions();
+        await saveCache();
     }
 
     public static async updateGroupDay(data: { day: GroupDay, group: string }) {
         for (const service of this.serviceList) {
             await service.updateGroupDay(data);
         }
-
-        await this.runDeferredFunctions();
     }
 
     public static async nextTeacherDay(data: { index: number }) {
         for (const service of this.serviceList) {
             await service.nextTeacherDay(data);
         }
-
-        await this.runDeferredFunctions();
     }
 
     public static async sendTeacherDay(data: { day: TeacherDay, teacher: string }) {
+        const { day, teacher } = data;
+
+        const teacherEntry = raspCache.teachers.timetable[teacher];
+        const dayIndex = strDateToIndex(day.day);
+        if (teacherEntry.lastNoticedDay && dayIndex <= teacherEntry.lastNoticedDay) {
+            return;
+        }
+
+        teacherEntry.lastNoticedDay = dayIndex;
+
         for (const service of this.serviceList) {
             await service.sendTeacherDay(data);
         }
+
+        await saveCache();
     }
 
     public static async updateTeacherDay(data: { day: TeacherDay, teacher: string }) {
         for (const service of this.serviceList) {
             await service.updateTeacherDay(data);
         }
-
-        await this.runDeferredFunctions();
     }
 
     public static async sendNextWeek(chatMode: ChatMode) {
         for (const service of this.serviceList) {
             await service.sendNextWeek(chatMode);
         }
-
-        await this.runDeferredFunctions();
     }
 
     public static async sendDistibution(message: string) {
         for (const service of this.serviceList) {
             await service.sendDistribution(message);
         }
-
-        await this.runDeferredFunctions();
     }
 
     public static async sendError(error: Error) {
         for (const service of this.serviceList) {
             await service.sendError(error);
         }
-
-        await this.runDeferredFunctions();
     }
 
     public static deferFunction(id: string, func: () => any) {
