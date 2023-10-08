@@ -133,7 +133,8 @@ export abstract class AbstractBot {
     }
 
     protected handleMessageError(cmd: AbstractCommand | AbstractCallback, context: AbstractCommandContext | AbstractCallbackContext, err: Error) {
-        context.send(`Произошла ошибка во время выполнения #${cmd.id}: ${err.toString()}`).catch(() => { })
+        const name = (cmd as any).__proto__.__proto__.constructor.name.replace(/^Abstract/, '').toLowerCase();
+        context.send(`Произошла ошибка во время выполнения ${name}#${cmd.id}: ${err.toString()}`).catch(() => { })
     }
 
     protected notFound(chat: AbstractChat, context: AbstractCommandContext, keyboard: any, selfMention: boolean = true) {
