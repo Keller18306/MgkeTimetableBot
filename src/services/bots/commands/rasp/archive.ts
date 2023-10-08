@@ -1,6 +1,6 @@
 import { TelegramBotCommand } from "puregram/generated";
 import { Updater } from "../../../../updater";
-import { GroupLesson, TeacherLesson } from "../../../../updater/parser/types";
+import { GroupDay, TeacherDay } from "../../../../updater/parser/types";
 import { dayIndexToDate, formatDate, strDateToIndex } from "../../../../utils";
 import { AbstractCommand, CmdHandlerParams } from "../../abstract";
 
@@ -23,7 +23,7 @@ export default class extends AbstractCommand {
 
         const dayIndex: number = strDateToIndex(day);
 
-        let entry: GroupLesson[] | TeacherLesson[] | null = null;
+        let entry: GroupDay | TeacherDay | null = null;
         let text: string;
         if (chat.mode === 'student' || chat.mode === 'parent') {
             if (chat.group == null) {
@@ -31,14 +31,14 @@ export default class extends AbstractCommand {
             }
 
             entry = archive.getGroupDay(dayIndex, chat.group);
-            text = scheduleFormatter.formatGroupLessons(entry);
+            text = scheduleFormatter.formatGroupLessons(entry?.lessons);
         } else if (chat.mode === 'teacher') {
             if (chat.teacher == null) {
                 return context.send(`Для данного чата учитель не был выбран.`);
             }
 
             entry = archive.getTeacherDay(dayIndex, chat.teacher);
-            text = scheduleFormatter.formatTeacherLessons(entry);
+            text = scheduleFormatter.formatTeacherLessons(entry?.lessons);
         } else {
             //todo get from args
             return context.send(`Для данного режима чата (${chat.mode}) нельзя автоматически получить группу или учителя.`);
@@ -61,7 +61,7 @@ export default class extends AbstractCommand {
             return context.send('Ничего не найдено на данный день');
         }
 
-        text = scheduleFormatter.formatDayHeader(formatDate(dayIndexToDate(dayIndex))) + '\n' + text;
+        text = scheduleFormatter.formatDayHeader(entry.day) + '\n' + text;
 
         return context.send(text);
     }

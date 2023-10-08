@@ -117,7 +117,7 @@ export abstract class ScheduleFormatter {
         return this.DayHeader(day, getWeekdayNameByStrDate(day));
     }
 
-    public formatGroupLessons(lessons: GroupLesson[]): string {
+    public formatGroupLessons(lessons?: GroupLesson[]): string {
         if (!lessons || !lessons.length) {
             return this.NoLessons();
         }

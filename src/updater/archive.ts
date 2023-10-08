@@ -1,6 +1,6 @@
 import db from "../db";
-import { strDateToIndex } from "../utils";
-import { GroupDay, GroupLesson, TeacherDay, TeacherLesson } from "./parser/types";
+import { dayIndexToDate, formatDate, strDateToIndex } from "../utils";
+import { GroupDay, TeacherDay } from "./parser/types";
 
 export type ArchiveAppendDay = {
     type: 'group',
@@ -10,6 +10,13 @@ export type ArchiveAppendDay = {
     type: 'teacher',
     teacher: string,
     day: TeacherDay
+}
+
+function dbEntryToDayObject(entry: any): any {
+    return {
+        day: formatDate(dayIndexToDate(entry.day)),
+        lessons: JSON.parse(entry.data)
+    };
 }
 
 export class Archive {
@@ -29,14 +36,26 @@ export class Archive {
             .run(dayIndex, teacher, data, data);
     }
 
-    public getGroupDay(dayIndex: number, group: number | string): GroupLesson[] {
-        const entry = db.prepare('SELECT * FROM timetable_archive WHERE day = ? AND `group` = ?').get(dayIndex, group) as any;
-        return entry ? JSON.parse(entry.data) : null;
+    public getGroupDay(dayIndex: number, group: number | string): GroupDay | null {
+        const entry = db.prepare('SELECT day,data FROM timetable_archive WHERE day = ? AND `group` = ?').get(dayIndex, group) as any;
+        return entry ? dbEntryToDayObject(entry) : null;
     }
 
-    public getTeacherDay(dayIndex: number, teacher: string): TeacherLesson[] {
-        const entry = db.prepare('SELECT * FROM timetable_archive WHERE day = ? AND teacher = ?').get(dayIndex, teacher) as any;
-        return entry ? JSON.parse(entry.data) : null;
+    public getTeacherDay(dayIndex: number, teacher: string): TeacherDay | null {
+        const entry = db.prepare('SELECT day,data FROM timetable_archive WHERE day = ? AND teacher = ?').get(dayIndex, teacher) as any;
+        return entry ? dbEntryToDayObject(entry) : null;
+    }
+
+    public getGroupDaysByBounds(dayBounds: [number, number], group: number | string): GroupDay[] {
+        const days = db.prepare('SELECT day,data FROM timetable_archive WHERE day >= ? AND day <= ? AND `group` = ?').all(...dayBounds, group) as any;
+
+        return days.map(dbEntryToDayObject);
+    }
+
+    public getTeacherDayByBounds(dayBounds: [number, number], teacher: string): TeacherDay[] {
+        const days = db.prepare('SELECT day,data FROM timetable_archive WHERE day >= ? AND day <= ? AND teacher = ?').all(...dayBounds, teacher) as any;
+
+        return days.map(dbEntryToDayObject);
     }
 
     public getDayIndexBounds(): { min: number, max: number } {
