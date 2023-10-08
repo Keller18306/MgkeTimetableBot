@@ -111,7 +111,8 @@ export class ViberBot extends AbstractBot {
             actions: new ViberAction(context, chat),
             keyboard: new Keyboard(context, chat.resync()),
             service: 'viber',
-            scheduleFormatter: createScheduleFormatter('viber', raspCache, chat)
+            scheduleFormatter: createScheduleFormatter('viber', raspCache, chat),
+            cache: this.cache
         });
     }
 

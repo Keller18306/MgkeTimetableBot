@@ -50,7 +50,9 @@ export abstract class AbstractCommandContext extends AbstractContext {
 }
 
 export abstract class AbstractCallbackContext extends AbstractContext {
+    public abstract messageId: any;
     public abstract payload: any;
     public abstract answer(text: string): Promise<boolean>
-
+    public abstract edit(text: string, options?: MessageOptions): Promise<boolean>
+    public abstract delete(id?: string): Promise<boolean>
 }

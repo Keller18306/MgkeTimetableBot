@@ -1,6 +1,7 @@
 import { existsSync, readdirSync, statSync } from "fs";
 import path from "path";
 import { TelegramBotCommand } from "puregram/generated";
+import { parsePayload } from "../../utils";
 import { AbstractCallback, AbstractCommand } from "./abstract";
 
 const cmdRootPath = path.join(__dirname, 'commands');
@@ -60,14 +61,16 @@ export class CommandController {
     }
 
     public static searchCommandByPayload(payload?: string, scene?: string | null): AbstractCommand | null {
-        if (!payload) return null;
+        const parsed = parsePayload(payload);
+        if (!payload || !parsed) return null;
 
+        const { action } = parsed;
         const cmds = this.instance.commands;
 
         for (const id in cmds) {
             const cmd = cmds[id].instance;
 
-            if (cmd.payload == null || cmd.payload != payload) continue;
+            if (cmd.payload == null || cmd.payload != action) continue;
 
             return cmd;
         }
@@ -83,7 +86,12 @@ export class CommandController {
         return cb.instance;
     }
 
-    public static getCallbackByAction(action: string): AbstractCallback | null {
+    public static getCallbackByPayload(payload?: string): AbstractCallback | null {
+        const parsed = parsePayload(payload);
+        if (!payload || !parsed) return null;
+
+        const { action } = parsed;
+
         const cbs = this.instance.callbacks;
 
         for (const id in cbs) {

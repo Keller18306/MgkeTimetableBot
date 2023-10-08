@@ -1,4 +1,5 @@
 import { CallbackQueryContext, MediaInput, MediaSourceType, MessageContext, PhotoAttachment } from "puregram";
+import { parsePayload } from "../../../utils";
 import { ImageFile } from "../../image/builder";
 import { AbstractCallbackContext, AbstractCommandContext, FileCache, MessageOptions } from "../abstract";
 import { BotInput } from "../input";
@@ -106,6 +107,7 @@ export class TgCommandContext extends AbstractCommandContext {
 }
 
 export class TgCallbackContext extends AbstractCallbackContext {
+    public messageId: any;
     public payload: any;
     public peerId: number;
     public userId: number;
@@ -123,7 +125,9 @@ export class TgCallbackContext extends AbstractCallbackContext {
         if (!context.message) {
             throw new Error('there are no message context');
         }
+
         this.messageContext = context.message;
+        this.messageId = context.message.id;
 
         this.cache = cache;
 
@@ -133,6 +137,11 @@ export class TgCallbackContext extends AbstractCallbackContext {
 
         this.peerId = context.message!.chat.id;
         this.userId = context.from.id;
+
+        const json = parsePayload(context.data);
+        if (json) {
+            this.payload = json.data;
+        }
     }
 
     get isChat(): boolean {
@@ -204,10 +213,22 @@ export class TgCallbackContext extends AbstractCallbackContext {
         return result.id.toString();
     }
 
-    public async delete(id: string): Promise<boolean> {
+    public async delete(id?: string): Promise<boolean> {
         return this.messageContext.delete({
-            message_id: Number(id)
+            message_id: id ? Number(id) : this.messageContext.id
         })
+    }
+
+    public async edit(text: string, options: MessageOptions = {}) {
+        await this.messageContext.editMessageText(text, {
+            ...(!options.disableHtmlParser ? {
+                parse_mode: 'HTML',
+            } : {}),
+            disable_notification: options.disable_mentions,
+            reply_markup: convertAbstractToTg(options.keyboard)
+        })
+
+        return true;
     }
 
     public async isChatAdmin(): Promise<boolean> {

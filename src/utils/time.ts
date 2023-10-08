@@ -1,30 +1,38 @@
+const startingWeekIndexDate = new Date(1970, 0, 5);
+
 export function seconds2times(seconds: number, values: number = 3) {
-    let times = []
-    let count_zero = false
-    let periods = [60, 60 * 60, 60 * 60 * 24, 60 * 60 * 24 * 365]
-    let period = 0
+    let times = [];
+    let count_zero = false;
+    let periods = [60, 60 * 60, 60 * 60 * 24, 60 * 60 * 24 * 365];
+    let period = 0;
+
     for (let i = values; i >= 0; i--) {
-        period = Math.floor(seconds / periods[i])
+        period = Math.floor(seconds / periods[i]);
+
         if ((period > 0) || (period === 0 && count_zero)) {
-            times[i + 1] = period
-            seconds -= period * periods[i]
-            count_zero = true
+            times[i + 1] = period;
+            seconds -= period * periods[i];
+            count_zero = true;
         }
     }
-    times[0] = seconds
-    return times
+
+    times[0] = seconds;
+
+    return times;
 }
 
 export function formatSeconds(sec: number, limit: number | null = null) {
-    let end = []
-    let times_values = ['сек.', 'мин.', 'ч.', 'д.', 'г.']
+    let end = [];
+    let times_values = ['сек.', 'мин.', 'ч.', 'д.', 'г.'];
     let times = seconds2times(sec);
-    let ti = 0
+    let ti = 0;
+
     for (let i = times.length - 1; i >= 0; i--) {
-        ti++
+        ti++;
         if (limit != null && ti > limit) break;
-        end.push(times[i] + ' ' + times_values[i])
+        end.push(times[i] + ' ' + times_values[i]);
     }
+
     return end.join(' ');
 }
 
@@ -33,7 +41,7 @@ export function formatDateTime(date: Date, microtime: boolean = false): string {
         `${date.getHours().toString().padStart(2, '0')}:` +
         `${date.getMinutes().toString().padStart(2, '0')}:` +
         `${date.getSeconds().toString().padStart(2, '0')}` +
-        (microtime ? `,${date.getMilliseconds().toString().padStart(3, '0')}` : '')
+        (microtime ? `,${date.getMilliseconds().toString().padStart(3, '0')}` : '');
 }
 
 export function formatDate(date: Date): string {
@@ -48,7 +56,7 @@ export function getDayIndex(date?: Date): number {
     }
 
     date.setUTCHours(0, 0, 0, 0);
-    
+
     return date.getTime() / 1e3 / 24 / 60 / 60;
 }
 
@@ -57,10 +65,8 @@ export function getWeekIndex(date?: Date): number {
         date = new Date();
     }
 
-    const startingDate = new Date(1970, 0, 5)
-
     const oneWeekMilliseconds = 7 * 24 * 60 * 60 * 1000;
-    const millisecondsElapsed = date.getTime() - startingDate.getTime();
+    const millisecondsElapsed = date.getTime() - startingWeekIndexDate.getTime();
     const weekNumber = Math.floor(millisecondsElapsed / oneWeekMilliseconds);
 
     return weekNumber;
@@ -70,8 +76,9 @@ export function parseStrToDate(str_date: string, utc: boolean = false): Date {
     const date = new Date();
 
     const parts = str_date.split('.').map((value: string): number => {
-        return Number(value)
-    }).slice(0, 3).reverse() as [number, number, number]
+        return Number(value);
+    }).slice(0, 3).reverse() as [number, number, number];
+
     parts[1] -= 1; //js format
 
     date.setFullYear(...parts);
@@ -83,7 +90,7 @@ export function parseStrToDate(str_date: string, utc: boolean = false): Date {
 
     return date;
 }
-    
+
 export function strDateToIndex(str_date: string): number {
     const date = parseStrToDate(str_date, true);
 
@@ -149,14 +156,12 @@ export function nowInTime(includedDays: number[], timeFrom: string, timeTo: stri
     }
 }
 
-export function weekBounds(date: Date): [Date, Date] {
-    const ONE_DAY: number = 1000 * 60 * 60 * 24;
+export function weekBoundsByWeekIndex(weekIndex: number): [Date, Date] {
+    const oneWeekMilliseconds = 7 * 24 * 60 * 60 * 1000;
+    const d1 = new Date((weekIndex * oneWeekMilliseconds) + startingWeekIndexDate.getTime());
 
-    const d1 = new Date(date.getTime() - (date.getDay() * ONE_DAY));
-    d1.setHours(0, 0, 0, 0);
-
-    const d2 = new Date(date.getTime() + (6 - date.getDay()) * ONE_DAY);
-    d2.setHours(23, 59, 59, 999);
+    const ONE_DAY: number = 24 * 60 * 60 * 1000;
+    const d2 = new Date(d1.getTime() + ONE_DAY * 6);
 
     return [d1, d2];
 }

@@ -1,6 +1,6 @@
 import { TelegramBotCommand } from 'puregram/generated';
 import { raspCache } from '../../../../updater';
-import { GroupDay, TeacherDay } from '../../../../updater/parser/types';
+import { TeacherDay } from '../../../../updater/parser/types';
 import { randArray, removePastDays } from "../../../../utils";
 import { ScheduleFormatter } from '../../../../utils/formatters/abstract';
 import { AbstractAction, AbstractChat, AbstractCommand, AbstractCommandContext, CmdHandlerParams } from "../../abstract";
@@ -41,7 +41,11 @@ export default class extends AbstractCommand {
         const group = raspCache.groups.timetable[chat.group];
         if (group === undefined) return context.send('Данной учебной группы не существует');
 
-        let days: GroupDay[] = group.days;
+        // const currentWeekIndex = raspCache.groups.lastWeekIndex || getWeekIndex();
+        // const weekBounds = weekBoundsByWeekIndex(currentWeekIndex).map(getDayIndex) as [number, number];
+
+        // let days = Updater.getInstance().archive.getGroupDaysByBounds(weekBounds, chat.group);
+        let days = group.days;
         if (chat.hidePastDays) {
             days = removePastDays(days);
         }
@@ -51,19 +55,18 @@ export default class extends AbstractCommand {
         const message = scheduleFormatter.formatGroupFull(String(chat.group), {
             showHeader: false,
             days: days
-        })
-        //const image = await ImageBuilder.getGroupImage(group);
+        });
 
         actions.deleteUserMsg();
 
-        const id = await context.send(message, {
-            // keyboard: keyboard.WeekControl('group', String(chat.group))
+        return context.send(message, {
+            // ...((chat.noticeParserErrors || chat.group == 63) ? {
+            //     keyboard: keyboard.GenerateImage('group', String(chat.group))
+            // } : {}),
         }).then(id => {
             actions.handlerLastMsgUpdate(context);
             return id;
         });
-
-        //return context.sendPhoto(image, { reply_to: id })
     }
 
     private async teacherRasp(context: AbstractCommandContext, chat: AbstractChat, actions: AbstractAction, scheduleFormatter: ScheduleFormatter, keyboard: Keyboard) {
@@ -96,7 +99,9 @@ export default class extends AbstractCommand {
         actions.deleteUserMsg();
 
         return context.send(message, {
-            // keyboard: keyboard.GenerateImage('teacher', chat.teacher)
+            // ...((chat.noticeParserErrors || chat.teacher.toLowerCase().startsWith('козел')) ? {
+            //     keyboard: keyboard.GenerateImage('teacher', chat.teacher)
+            // } : {}),
         }).then(context => actions.handlerLastMsgUpdate(context));
     }
 }

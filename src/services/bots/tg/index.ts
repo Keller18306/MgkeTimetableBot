@@ -1,17 +1,16 @@
 import { NextMiddleware } from 'middleware-io';
-import { APIError, CallbackQueryContext, ChatMemberContext, MediaInput, MediaSourceType, MessageContext, PhotoAttachment, Telegram } from 'puregram';
+import { APIError, CallbackQueryContext, ChatMemberContext, MessageContext, Telegram } from 'puregram';
 import StatusCode from 'status-code-enum';
 import { config } from '../../../../config';
 import { FromType, InputRequestKey } from '../../../key';
 import { raspCache } from '../../../updater';
 import { createScheduleFormatter } from '../../../utils';
-import { ImageBuilder, ImageFile } from '../../image/builder';
 import { AbstractBot, AbstractCommand, AbstractCommandContext } from '../abstract';
 import { CommandController } from '../controller';
 import { Keyboard } from '../keyboard';
 import { TgBotAction } from './action';
 import { TgChat } from './chat';
-import { TgCommandContext } from './context';
+import { TgCallbackContext, TgCommandContext } from './context';
 import { TgEventListener } from './event';
 
 export class TgBot extends AbstractBot {
@@ -112,7 +111,8 @@ export class TgBot extends AbstractBot {
             keyboard: new Keyboard(_context, chat),
             service: 'tg',
             realContext: context,
-            scheduleFormatter: createScheduleFormatter('tg', raspCache, chat)
+            scheduleFormatter: createScheduleFormatter('tg', raspCache, chat),
+            cache: this.cache
         });
     }
 
@@ -127,99 +127,28 @@ export class TgBot extends AbstractBot {
     private async callbackHandler(context: CallbackQueryContext, next: NextMiddleware) {
         if (context.from?.isBot()) return next();
 
-        let payload: any = context.queryPayload;
+        let payload: string | undefined = context.data;
         if (!payload || !context.message) {
             return;
         }
 
         const chat = new TgChat(context.from.id);
-        
-        //todo rewrite to abstract for all services
-        if (typeof payload === 'object') {
-            switch (payload.action) {
-                case 'answer':
-                    const answer: string = payload.answer;
-                    if (!answer) return;
+        chat.updateChat(context.message.chat, context.message.from);
 
-                    await context.answerCallbackQuery({
-                        text: `Выбрано: "${answer}"`
-                    }).catch(() => { });
+        const cb = CommandController.getCallbackByPayload(payload);
+        if (!cb) return;
 
-                    if (chat.accepted && this.input.has(String(context.message.chatId))) {
-                        this.input.resolve(String(context.message.chatId), answer);
+        const _context = new TgCallbackContext(context, this.input, this.cache);
 
-                        await context.message.delete().catch(() => { });
-                    }
-
-                    return;
-                
-                case 'image':
-                    const type: string = payload.type;
-                    const value: string = payload.value;
-                    if (!type || !value) return;
-
-                    let image: ImageFile | undefined;
-                    if (type === 'group') {
-                        const rasp = raspCache.groups.timetable[value];
-                        if (!rasp) return;
-
-                        image = await ImageBuilder.getGroupImage(rasp);
-                    } else if (type === 'teacher') {
-                        const rasp = raspCache.teachers.timetable[value];
-                        if (!rasp) return;
-
-                        image = await ImageBuilder.getTeacherImage(rasp);
-                    }
-
-                    if (!image) return;
-
-                    let fileId = this.cache.get(image.id);
-
-                    let photo: MediaInput;
-                    if (fileId) {
-                        photo = {
-                            type: MediaSourceType.FileId,
-                            value: fileId
-                        }
-                    } else {
-                        photo = {
-                            type: MediaSourceType.Buffer,
-                            value: await image.data()
-                        }
-                    }
-
-                    const result: MessageContext = await context.message.sendPhoto(photo, {
-                        reply_to_message_id: context.message.id
-                    });
-
-                    const attachment = result.attachment;
-                    if (!fileId && attachment instanceof PhotoAttachment) {
-                        fileId = attachment.bigSize.fileId;
-
-                        this.cache.add(image.id, fileId);
-                    }
-
-                    return context.answerCallbackQuery({
-                        text: 'Изображение было отправлено'
-                    }).catch(() => {});
-            }
-        } else if (payload === 'cancel') {
-            this.input.cancel(String(context.message.chatId));
-            chat.scene = null;
-
-            // await context.message.editMessageReplyMarkup({
-            //     inline_keyboard: []
-            // }).catch(() => {});
-            await context.answerCallbackQuery({
-                text: 'Ввод был отменён'
-            }).catch(() => { });
-
-            await context.message.delete().catch(() => { });
-
-            return;
-        } else {
-            
-        }
+        return this.handleCallback(cb, {
+            service: 'tg',
+            context: _context,
+            realContext: context,
+            chat: chat,
+            keyboard: new Keyboard(_context, chat),
+            scheduleFormatter: createScheduleFormatter('tg', raspCache, chat),
+            cache: this.cache
+        });
     }
 
     protected _getAcceptKeyParams(context: TgCommandContext): InputRequestKey {

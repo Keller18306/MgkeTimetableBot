@@ -9,7 +9,7 @@ import { convertAbstractToVK } from "./keyboard";
 export class VkCommandContext extends AbstractCommandContext {
     public id: string;
     public text: string
-    public payload?: { [key: string]: any };
+    public payload?: any;
     public peerId: number;
     public userId: number;
 

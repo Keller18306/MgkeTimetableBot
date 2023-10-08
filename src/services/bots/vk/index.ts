@@ -4,7 +4,7 @@ import { config } from '../../../../config';
 import { defines } from '../../../defines';
 import { FromType, InputRequestKey } from '../../../key';
 import { raspCache } from '../../../updater';
-import { createScheduleFormatter } from '../../../utils';
+import { createScheduleFormatter, parsePayload } from '../../../utils';
 import { AbstractBot, AbstractCommand } from '../abstract';
 import { CommandController } from '../controller';
 import { Keyboard } from '../keyboard';
@@ -80,14 +80,19 @@ export class VkBot extends AbstractBot {
             chat.ref = context.referralValue?.slice(0, 255) || 'none'
         }
 
-        if (!_context.payload && chat.accepted && this.input.has(String(context.peerId))) {
+        const payload = parsePayload(_context.payload);
+
+        //TODO -> убрать временный костыль (payload.action === 'answer')
+        if ((!payload || payload.action === 'answer') && chat.accepted && this.input.has(String(context.peerId))) {
             return this.input.resolve(String(context.peerId), text);
         }
 
         let cmd: AbstractCommand | null = null;
         if (_context.payload) {
-            cmd = CommandController.searchCommandByPayload(_context.payload.action || _context.payload, chat.scene)
-        } else {
+            cmd = CommandController.searchCommandByPayload(_context.payload, chat.scene)
+        }
+        
+        if (!cmd) {
             cmd = CommandController.searchCommandByMessage(text, chat.scene)
         }
 
@@ -98,7 +103,8 @@ export class VkBot extends AbstractBot {
             keyboard: new Keyboard(_context, chat.resync()),
             service: 'vk',
             realContext: context,
-            scheduleFormatter: createScheduleFormatter('vk', raspCache, chat)
+            scheduleFormatter: createScheduleFormatter('vk', raspCache, chat),
+            cache: this.cache
         }, {
             selfMention: selfMention
         })

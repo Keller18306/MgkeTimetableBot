@@ -1,5 +1,5 @@
 import { SCHEDULE_FORMATTERS } from '../../utils';
-import { AbstractChat, AbstractCommandContext, KeyboardBuilder, KeyboardColor } from './abstract';
+import { AbstractChat, AbstractContext, KeyboardBuilder, KeyboardColor } from './abstract';
 
 function noYesSmile(value: number | boolean, text: string, smiles: [string, string] = ['✅', '🚫']): string {
     return (value ? smiles[0] : smiles[1]) + ` ${text}`
@@ -10,10 +10,10 @@ function noYesColor(value: number | boolean) {
 }
 
 export class Keyboard {
-    private context?: AbstractCommandContext;
+    private context?: AbstractContext;
     private chat: AbstractChat;
 
-    constructor(context: AbstractCommandContext | undefined, chat: AbstractChat) {
+    constructor(context: AbstractContext | undefined, chat: AbstractChat) {
         this.context = context;
         this.chat = chat;
     }
@@ -96,7 +96,7 @@ export class Keyboard {
 
     public get SettingsMain() {
         const keyboard: KeyboardBuilder = new KeyboardBuilder('Settings');
-        
+
         return keyboard.add({
             text: '📚 Первоначальная настройка',
             color: KeyboardColor.PRIMARY_COLOR
@@ -167,7 +167,7 @@ export class Keyboard {
             const selected: boolean = this.chat.scheduleFormatter === +i;
 
             keyboard.add({
-                text: Formatter.label+(selected ? ' (выбран)' : ''),
+                text: Formatter.label + (selected ? ' (выбран)' : ''),
                 color: selected ? KeyboardColor.POSITIVE_COLOR : KeyboardColor.PRIMARY_COLOR
             });
 
@@ -189,10 +189,9 @@ export class Keyboard {
         for (const group of this.chat.groupSearchHistory) {
             keyboard.add({
                 text: group,
-                payload: {
-                    action: 'answer',
+                payload: 'answer' + JSON.stringify({
                     answer: group
-                }
+                })
             });
         }
 
@@ -205,10 +204,9 @@ export class Keyboard {
         for (const teacher of this.chat.teacherSearchHistory) {
             keyboard.add({
                 text: teacher,
-                payload: {
-                    action: 'answer',
+                payload: 'answer' + JSON.stringify({
                     answer: teacher
-                }
+                })
             })
         }
 
@@ -221,10 +219,9 @@ export class Keyboard {
         for (const value of values) {
             keyboard.add({
                 text: value,
-                payload: {
-                    action: 'answer',
+                payload: 'answer' + JSON.stringify({
                     answer: value
-                }
+                })
             }).row()
         }
 
@@ -238,16 +235,15 @@ export class Keyboard {
 
         return keyboard.add({
             text: '📷 Сгенерировать изображение',
-            payload: {
-                action: 'image',
-                type: type,
-                value: value
-            },
+            payload: 'image' + JSON.stringify([
+                type,
+                value
+            ]),
             color: KeyboardColor.PRIMARY_COLOR
         });
     }
 
-    public WeekControl(type: string, value: string): KeyboardBuilder | undefined {
+    public WeekControl(type: string, value: string, weekIndex: number, expand: boolean = false): KeyboardBuilder | undefined {
         const keyboard: KeyboardBuilder = new KeyboardBuilder('WeekControl', true);
 
         let newLine: boolean = false;
@@ -255,19 +251,38 @@ export class Keyboard {
         if (true) {
             keyboard.add({
                 text: '⬅️',
-                payload: {},
+                payload: 'timetable' + JSON.stringify([
+                    type,
+                    value,
+                    weekIndex - 1,
+                    expand
+                ]),
                 color: KeyboardColor.PRIMARY_COLOR
             });
 
             newLine = true;
         }
 
-        //🔼🔽
+        keyboard.add({
+            text: expand ? '🔼' : '🔽',
+            payload: 'timetable' + JSON.stringify([
+                type,
+                value,
+                weekIndex,
+                !expand
+            ]),
+            color: KeyboardColor.PRIMARY_COLOR
+        });
 
         if (true) {
             keyboard.add({
                 text: '➡️',
-                payload: {},
+                payload: 'timetable' + JSON.stringify([
+                    type,
+                    value,
+                    weekIndex + 1,
+                    expand
+                ]),
                 color: KeyboardColor.PRIMARY_COLOR
             });
 
@@ -280,11 +295,11 @@ export class Keyboard {
 
         keyboard.add({
             text: '📷 Сгенерировать изображение',
-            payload: {
-                action: 'image',
-                type: type,
-                value: value
-            },
+            payload: 'image' + JSON.stringify([
+                type,
+                value,
+                weekIndex
+            ]),
             color: KeyboardColor.PRIMARY_COLOR
         });
 
@@ -301,27 +316,27 @@ export class StaticKeyboard {
             })
     }
 
-    public static get DisableChanges() {
-        return new KeyboardBuilder('DisableChanges', true)
-            .add({
-                text: 'Не оповещать об изменениях',
-                color: KeyboardColor.PRIMARY_COLOR,
-                payload: {
-                    action: 'disableNoticeChanges'
-                }
-            })
-    }
+    // public static get DisableChanges() {
+    //     return new KeyboardBuilder('DisableChanges', true)
+    //         .add({
+    //             text: 'Не оповещать об изменениях',
+    //             color: KeyboardColor.PRIMARY_COLOR,
+    //             payload: {
+    //                 action: 'disableNoticeChanges'
+    //             }
+    //         })
+    // }
 
-    public static get UnsubscribeMessages() {
-        return new KeyboardBuilder('UnsubscribeMessages', true)
-            .add({
-                text: 'Отписаться от рассылки',
-                color: KeyboardColor.PRIMARY_COLOR,
-                payload: {
-                    action: 'unsubscribeMessages'
-                }
-            })
-    }
+    // public static get UnsubscribeMessages() {
+    //     return new KeyboardBuilder('UnsubscribeMessages', true)
+    //         .add({
+    //             text: 'Отписаться от рассылки',
+    //             color: KeyboardColor.PRIMARY_COLOR,
+    //             payload: {
+    //                 action: 'unsubscribeMessages'
+    //             }
+    //         })
+    // }
 
     public static get StartButton(): KeyboardBuilder {
         const keyboard: KeyboardBuilder = new KeyboardBuilder('StartButton');
@@ -357,9 +372,7 @@ export class StaticKeyboard {
         const keyboard: KeyboardBuilder = new KeyboardBuilder('Cancel');
 
         return keyboard.add({
-            payload: {
-                action: 'cancel'
-            },
+            payload: 'cancel',
             text: 'Отмена',
             color: KeyboardColor.NEGATIVE_COLOR
         });

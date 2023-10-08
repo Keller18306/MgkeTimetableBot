@@ -11,6 +11,7 @@ import { ViberCommandContext, ViberContext } from '../viber/context';
 import { VkChat } from '../vk/chat';
 import { VkCommandContext } from '../vk/context';
 import { AbstractAction } from './action';
+import { FileCache } from './cache';
 import { AbstractChat } from './chat';
 import { AbstractCommandContext } from './context';
 import { KeyboardBuilder } from './keyboardBuilder';
@@ -24,7 +25,8 @@ export type CmdHandlerParams = {
     actions: AbstractAction,
     keyboard: Keyboard,
     service: Service,
-    scheduleFormatter: ScheduleFormatter
+    scheduleFormatter: ScheduleFormatter,
+    cache: FileCache
 } & ({
     service: 'vk',
     context: VkCommandContext,

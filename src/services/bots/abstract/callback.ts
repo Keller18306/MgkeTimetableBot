@@ -1,9 +1,11 @@
-import { CallbackQueryContext as TgCallbackContext } from 'puregram'
+import { CallbackQueryContext as TgRealCallbackContext } from 'puregram'
 import { ContextDefaultState, MessageEventContext } from 'vk-io'
 import { ScheduleFormatter } from "../../../utils/formatters/abstract"
 import { Keyboard } from "../keyboard"
 import { TgChat } from "../tg/chat"
+import { TgCallbackContext } from '../tg/context'
 import { VkChat } from "../vk/chat"
+import { FileCache } from './cache'
 import { AbstractChat } from "./chat"
 import { Service } from "./command"
 import { AbstractCallbackContext } from './context'
@@ -14,7 +16,8 @@ export type CbHandlerParams = {
     chat: AbstractChat,
     keyboard: Keyboard,
     service: Service,
-    scheduleFormatter: ScheduleFormatter
+    scheduleFormatter: ScheduleFormatter,
+    cache: FileCache
 } & ({
     service: 'vk',
     // context: VkCommandContext,
@@ -22,8 +25,8 @@ export type CbHandlerParams = {
     chat: VkChat
 } | {
     service: 'tg',
-    // context: TgCommandContext,
-    realContext: TgCallbackContext,
+    context: TgCallbackContext,
+    realContext: TgRealCallbackContext,
     chat: TgChat
 })
 
@@ -35,9 +38,9 @@ export abstract class AbstractCallback {
         'vk', 'tg'
     ];
 
-    abstract action: string;
-    
-    abstract handler(params: CbHandlerParams): any | Promise<any>
+    public abstract action: string;
+
+    public abstract handler(params: CbHandlerParams): any | Promise<any>
 
     public preHandle({ service, chat }: CbHandlerParams) {
         if (!this.services.includes(service)) {
