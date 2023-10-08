@@ -488,23 +488,23 @@ export class Updater {
         this.archive.appendDays(archiveDays);
 
         // проверка на то, что добавлена новая неделя
-        const maxWeekNumber = Math.max(...(Object.values(cache.timetable) as (Group | Teacher)[])
+        const maxWeekIndex = Math.max(...(Object.values(cache.timetable) as (Group | Teacher)[])
             .map((entry) => {
-                const weekNumbers = entry.days.map((day) => {
+                const weekIndexes = entry.days.map((day) => {
                     return getStrWeekIndex(day.day);
                 });
 
-                return Math.max(...weekNumbers);
+                return Math.max(...weekIndexes);
             })
         );
 
         // оповещение в чаты, что на сайте вывесили новую неделю
-        if (cache.lastWeekIndex && maxWeekNumber > cache.lastWeekIndex) {
+        if (cache.lastWeekIndex && maxWeekIndex > cache.lastWeekIndex) {
             const chatMode: ChatMode = onParser<ChatMode>(Parser, 'student', 'teacher');
             EventController.sendNextWeek(chatMode);
         }
 
-        cache.lastWeekIndex = maxWeekNumber;
+        cache.lastWeekIndex = maxWeekIndex;
         cache.update = Date.now();
 
         return true;
