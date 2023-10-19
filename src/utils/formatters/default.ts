@@ -1,4 +1,5 @@
 import { GroupLessonExplain, TeacherLessonExplain } from "../../updater/parser/types";
+import { isToday, isTomorrow } from "../time";
 import { GroupLessonOptions, ScheduleFormatter } from "./abstract";
 
 export class DefaultScheduleFormatter extends ScheduleFormatter {
@@ -87,7 +88,17 @@ export class DefaultScheduleFormatter extends ScheduleFormatter {
     }
 
     protected DayHeader(day: string, weekday: string): string {
-        return `__ ${this.b(weekday)}, ${day} __`;
+        let hint: string | undefined;
+
+        if (isToday(day)) {
+            hint = '(сегодня)'
+        }
+
+        if (isTomorrow(day)) {
+            hint = '(завтра)'
+        }
+
+        return `__ ${this.b(weekday + (hint ? ` ${this.i(hint)}` : ''))}, ${day} __`;
     }
 
     protected LessonHeader(i: number): string {
