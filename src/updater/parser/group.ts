@@ -1,4 +1,4 @@
-import { chunkArray } from "../../utils";
+import { chunkArray, getShortSubjectName } from "../../utils";
 import { AbstractParser } from "./abstract";
 import { GroupDay, GroupLesson, GroupLessonExplain, Groups } from './types/group';
 
@@ -159,13 +159,13 @@ export default class StudentParser extends AbstractParser {
             .from(lessonCell.childNodes)
             .filter(_ => _.nodeType === _.TEXT_NODE)
             .map(_ => _.textContent!);
-        const matchType = group[1]?.match(/\((.+)\)/)?.slice(1)[0]
+        const matchType = group[1]?.match(/\((.+)\)/)?.slice(1)[0];
         // if (!matchType) {
         //     throw new Error('Тип урока не был получен')
         // }
 
         return {
-            lesson: group[0],
+            lesson: getShortSubjectName(group[0]),
             type: matchType || null,
             teacher: group[2] || null,
             cabinet: cabinet,
@@ -222,7 +222,7 @@ export default class StudentParser extends AbstractParser {
 
             parsed.push({
                 subgroup: sgNumber,
-                lesson: matchName[1],
+                lesson: getShortSubjectName(matchName[1]),
                 type: matchType,
                 teacher: subGroup[2],
                 cabinet: cabinet,

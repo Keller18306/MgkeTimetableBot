@@ -1,3 +1,4 @@
+import { getShortSubjectName } from '../../utils';
 import { AbstractParser } from './abstract';
 import { Teacher, TeacherDay, TeacherLesson, Teachers } from './types/teacher';
 
@@ -125,12 +126,12 @@ export default class TeacherParser extends AbstractParser {
             .from(lessonCell.childNodes)
             .filter(_ => _.nodeType === _.TEXT_NODE)
             .map(_ => _.textContent!);
-        const type = data[1]?.match(/\((.+)\)/)?.slice(1)[0]
-        const group = data[0].split('-', 2)[0]
-        const lesson = data[0].split('-', 2)[1]
+        const type = data[1]?.match(/\((.+)\)/)?.slice(1)[0];
+        const group = data[0].split('-', 2)[0];
+        const lesson = data[0].split('-', 2)[1];
 
         return {
-            lesson: lesson,
+            lesson: getShortSubjectName(lesson),
             type: type || null,
             group: group,
             cabinet: cabinet,
