@@ -41,9 +41,11 @@ export default class extends AbstractCommand {
         const groupRasp = raspCache.groups.timetable[group];
         const message = scheduleFormatter.formatGroupFull(String(group), {
             showHeader: true,
-            days: getDayRasp(groupRasp.days)
+            days: getDayRasp(groupRasp.days, true, 2)
         })
 
-        return context.send(message);
+        return context.send(message, {
+            keyboard: keyboard.GetWeekTimetable('group', group)
+        });
     }
 }

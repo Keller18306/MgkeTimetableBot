@@ -1,7 +1,9 @@
 import { TelegramBotCommand } from "puregram/generated";
-import { raspCache } from "../../../../updater";
+import { Updater, raspCache } from "../../../../updater";
 import { formatSeconds, sort } from "../../../../utils";
 import { AbstractCommand, CmdHandlerParams } from "../../abstract";
+
+const archive = Updater.getInstance().archive;
 
 export default class extends AbstractCommand {
     public regexp = /^(!|\/)(get)?teachers$/i
@@ -11,14 +13,10 @@ export default class extends AbstractCommand {
         description: 'Получить полный список преподавателей в кэше бота'
     };
 
-    async handler({ context, chat }: CmdHandlerParams) {
-        if (Object.keys(raspCache.teachers.timetable).length == 0) {
-            return context.send('Данные с сервера ещё не загружены, ожидайте...')
-        }
-
-        const teachers = sort(Object.keys(raspCache.teachers.timetable)).map((value, i) => {
-            return `${i+1}. ${value}`
-        })
+    async handler({ context }: CmdHandlerParams) {
+        const teachers = sort(archive.getTeachers()).map((value, i) => {
+            return `${i + 1}. ${value}`
+        });
 
         context.send([
             '__ Преподаватели в кэше __\n',

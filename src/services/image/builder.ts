@@ -5,7 +5,7 @@ import { existsSync, mkdirSync } from "fs";
 import { readFile, writeFile } from "fs/promises";
 import path from "path";
 import { config } from "../../../config";
-import { Group, GroupDay, GroupLessonExplain, Teacher, TeacherDay } from "../../updater/parser/types";
+import { GroupDay, GroupLessonExplain, TeacherDay } from "../../updater/parser/types";
 import { formatDateTime, getWeekdayNameByStrDate } from "../../utils";
 
 const groupColumns: IColumn[] = [
@@ -78,8 +78,8 @@ export class ImageBuilder {
         [id: string]: Promise<ImageFile>
     } = {};
 
-    public static async getGroupImage(group: Group): Promise<ImageFile> {
-        const id: string = createHash('sha256').update(JSON.stringify(group)).digest('base64url');
+    public static async getGroupImage(group: string | number, days: GroupDay[]): Promise<ImageFile> {
+        const id: string = createHash('sha256').update(JSON.stringify({ group, days })).digest('base64url');
         if (this.promises[id] !== undefined) {
             return this.promises[id];
         }
@@ -96,7 +96,7 @@ export class ImageBuilder {
                 };
             }
 
-            const data = await new this().buildGroupImage(group);
+            const data = await new this().buildGroupImage(group, days);
             await writeFile(filePath, data);
 
             return {
@@ -114,8 +114,8 @@ export class ImageBuilder {
         return process;
     }
 
-    public static async getTeacherImage(teacher: Teacher): Promise<ImageFile> {
-        const id: string = createHash('sha256').update(JSON.stringify(teacher)).digest('base64url');
+    public static async getTeacherImage(teacher: string, days: TeacherDay[]): Promise<ImageFile> {
+        const id: string = createHash('sha256').update(JSON.stringify({ teacher, days })).digest('base64url');
         if (this.promises[id] !== undefined) {
             return this.promises[id];
         }
@@ -132,7 +132,7 @@ export class ImageBuilder {
                 };
             }
 
-            const data = await new this().buildTeacherImage(teacher);
+            const data = await new this().buildTeacherImage(teacher, days);
             await writeFile(filePath, data);
 
             return {
@@ -146,7 +146,7 @@ export class ImageBuilder {
         this.promises[id] = process;
         await process;
         delete this.promises[id];
-        
+
         return process;
     }
 
@@ -158,28 +158,28 @@ export class ImageBuilder {
 
     private devicePixelRatio: number = 1;
 
-    public async buildGroupImage(group: Group): Promise<Buffer> {
-        const canvasList: Canvas[] = this._generateCanvasListForGroup(group.days);
+    public async buildGroupImage(group: string | number, days: GroupDay[]): Promise<Buffer> {
+        const canvasList: Canvas[] = this._generateCanvasListForGroup(days);
 
         const { canvas, ctx, width } = await this._appendImageTemplate(canvasList);
 
         ctx.fillStyle = 'black';
         ctx.textAlign = 'center';
         ctx.font = `${30 * this.devicePixelRatio}px sans-serif`;
-        ctx.fillText(`Группа - ${group.group}`, width / 2, 45 * this.devicePixelRatio);
+        ctx.fillText(`Группа - ${group}`, width / 2, 45 * this.devicePixelRatio);
 
         return canvas.toBuffer('image/png');
     }
 
-    public async buildTeacherImage(teacher: Teacher): Promise<Buffer> {
-        const canvasList: Canvas[] = this._generateCanvasListForTeacher(teacher.days);
+    public async buildTeacherImage(teacher: string, days: TeacherDay[]): Promise<Buffer> {
+        const canvasList: Canvas[] = this._generateCanvasListForTeacher(days);
 
         const { canvas, ctx, width } = await this._appendImageTemplate(canvasList);
 
         ctx.fillStyle = 'black';
         ctx.textAlign = 'center';
         ctx.font = `${30 * this.devicePixelRatio}px sans-serif`;
-        ctx.fillText(`Преподаватель - ${teacher.teacher}`, width / 2, 45 * this.devicePixelRatio);
+        ctx.fillText(`Преподаватель - ${teacher}`, width / 2, 45 * this.devicePixelRatio);
 
         return canvas.toBuffer('image/png');
     }

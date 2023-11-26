@@ -1,6 +1,6 @@
 import { TelegramBotCommand } from "puregram/generated";
-import { raspCache } from "../../../../updater";
-import { randArray } from "../../../../utils";
+import { Updater, raspCache } from "../../../../updater";
+import { getDayIndex, getWeekIndex, randArray, weekBoundsByWeekIndex } from "../../../../utils";
 import { AbstractCommand, CmdHandlerParams } from "../../abstract";
 import { withCancelButton } from "../../keyboard";
 
@@ -14,12 +14,12 @@ export default class extends AbstractCommand {
 
     async handler({ context, chat, keyboard, scheduleFormatter }: CmdHandlerParams) {
         if (Object.keys(raspCache.groups.timetable).length == 0) {
-            return context.send('Данные с сервера ещё не загружены, ожидайте...')
+            return context.send('Данные с сервера ещё не загружены, ожидайте...');
         }
 
         let group: string | number | false | undefined = context.text?.replace(this.regexp, '').trim();
         if (group == '' || group == undefined || group.length > 3 || isNaN(+group)) {
-            const randGroup = randArray(Object.keys(raspCache.groups.timetable))
+            const randGroup = randArray(Object.keys(raspCache.groups.timetable));
 
             group = await context.input(`Введите номер группы, которой хотите узнать расписание на неделю (например, ${randGroup})`, {
                 keyboard: withCancelButton(keyboard.GroupHistory)
@@ -27,7 +27,7 @@ export default class extends AbstractCommand {
         }
 
         while (true) {
-            group = await this.findGroup(context, keyboard, group, keyboard.MainMenu)
+            group = await this.findGroup(context, keyboard, group, keyboard.MainMenu);
 
             if (!group) {
                 return;
@@ -37,12 +37,18 @@ export default class extends AbstractCommand {
         }
 
         chat.appendGroupSearchHistory(String(group));
+        
+        const currentWeekIndex = raspCache.teachers.lastWeekIndex || getWeekIndex();
+        const weekBounds = weekBoundsByWeekIndex(currentWeekIndex).map(getDayIndex) as [number, number];
+        const days = Updater.getInstance().archive.getGroupDaysByBounds(weekBounds, group);
+
         const message = scheduleFormatter.formatGroupFull(String(group), {
-            showHeader: true
-        })
+            showHeader: true,
+            days: days
+        });
 
         return context.send(message, {
-            // keyboard: keyboard.GenerateImage('group', String(group))
-        })
+            keyboard: keyboard.WeekControl('group', group, currentWeekIndex, false)
+        });
     }
 }

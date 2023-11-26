@@ -1,6 +1,6 @@
 import { TelegramBotCommand } from "puregram/generated";
-import { raspCache } from "../../../../updater";
-import { randArray } from "../../../../utils";
+import { Updater, raspCache } from "../../../../updater";
+import { getDayIndex, getWeekIndex, randArray, weekBoundsByWeekIndex } from "../../../../utils";
 import { AbstractCommand, CmdHandlerParams } from "../../abstract";
 import { withCancelButton } from "../../keyboard";
 
@@ -19,7 +19,7 @@ export default class extends AbstractCommand {
 
         let teacher: string | false | undefined = context.text?.replace(this.regexp, '').trim();
         if (teacher == '' || teacher == undefined || teacher.length < 3) {
-            const randTeacher = randArray(Object.keys(raspCache.teachers.timetable))
+            const randTeacher = randArray(Object.keys(raspCache.teachers.timetable));
 
             teacher = await context.input(`Введите фамилию преподавателя, которого хотите узнать расписание на неделю (например, ${randTeacher})`, {
                 keyboard: withCancelButton(keyboard.TeacherHistory)
@@ -31,7 +31,7 @@ export default class extends AbstractCommand {
 
             if (!teacher) {
                 if (teacher === undefined) {
-                    teacher = await context.waitInput()
+                    teacher = await context.waitInput();
                     continue;
                 } else {
                     return;
@@ -42,12 +42,18 @@ export default class extends AbstractCommand {
         }
 
         chat.appendTeacherSearchHistory(teacher);
+        
+        const currentWeekIndex = raspCache.teachers.lastWeekIndex || getWeekIndex();
+        const weekBounds = weekBoundsByWeekIndex(currentWeekIndex).map(getDayIndex) as [number, number];
+        const days = Updater.getInstance().archive.getTeacherDaysByBounds(weekBounds, teacher);
+
         const message = scheduleFormatter.formatTeacherFull(teacher, {
-            showHeader: true
-        })
+            showHeader: true,
+            days: days
+        });
 
         return context.send(message, {
-            // keyboard: keyboard.GenerateImage('teacher', teacher)
+            keyboard: keyboard.WeekControl('teacher', teacher, currentWeekIndex, false)
         });
     }
 }

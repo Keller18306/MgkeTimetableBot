@@ -1,5 +1,5 @@
 import db from "../db";
-import { dayIndexToDate, formatDate, strDateToIndex } from "../utils";
+import { dayIndexToDate, formatDate, getDayIndex, getWeekIndex, strDateToIndex } from "../utils";
 import { GroupDay, TeacherDay } from "./parser/types";
 
 export type ArchiveAppendDay = {
@@ -20,7 +20,57 @@ function dbEntryToDayObject(entry: any): any {
 }
 
 export class Archive {
+    private _dayIndexBounds: { min: number, max: number } | undefined;
+    private _groups: string[] | undefined;
+    private _teachers: string[] | undefined;
+
+    public cleanCache() {
+        this._dayIndexBounds = undefined;
+        this._groups = undefined;
+        this._teachers = undefined;
+    }
+
+    public getDayIndexBounds(): { min: number, max: number } {
+        if (!this._dayIndexBounds) {
+            this._dayIndexBounds = db.prepare('SELECT MIN(`day`) as `min`, MAX(`day`) as `max` FROM timetable_archive').get() as any;
+        }
+
+        return this._dayIndexBounds!;
+    }
+
+    public getWeekIndexBounds(): { min: number, max: number } {
+        const { min, max } = this.getDayIndexBounds();
+
+        return {
+            min: getWeekIndex(dayIndexToDate(min)),
+            max: getWeekIndex(dayIndexToDate(max))
+        }
+    }
+
+    public getGroups() {
+        if (!this._groups) {
+            this._groups = (db.prepare('SELECT DISTINCT `group` FROM timetable_archive WHERE `group` IS NOT NULL').all() as any).map((entry: any) => {
+                return entry.group;
+            });
+        }
+
+        return this._groups!;
+    }
+
+    public getTeachers() {
+        if (!this._teachers) {
+            this._teachers = (db.prepare('SELECT DISTINCT `teacher` FROM timetable_archive WHERE `teacher` IS NOT NULL').all() as any).map((entry: any) => {
+                return entry.teacher;
+            });
+        }
+
+        return this._teachers!;
+    }
+
     public addGroupDay(group: number | string, day: GroupDay): void {
+        this._dayIndexBounds = undefined;
+        this._groups = undefined;
+
         const dayIndex: number = strDateToIndex(day.day);
         const data = JSON.stringify(day.lessons);
 
@@ -29,6 +79,9 @@ export class Archive {
     }
 
     public addTeacherDay(teacher: string, day: TeacherDay): void {
+        this._dayIndexBounds = undefined;
+        this._teachers = undefined;
+
         const dayIndex: number = strDateToIndex(day.day);
         const data = JSON.stringify(day.lessons);
 
@@ -52,14 +105,10 @@ export class Archive {
         return days.map(dbEntryToDayObject);
     }
 
-    public getTeacherDayByBounds(dayBounds: [number, number], teacher: string): TeacherDay[] {
+    public getTeacherDaysByBounds(dayBounds: [number, number], teacher: string): TeacherDay[] {
         const days = db.prepare('SELECT day,data FROM timetable_archive WHERE day >= ? AND day <= ? AND teacher = ?').all(...dayBounds, teacher) as any;
 
         return days.map(dbEntryToDayObject);
-    }
-
-    public getDayIndexBounds(): { min: number, max: number } {
-        return (db.prepare('SELECT MIN(`day`) as `min`, MAX(`day`) as `max` FROM timetable_archive').get() as any);
     }
 
     public appendDays(entries: ArchiveAppendDay[]) {

@@ -1,4 +1,5 @@
-import { SCHEDULE_FORMATTERS } from '../../utils';
+import { Updater, raspCache } from '../../updater';
+import { SCHEDULE_FORMATTERS, getWeekIndex } from '../../utils';
 import { AbstractChat, AbstractContext, KeyboardBuilder, KeyboardColor } from './abstract';
 
 function noYesSmile(value: number | boolean, text: string, smiles: [string, string] = ['✅', '🚫']): string {
@@ -228,34 +229,27 @@ export class Keyboard {
         return keyboard;
     }
 
-    public GenerateImage(type: string, value: string): KeyboardBuilder | undefined {
-        if (this.chat.service !== 'tg') return;
-
-        const keyboard: KeyboardBuilder = new KeyboardBuilder('GenerateImage', true);
-
-        return keyboard.add({
-            text: '📷 Сгенерировать изображение',
-            payload: 'image' + JSON.stringify([
-                type,
-                value
-            ]),
-            color: KeyboardColor.PRIMARY_COLOR
-        });
-    }
-
-    public WeekControl(type: string, value: string, weekIndex: number, expand: boolean = false): KeyboardBuilder | undefined {
+    public WeekControl(type: string, value: string | number, weekIndex: number, hidePastDays: boolean = true, showHeader: boolean = false): KeyboardBuilder | undefined {
         const keyboard: KeyboardBuilder = new KeyboardBuilder('WeekControl', true);
+
+        if (!isNaN(+value)) {
+            value = Number(value)
+        }
+
+        if (type === 'group' || type === 'teacher') {
+            type = type[0]; //first letter of type
+        }
+
+        const { min, max } = Updater.getInstance().archive.getWeekIndexBounds();
+        const currentWeekIndex: number = raspCache.groups.lastWeekIndex || getWeekIndex();
 
         let newLine: boolean = false;
 
-        if (true) {
+        if (weekIndex - 1 >= min) {
             keyboard.add({
                 text: '⬅️',
                 payload: 'timetable' + JSON.stringify([
-                    type,
-                    value,
-                    weekIndex - 1,
-                    expand
+                    type, value, (weekIndex - 1), Number(hidePastDays), Number(showHeader)
                 ]),
                 color: KeyboardColor.PRIMARY_COLOR
             });
@@ -263,25 +257,24 @@ export class Keyboard {
             newLine = true;
         }
 
-        keyboard.add({
-            text: expand ? '🔼' : '🔽',
-            payload: 'timetable' + JSON.stringify([
-                type,
-                value,
-                weekIndex,
-                !expand
-            ]),
-            color: KeyboardColor.PRIMARY_COLOR
-        });
+        //show full
+        if (hidePastDays && weekIndex === currentWeekIndex) {
+            keyboard.add({
+                text: '🔼',
+                payload: 'timetable' + JSON.stringify([
+                    type, value, weekIndex, 0, Number(showHeader)
+                ]),
+                color: KeyboardColor.PRIMARY_COLOR
+            });
 
-        if (true) {
+            newLine = true;
+        }
+
+        if (weekIndex + 1 <= max) {
             keyboard.add({
                 text: '➡️',
                 payload: 'timetable' + JSON.stringify([
-                    type,
-                    value,
-                    weekIndex + 1,
-                    expand
+                    type, value, (weekIndex + 1), Number(hidePastDays), Number(showHeader)
                 ]),
                 color: KeyboardColor.PRIMARY_COLOR
             });
@@ -296,14 +289,32 @@ export class Keyboard {
         keyboard.add({
             text: '📷 Сгенерировать изображение',
             payload: 'image' + JSON.stringify([
-                type,
-                value,
-                weekIndex
+                type, value, weekIndex
             ]),
             color: KeyboardColor.PRIMARY_COLOR
         });
 
         return keyboard;
+    }
+
+    public GetWeekTimetable(type: string, value: string | number): KeyboardBuilder | undefined {
+        const keyboard: KeyboardBuilder = new KeyboardBuilder('GenerateImage', true);
+
+        if (!isNaN(+value)) {
+            value = Number(value)
+        }
+
+        if (type === 'group' || type === 'teacher') {
+            type = type[0]; //first letter of type
+        }
+
+        return keyboard.add({
+            text: 'На неделю',
+            payload: 'timetable' + JSON.stringify([
+                type, value, null, 0, 1
+            ]),
+            color: KeyboardColor.PRIMARY_COLOR
+        });
     }
 }
 

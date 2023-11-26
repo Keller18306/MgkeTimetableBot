@@ -1,7 +1,6 @@
 import { TelegramBotCommand } from 'puregram/generated';
-import { raspCache } from '../../../../updater';
-import { TeacherDay } from '../../../../updater/parser/types';
-import { randArray, removePastDays } from "../../../../utils";
+import { Updater, raspCache } from '../../../../updater';
+import { getDayIndex, getWeekIndex, randArray, removePastDays, weekBoundsByWeekIndex } from "../../../../utils";
 import { ScheduleFormatter } from '../../../../utils/formatters/abstract';
 import { AbstractAction, AbstractChat, AbstractCommand, AbstractCommandContext, CmdHandlerParams } from "../../abstract";
 import { Keyboard } from '../../keyboard';
@@ -41,11 +40,10 @@ export default class extends AbstractCommand {
         const group = raspCache.groups.timetable[chat.group];
         if (group === undefined) return context.send('Данной учебной группы не существует');
 
-        // const currentWeekIndex = raspCache.groups.lastWeekIndex || getWeekIndex();
-        // const weekBounds = weekBoundsByWeekIndex(currentWeekIndex).map(getDayIndex) as [number, number];
+        const currentWeekIndex = raspCache.groups.lastWeekIndex || getWeekIndex();
+        const weekBounds = weekBoundsByWeekIndex(currentWeekIndex).map(getDayIndex) as [number, number];
 
-        // let days = Updater.getInstance().archive.getGroupDaysByBounds(weekBounds, chat.group);
-        let days = group.days;
+        let days = Updater.getInstance().archive.getGroupDaysByBounds(weekBounds, chat.group);
         if (chat.hidePastDays) {
             days = removePastDays(days);
         }
@@ -60,9 +58,7 @@ export default class extends AbstractCommand {
         actions.deleteUserMsg();
 
         return context.send(message, {
-            // ...((chat.noticeParserErrors || chat.group == 63) ? {
-            //     keyboard: keyboard.GenerateImage('group', String(chat.group))
-            // } : {}),
+            keyboard: keyboard.WeekControl('group', String(chat.group), currentWeekIndex, chat.hidePastDays)
         }).then(id => {
             actions.handlerLastMsgUpdate(context);
             return id;
@@ -84,7 +80,10 @@ export default class extends AbstractCommand {
         const teacher = raspCache.teachers.timetable[chat.teacher];
         if (teacher === undefined) return context.send('Данного преподавателя не существует');
 
-        let days: TeacherDay[] = teacher.days;
+        const currentWeekIndex = raspCache.teachers.lastWeekIndex || getWeekIndex();
+        const weekBounds = weekBoundsByWeekIndex(currentWeekIndex).map(getDayIndex) as [number, number];
+
+        let days = Updater.getInstance().archive.getTeacherDaysByBounds(weekBounds, chat.teacher);
         if (chat.hidePastDays) {
             days = removePastDays(days);
         }
@@ -94,14 +93,12 @@ export default class extends AbstractCommand {
         const message = scheduleFormatter.formatTeacherFull(chat.teacher, {
             showHeader: false,
             days: days
-        })
+        });
 
         actions.deleteUserMsg();
 
         return context.send(message, {
-            // ...((chat.noticeParserErrors || chat.teacher.toLowerCase().startsWith('козел')) ? {
-            //     keyboard: keyboard.GenerateImage('teacher', chat.teacher)
-            // } : {}),
+            keyboard: keyboard.WeekControl('teacher', chat.teacher, currentWeekIndex, chat.hidePastDays)
         }).then(context => actions.handlerLastMsgUpdate(context));
     }
 }

@@ -7,12 +7,10 @@ sqlite3.db
 logs
 *.log
 npm-debug.log*
-*.lock
 
 # Dependency directories
 package-lock.json
 node_modules
-yarn.lock
 
 # Optional npm cache directory
 .npm

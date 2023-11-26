@@ -46,9 +46,11 @@ export default class extends AbstractCommand {
         const teacherRasp = raspCache.teachers.timetable[teacher];
         const message = scheduleFormatter.formatTeacherFull(teacher, {
             showHeader: true,
-            days: getDayRasp(teacherRasp.days)
+            days: getDayRasp(teacherRasp.days, true, 2)
         })
 
-        return context.send(message);
+        return context.send(message, {
+            keyboard: keyboard.GetWeekTimetable('teacher', teacher)
+        });
     }
 }

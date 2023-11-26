@@ -97,7 +97,7 @@ export abstract class AbstractCommand {
             return false;
         }
 
-        if (!Object.keys(raspCache.groups.timetable).includes(group)) {
+        if (!raspCache.groups.timetable[group]) {
             await context.send('Данной учебной группы не существует', {
                 keyboard: errorKeyboard
             })

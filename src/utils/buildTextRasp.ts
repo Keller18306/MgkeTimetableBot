@@ -62,7 +62,7 @@ export function removePastDays<T extends GroupDay | TeacherDay>(days: T[], proce
     return nextDays;
 }
 
-export function getDayRasp<T extends GroupDay | TeacherDay>(days: T[], processAutoskip: boolean = true): T[] {
+export function getDayRasp<T extends GroupDay | TeacherDay>(days: T[], processAutoskip: boolean = true, maxDays: number = 1): T[] {
     const nextDays: T[] = removePastDays(days, processAutoskip);
     const showDays: T[] = [];
 
@@ -71,9 +71,14 @@ export function getDayRasp<T extends GroupDay | TeacherDay>(days: T[], processAu
     }
 
     showDays.push(nextDays[0]);
+    
+    if (maxDays > 1) {
+        for (let i = 1; i < maxDays; i++) {
+            const day = nextDays[i];
+            if (!day) break;
 
-    if (nextDays.length > 1) {
-        showDays.push(nextDays[1]);
+            showDays.push(day);
+        }
     }
 
     return showDays;
