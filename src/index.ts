@@ -1,4 +1,5 @@
 import { config } from "../config";
+import { startVanishCronJob } from "./db";
 import { HttpServer } from "./http";
 import { AliceApp } from "./services/alice";
 import { Api } from "./services/api";
@@ -46,3 +47,5 @@ if (config.alice.enabled) {
 if (config.updater.enabled) {
     Updater.getInstance().start()
 }
+
+startVanishCronJob();
