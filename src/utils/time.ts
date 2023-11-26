@@ -81,10 +81,11 @@ export function parseStrToDate(str_date: string, utc: boolean = false): Date {
 
     parts[1] -= 1; //js format
 
-    date.setFullYear(...parts);
     if (utc) {
+        date.setUTCFullYear(...parts);
         date.setUTCHours(0, 0, 0, 0);
     } else {
+        date.setFullYear(...parts);
         date.setHours(0, 0, 0, 0);
     }
 
@@ -156,11 +157,11 @@ export function nowInTime(includedDays: number[], timeFrom: string, timeTo: stri
     }
 }
 
-export function weekBoundsByWeekIndex(weekIndex: number): [Date, Date] {
-    const oneWeekMilliseconds = 7 * 24 * 60 * 60 * 1000;
-    const d1 = new Date((weekIndex * oneWeekMilliseconds) + startingWeekIndexDate.getTime());
+const ONE_DAY: number = 24 * 60 * 60 * 1000;
+const oneWeekMilliseconds = 7 * 24 * 60 * 60 * 1000;
 
-    const ONE_DAY: number = 24 * 60 * 60 * 1000;
+export function weekBoundsByWeekIndex(weekIndex: number): [Date, Date] {
+    const d1 = new Date((weekIndex * oneWeekMilliseconds) + startingWeekIndexDate.getTime() + ONE_DAY);
     const d2 = new Date(d1.getTime() + ONE_DAY * 6);
 
     return [d1, d2];
