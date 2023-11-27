@@ -48,7 +48,7 @@ export class ViberCommandContext extends AbstractCommandContext {
 
     public async send(text: string, options: MessageOptions = {}): Promise<string> {
         let keyboard: KeyboardBuilder | undefined = options.keyboard
-        if (!keyboard) {
+        if (!keyboard || keyboard.isInline) {
             keyboard = new Keyboard(this, this.chat.resync()).MainMenu
         }
 
@@ -61,7 +61,7 @@ export class ViberCommandContext extends AbstractCommandContext {
 
     public async sendPhoto(image: ImageFile, options: MessageOptions = {}): Promise<string> {
         let keyboard: KeyboardBuilder | undefined = options.keyboard
-        if (!keyboard) {
+        if (!keyboard || keyboard.isInline) {
             keyboard = new Keyboard(this, this.chat.resync()).MainMenu
         }
 

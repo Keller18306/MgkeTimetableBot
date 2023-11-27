@@ -18,7 +18,7 @@ function convertColor(keyboard: ViberKeyboardBuilder, color?: KeyboardColor): st
 }
 
 export function convertAbstractToViber(aKeyboard?: KeyboardBuilder): Keyboard | undefined {
-    if (!aKeyboard) {
+    if (!aKeyboard || aKeyboard.isInline) {
         return;
     }
 
