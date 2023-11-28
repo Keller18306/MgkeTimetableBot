@@ -55,9 +55,10 @@ export function getDayIndex(date?: Date): number {
         date = new Date();
     }
 
-    date.setUTCHours(0, 0, 0, 0);
+    date.setHours(0, 0, 0, 0);
+    
 
-    return date.getTime() / 1e3 / 24 / 60 / 60;
+    return (date.getTime() + (Math.abs(date.getTimezoneOffset()) * 60 * 1e3)) / 1e3 / 24 / 60 / 60;
 }
 
 export function getWeekIndex(date?: Date): number {
