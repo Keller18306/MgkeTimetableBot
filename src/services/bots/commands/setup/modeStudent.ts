@@ -1,7 +1,8 @@
 import { defines } from "../../../../defines";
 import { raspCache } from "../../../../updater";
 import { randArray } from "../../../../utils";
-import { AbstractCommand, CmdHandlerParams } from "../../abstract";
+import { AbstractCommand, CmdHandlerParams, MessageOptions } from "../../abstract";
+import { InputInitiator } from "../../input";
 import { StaticKeyboard } from "../../keyboard";
 
 export default class extends AbstractCommand {
@@ -11,20 +12,29 @@ export default class extends AbstractCommand {
 
     async handler({ context, chat, keyboard, service }: CmdHandlerParams) {
         if (Object.keys(raspCache.groups.timetable).length == 0) {
-            return context.send('Данные с сервера ещё не загружены, ожидайте...')
+            return context.send('Данные с сервера ещё не загружены, ожидайте...');
         }
 
-        const randGroup = randArray(Object.keys(raspCache.groups.timetable))
+        const randGroup = randArray(Object.keys(raspCache.groups.timetable));
 
+        let initiator: InputInitiator;
         let group: string | number | false | undefined = await context.input(`Введите номер своей группы (например, ${randGroup})`, {
             keyboard: StaticKeyboard.Cancel
+        }).then<string | undefined>(value => {
+            initiator = value?.initiator;
+
+            return value?.text;
         });
 
         while (true) {
-            group = await this.findGroup(context, keyboard, group)
+            group = await this.findGroup(context, keyboard, group);
 
             if (!group) {
-                group = await context.waitInput()
+                group = await context.waitInput().then<string | undefined>(value => {
+                    initiator = value?.initiator;
+
+                    return value?.text;
+                });
                 continue;
             }
 
@@ -32,18 +42,24 @@ export default class extends AbstractCommand {
         }
 
         if (context.text.match(/^(👨‍👩‍👦\s)?Родитель$/i)) {
-            chat.mode = 'parent'
+            chat.mode = 'parent';
         } else {
-            chat.mode = 'student'
+            chat.mode = 'student';
         }
 
-        chat.group = group
-        chat.teacher = null
+        chat.group = group;
+        chat.teacher = null;
         chat.scene = null;
         chat.deactivateSecondaryCheck = false;
 
-        context.send(defines[`${service}.message.about`], {
+        const options: MessageOptions = {
             keyboard: keyboard.MainMenu
-        })
+        }
+
+        if (initiator === 'callback') {
+            return context.editOrSend(defines[`${service}.message.about`], options);
+        }
+
+        return context.send(defines[`${service}.message.about`], options);
     }
 }

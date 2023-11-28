@@ -84,24 +84,18 @@ export class TgBot extends AbstractBot {
     private messageHandler(context: MessageContext, next: NextMiddleware) {
         if (context.from?.isBot() || context.hasViaBot()) return next();
 
-        const text = context.text
-        const _context = new TgCommandContext(context, this.input, this.cache)
-        const chat = new TgChat(context.chatId)
+        const text = context.text;
+        const _context = new TgCommandContext(context, this.input, this.cache);
+        const chat = new TgChat(context.chatId);
         chat.updateChat(context.chat, context.from);
 
         if (chat.ref === null) {
-            chat.ref = context.startPayload || 'none'
+            chat.ref = context.startPayload || 'none';
         }
 
-        if (context.text !== '/cancel' && chat.accepted && this.input.has(String(context.chatId))) {
-            return this.input.resolve(String(context.chatId), text);
-        }
-
-        let cmd: AbstractCommand | null = null;
-        if (context.text === '/cancel') {
-            cmd = CommandController.searchCommandByPayload('cancel', chat.scene)
-        } else {
-            cmd = CommandController.searchCommandByMessage(text, chat.scene)
+        let cmd: AbstractCommand | null = CommandController.searchCommandByMessage(text, chat.scene);
+        if (!cmd && chat.accepted && this.input.has(String(context.chatId))) {
+            return this.input.resolve(String(context.chatId), text, 'message');
         }
 
         this.handleMessage(cmd, {

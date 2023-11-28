@@ -5,6 +5,7 @@ import { Keyboard } from "../keyboard"
 import { TgChat } from "../tg/chat"
 import { TgCallbackContext } from '../tg/context'
 import { VkChat } from "../vk/chat"
+import { VkCallbackContext } from '../vk/context'
 import { FileCache } from './cache'
 import { AbstractChat } from "./chat"
 import { Service } from "./command"
@@ -20,7 +21,7 @@ export type CbHandlerParams = {
     cache: FileCache
 } & ({
     service: 'vk',
-    // context: VkCommandContext,
+    context: VkCallbackContext,
     realContext: MessageEventContext<ContextDefaultState>,
     chat: VkChat
 } | {
@@ -34,6 +35,7 @@ export abstract class AbstractCallback {
     public id?: string;
 
     public adminOnly: boolean = false;
+    public acceptRequired: boolean = true;
     public services: Service[] = [
         'vk', 'tg'
     ];

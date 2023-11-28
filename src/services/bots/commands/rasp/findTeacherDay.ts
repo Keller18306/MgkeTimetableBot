@@ -1,7 +1,8 @@
 import { TelegramBotCommand } from "puregram/generated";
 import { raspCache } from "../../../../updater";
 import { getDayRasp, randArray } from "../../../../utils";
-import { AbstractCommand, CmdHandlerParams } from "../../abstract";
+import { AbstractCommand, CmdHandlerParams, MessageOptions } from "../../abstract";
+import { InputInitiator } from "../../input";
 import { withCancelButton } from "../../keyboard";
 
 export default class extends AbstractCommand {
@@ -18,12 +19,17 @@ export default class extends AbstractCommand {
             return context.send('Данные с сервера ещё не загружены, ожидайте...');
         }
 
+        let initiator: InputInitiator;
         let teacher: string | false | undefined = context.text?.replace(this.regexp, '').trim();
         if (teacher == '' || teacher == undefined || teacher.length < 3) {
-            const randTeacher = randArray(Object.keys(raspCache.teachers.timetable))
+            const randTeacher = randArray(Object.keys(raspCache.teachers.timetable));
 
             teacher = await context.input(`Введите фамилию преподавателя, которого хотите узнать расписание на день (например, ${randTeacher})`, {
                 keyboard: withCancelButton(keyboard.TeacherHistory)
+            }).then<string | undefined>(value => {
+                initiator = value?.initiator;
+
+                return value?.text;
             });
         }
 
@@ -32,7 +38,11 @@ export default class extends AbstractCommand {
 
             if (!teacher) {
                 if (teacher === undefined) {
-                    teacher = await context.waitInput()
+                    teacher = await context.waitInput().then<string | undefined>(value => {
+                        initiator = value?.initiator;
+
+                        return value?.text;
+                    });
                     continue;
                 } else {
                     return;
@@ -47,10 +57,16 @@ export default class extends AbstractCommand {
         const message = scheduleFormatter.formatTeacherFull(teacher, {
             showHeader: true,
             days: getDayRasp(teacherRasp.days, true, 2)
-        })
-
-        return context.send(message, {
-            keyboard: keyboard.GetWeekTimetable('teacher', teacher)
         });
+
+        const options: MessageOptions = {
+            keyboard: keyboard.GetWeekTimetable('teacher', teacher)
+        }
+
+        if (initiator === 'callback') {
+            return context.editOrSend(message, options);
+        }
+
+        return context.send(message, options);
     }
 }

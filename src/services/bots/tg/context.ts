@@ -7,13 +7,14 @@ import { StaticKeyboard } from "../keyboard";
 import { convertAbstractToTg } from "./keyboard";
 
 export class TgCommandContext extends AbstractCommandContext {
-    public text: string
+    public text: string;
     public payload = undefined;
     public peerId: number;
     public userId: number;
 
-    private context: MessageContext;
+    protected lastSentMessageId?: number;
 
+    private context: MessageContext;
     private cache: FileCache;
 
     constructor(context: MessageContext, input: BotInput, cache: FileCache) {
@@ -36,8 +37,8 @@ export class TgCommandContext extends AbstractCommandContext {
     }
 
     public async send(text: string, options: MessageOptions = {}): Promise<string> {
-        let reply_to: number | string | undefined = options.reply_to
-        if (typeof reply_to === 'string') reply_to = Number(reply_to)
+        let reply_to: number | string | undefined = options.reply_to;
+        if (typeof reply_to === 'string') reply_to = Number(reply_to);
 
         if (options?.keyboard?.name === StaticKeyboard.Cancel.name) {
             text += '\n\nНапишите /cancel для отмены';
@@ -56,7 +57,41 @@ export class TgCommandContext extends AbstractCommandContext {
             reply_markup: convertAbstractToTg(options.keyboard)
         });
 
+        this.lastSentMessageId = result.id;
+
         return result.id.toString();
+    }
+
+    public async editOrSend(text: string, options: MessageOptions = {}): Promise<boolean> {
+        if (!this.lastSentMessageId) {
+            const result = await this.send(text, options);
+
+            return Boolean(result);
+        }
+
+        let reply_to: number | string | undefined = options.reply_to;
+        if (typeof reply_to === 'string') reply_to = Number(reply_to);
+
+        if (options?.keyboard?.name === StaticKeyboard.Cancel.name) {
+            text += '\n\nНапишите /cancel для отмены';
+            delete options.keyboard;
+        }
+
+        const result = await this.context.editMessageText(text, {
+            message_id: this.lastSentMessageId,
+            
+            ...(!options.disableHtmlParser ? {
+                parse_mode: 'HTML',
+            } : {}),
+            ...(reply_to ? {
+                allow_sending_without_reply: true,
+                reply_to_message_id: reply_to,
+            } : {}),
+            disable_notification: options.disable_mentions,
+            reply_markup: convertAbstractToTg(options.keyboard)
+        });
+
+        return Boolean(result);
     }
 
     public async sendPhoto(image: ImageFile, options: MessageOptions = {}): Promise<string> {
@@ -178,6 +213,18 @@ export class TgCallbackContext extends AbstractCallbackContext {
         return result.id.toString();
     }
 
+    public async edit(text: string, options: MessageOptions = {}) {
+        await this.messageContext.editMessageText(text, {
+            ...(!options.disableHtmlParser ? {
+                parse_mode: 'HTML',
+            } : {}),
+            disable_notification: options.disable_mentions,
+            reply_markup: convertAbstractToTg(options.keyboard)
+        })
+
+        return true;
+    }
+
     public async sendPhoto(image: ImageFile, options: MessageOptions = {}): Promise<string> {
         let reply_to: number | string | undefined = options.reply_to
         if (typeof reply_to === 'string') reply_to = Number(reply_to)
@@ -217,18 +264,6 @@ export class TgCallbackContext extends AbstractCallbackContext {
         return this.messageContext.delete({
             message_id: id ? Number(id) : this.messageContext.id
         })
-    }
-
-    public async edit(text: string, options: MessageOptions = {}) {
-        await this.messageContext.editMessageText(text, {
-            ...(!options.disableHtmlParser ? {
-                parse_mode: 'HTML',
-            } : {}),
-            disable_notification: options.disable_mentions,
-            reply_markup: convertAbstractToTg(options.keyboard)
-        })
-
-        return true;
     }
 
     public async isChatAdmin(): Promise<boolean> {

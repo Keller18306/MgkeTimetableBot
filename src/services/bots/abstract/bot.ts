@@ -109,7 +109,11 @@ export abstract class AbstractBot {
                 context.send(defines['eula']).catch(() => { });
             }
 
-            if (!cb || !chat.accepted) {
+            if (!cb) {
+                return;
+            }
+
+            if (cb.acceptRequired && !chat.accepted) {
                 return;
             }
 

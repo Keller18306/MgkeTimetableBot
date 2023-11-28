@@ -7,8 +7,9 @@ export class InputCancel extends Error {
     }
 }
 
-type ResolveValue = (string | undefined) | PromiseLike<string | undefined>;
-type ResolveFunction = (value: ResolveValue) => void;
+export type InputInitiator = 'message' | 'command' | 'callback' | undefined;
+export type InputResolvedValue = { text: string | undefined, initiator: InputInitiator } | undefined;
+type ResolveFunction = (value: InputResolvedValue | PromiseLike<InputResolvedValue>) => void;
 type CancelFunction = () => void;
 
 export class BotInput {
@@ -19,10 +20,10 @@ export class BotInput {
         }
     } = {};
 
-    public async create(peerId: string): Promise<string | undefined> {
+    public async create(peerId: string): Promise<InputResolvedValue> {
         const that = this;
 
-        const promise = new Promise<string | undefined>((resolve, reject) => {
+        const promise = new Promise<InputResolvedValue>((resolve, reject) => {
             function cancel() {
                 that.delete(peerId);
                 reject(new InputCancel())
@@ -38,9 +39,9 @@ export class BotInput {
         this.promises[peerId] = { resolve, cancel }
     }
 
-    public resolve(peerId: string, text: ResolveValue) {
-        this.promises[peerId].resolve(text);
-        this.delete(peerId)
+    public resolve(peerId: string, text?: string, initiator?: InputInitiator) {
+        this.promises[peerId].resolve({ text, initiator });
+        this.delete(peerId);
     }
 
     public cancel(peerId: string, reject: boolean = true) {

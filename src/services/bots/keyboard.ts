@@ -1,6 +1,6 @@
 import { Updater, raspCache } from '../../updater';
 import { SCHEDULE_FORMATTERS, getWeekIndex } from '../../utils';
-import { AbstractChat, AbstractContext, KeyboardBuilder, KeyboardColor } from './abstract';
+import { AbstractChat, AbstractContext, ButtonType, KeyboardBuilder, KeyboardColor } from './abstract';
 
 function noYesSmile(value: number | boolean, text: string, smiles: [string, string] = ['✅', '🚫']): string {
     return (value ? smiles[0] : smiles[1]) + ` ${text}`
@@ -189,6 +189,7 @@ export class Keyboard {
 
         for (const group of this.chat.groupSearchHistory) {
             keyboard.add({
+                type: ButtonType.Callback,
                 text: group,
                 payload: 'answer' + JSON.stringify({
                     answer: group
@@ -204,6 +205,7 @@ export class Keyboard {
 
         for (const teacher of this.chat.teacherSearchHistory) {
             keyboard.add({
+                type: ButtonType.Callback,
                 text: teacher,
                 payload: 'answer' + JSON.stringify({
                     answer: teacher
@@ -219,6 +221,7 @@ export class Keyboard {
 
         for (const value of values) {
             keyboard.add({
+                type: ButtonType.Callback,
                 text: value,
                 payload: 'answer' + JSON.stringify({
                     answer: value
@@ -247,6 +250,7 @@ export class Keyboard {
 
         if (weekIndex - 1 >= min) {
             keyboard.add({
+                type: ButtonType.Callback,
                 text: '⬅️',
                 payload: 'timetable' + JSON.stringify([
                     type, value, (weekIndex - 1), Number(hidePastDays), Number(showHeader)
@@ -260,6 +264,7 @@ export class Keyboard {
         //show full
         if (hidePastDays && weekIndex === currentWeekIndex) {
             keyboard.add({
+                type: ButtonType.Callback,
                 text: '🔼',
                 payload: 'timetable' + JSON.stringify([
                     type, value, weekIndex, 0, Number(showHeader)
@@ -272,6 +277,7 @@ export class Keyboard {
 
         if (weekIndex + 1 <= max) {
             keyboard.add({
+                type: ButtonType.Callback,
                 text: '➡️',
                 payload: 'timetable' + JSON.stringify([
                     type, value, (weekIndex + 1), Number(hidePastDays), Number(showHeader)
@@ -287,6 +293,7 @@ export class Keyboard {
         }
 
         keyboard.add({
+            type: ButtonType.Callback,
             text: '📷 Сгенерировать изображение',
             payload: 'image' + JSON.stringify([
                 type, value, weekIndex
@@ -309,6 +316,7 @@ export class Keyboard {
         }
 
         return keyboard.add({
+            type: ButtonType.Callback,
             text: 'На неделю',
             payload: 'timetable' + JSON.stringify([
                 type, value, null, 0, 1
@@ -394,6 +402,7 @@ export function withCancelButton(keyboard: KeyboardBuilder) {
     keyboard.withCancelButton = true;
 
     keyboard.row().add({
+        type: ButtonType.Callback,
         text: 'Отмена',
         payload: 'cancel',
         color: KeyboardColor.NEGATIVE_COLOR

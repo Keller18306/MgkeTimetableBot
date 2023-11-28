@@ -18,8 +18,10 @@ export class ViberCommandContext extends AbstractCommandContext {
     public peerId: string;
     public userId: string;
 
-    private response: Response
-    private chat: ViberChat
+    protected lastSentMessageId: undefined;
+
+    private response: Response;
+    private chat: ViberChat;
 
     constructor(message: ReceivedTextMessage | null, response: Response, chat: ViberChat, input: BotInput) {
         super(input)
@@ -59,6 +61,12 @@ export class ViberCommandContext extends AbstractCommandContext {
         return response[0].toString();
     }
 
+    //viber doesn't support message edit - using send new message
+    public async editOrSend(text: string, options?: MessageOptions | undefined): Promise<boolean> {
+        await this.send(text, options);
+        return true;
+    }
+
     public async sendPhoto(image: ImageFile, options: MessageOptions = {}): Promise<string> {
         let keyboard: KeyboardBuilder | undefined = options.keyboard
         if (!keyboard || keyboard.isInline) {
@@ -74,6 +82,7 @@ export class ViberCommandContext extends AbstractCommandContext {
         return response[0].toString();
     }
 
+    //viber doesn't support message delete
     public async delete(id: string): Promise<boolean> {
         return false;
     }

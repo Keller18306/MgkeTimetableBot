@@ -25,7 +25,7 @@ export function convertAbstractToVK(aKeyboard?: KeyboardBuilder): VKKeyboardBuil
     keyboard.oneTime(false);
 
     if (aKeyboard.isInline) {
-        keyboard.inline(true)
+        keyboard.inline(true);
     }
 
     for (const row of aKeyboard.buttons) {
@@ -35,18 +35,17 @@ export function convertAbstractToVK(aKeyboard?: KeyboardBuilder): VKKeyboardBuil
                     label: button.text,
                     color: convertColor(button.color),
                     payload: button.payload
-                })
+                });
             } else if (button.type === ButtonType.Callback) {
                 keyboard.callbackButton({
                     label: button.text,
                     color: convertColor(button.color),
                     payload: button.payload
-
-                })
+                });
             }
         }
 
-        keyboard.row()
+        keyboard.row();
     }
 
     return keyboard;

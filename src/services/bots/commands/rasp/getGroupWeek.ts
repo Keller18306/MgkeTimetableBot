@@ -1,7 +1,8 @@
 import { TelegramBotCommand } from "puregram/generated";
 import { Updater, raspCache } from "../../../../updater";
 import { getDayIndex, getWeekIndex, randArray, weekBoundsByWeekIndex } from "../../../../utils";
-import { AbstractCommand, CmdHandlerParams } from "../../abstract";
+import { AbstractCommand, CmdHandlerParams, MessageOptions } from "../../abstract";
+import { InputInitiator } from "../../input";
 import { withCancelButton } from "../../keyboard";
 
 export default class extends AbstractCommand {
@@ -17,12 +18,17 @@ export default class extends AbstractCommand {
             return context.send('Данные с сервера ещё не загружены, ожидайте...');
         }
 
+        let initiator: InputInitiator;
         let group: string | number | false | undefined = context.text?.replace(this.regexp, '').trim();
         if (group == '' || group == undefined || group.length > 3 || isNaN(+group)) {
             const randGroup = randArray(Object.keys(raspCache.groups.timetable));
 
             group = await context.input(`Введите номер группы, которой хотите узнать расписание на неделю (например, ${randGroup})`, {
                 keyboard: withCancelButton(keyboard.GroupHistory)
+            }).then<string | undefined>(value => {
+                initiator = value?.initiator;
+
+                return value?.text;
             });
         }
 
@@ -37,7 +43,7 @@ export default class extends AbstractCommand {
         }
 
         chat.appendGroupSearchHistory(String(group));
-        
+
         const currentWeekIndex = raspCache.teachers.lastWeekIndex || getWeekIndex();
         const weekBounds = weekBoundsByWeekIndex(currentWeekIndex).map(getDayIndex) as [number, number];
         const days = Updater.getInstance().archive.getGroupDaysByBounds(weekBounds, group);
@@ -47,8 +53,14 @@ export default class extends AbstractCommand {
             days: days
         });
 
-        return context.send(message, {
+        const options: MessageOptions = {
             keyboard: keyboard.WeekControl('group', group, currentWeekIndex, false)
-        });
+        }
+
+        if (initiator === 'callback') {
+            return context.editOrSend(message, options);
+        }
+
+        return context.send(message, options);
     }
 }

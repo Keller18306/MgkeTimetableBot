@@ -47,7 +47,12 @@ export class ViberBot extends AbstractBot {
             authToken: config.viber.token,
             name: config.viber.name,
             avatar: `https://${config.http.servername}${AVATAR_URL}`,
-            registerToEvents: ['message', 'subscribed', 'unsubscribed', 'conversation_started']
+            registerToEvents: [
+                Events.MESSAGE_RECEIVED,
+                Events.CONVERSATION_STARTED,
+                Events.SUBSCRIBED,
+                Events.UNSUBSCRIBED
+            ]
         });
 
         this.bot.on(Events.MESSAGE_RECEIVED, (message, response) => this.handleNewMessage(message, response));
@@ -86,7 +91,7 @@ export class ViberBot extends AbstractBot {
         const context = new ViberCommandContext(message, response, chat, this.input)
 
         if (!context.payload && chat.accepted && this.input.has(context.peerId)) {
-            return this.input.resolve(context.peerId, message.text);
+            return this.input.resolve(context.peerId, message.text, 'message');
         }
 
         let cmd: AbstractCommand | null = null;

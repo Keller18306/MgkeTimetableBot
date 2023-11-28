@@ -2,8 +2,9 @@ import { AbstractCallback, CbHandlerParams } from "../abstract";
 
 export default class extends AbstractCallback {
     public action: string = 'answer';
+    public acceptRequired: boolean = true;
 
-    async handler({ context, chat }: CbHandlerParams) {
+    async handler({ context }: CbHandlerParams) {
         const answer: string = context.payload.answer;
         if (!answer) return;
 
@@ -11,10 +12,8 @@ export default class extends AbstractCallback {
 
         const input = context._input;
 
-        if (chat.accepted && input.has(String(context.peerId))) {
-            input.resolve(String(context.peerId), answer);
-
-            await context.delete().catch(() => { });
+        if (input.has(String(context.peerId))) {
+            input.resolve(String(context.peerId), answer, 'callback');
         }
     }
 }

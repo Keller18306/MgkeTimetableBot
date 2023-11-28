@@ -1,7 +1,8 @@
 import { TelegramBotCommand } from "puregram/generated";
 import { raspCache } from "../../../../updater";
 import { getDayRasp, randArray } from "../../../../utils";
-import { AbstractCommand, CmdHandlerParams } from "../../abstract";
+import { AbstractCommand, CmdHandlerParams, MessageOptions } from "../../abstract";
+import { InputInitiator } from "../../input";
 import { withCancelButton } from "../../keyboard";
 
 export default class extends AbstractCommand {
@@ -18,17 +19,22 @@ export default class extends AbstractCommand {
             return context.send('Данные с сервера ещё не загружены, ожидайте...');
         }
 
+        let initiator: InputInitiator;
         let group: string | number | false | undefined = context.text?.replace(this.regexp, '').trim();
         if (group == '' || group == undefined || group.length > 3 || isNaN(+group)) {
-            const randGroup = randArray(Object.keys(raspCache.groups.timetable))
+            const randGroup = randArray(Object.keys(raspCache.groups.timetable));
 
             group = await context.input(`Введите номер группы, которой хотите узнать расписание на день (например, ${randGroup})`, {
                 keyboard: withCancelButton(keyboard.GroupHistory)
+            }).then<string | undefined>(value => {
+                initiator = value?.initiator;
+
+                return value?.text;
             });
         }
 
         while (true) {
-            group = await this.findGroup(context, keyboard, group, keyboard.MainMenu)
+            group = await this.findGroup(context, keyboard, group, keyboard.MainMenu);
 
             if (!group) {
                 return;
@@ -42,10 +48,16 @@ export default class extends AbstractCommand {
         const message = scheduleFormatter.formatGroupFull(String(group), {
             showHeader: true,
             days: getDayRasp(groupRasp.days, true, 2)
-        })
-
-        return context.send(message, {
-            keyboard: keyboard.GetWeekTimetable('group', group)
         });
+
+        const options: MessageOptions = {
+            keyboard: keyboard.GetWeekTimetable('group', group)
+        }
+
+        if (initiator === 'callback') {
+            return context.editOrSend(message, options);
+        }
+
+        return context.send(message, options);
     }
 }

@@ -1,7 +1,8 @@
 import { TelegramBotCommand } from "puregram/generated";
 import { Updater, raspCache } from "../../../../updater";
 import { getDayIndex, getWeekIndex, randArray, weekBoundsByWeekIndex } from "../../../../utils";
-import { AbstractCommand, CmdHandlerParams } from "../../abstract";
+import { AbstractCommand, CmdHandlerParams, MessageOptions } from "../../abstract";
+import { InputInitiator } from "../../input";
 import { withCancelButton } from "../../keyboard";
 
 export default class extends AbstractCommand {
@@ -17,12 +18,17 @@ export default class extends AbstractCommand {
             return context.send('Данные с сервера ещё не загружены, ожидайте...');
         }
 
+        let initiator: InputInitiator;
         let teacher: string | false | undefined = context.text?.replace(this.regexp, '').trim();
         if (teacher == '' || teacher == undefined || teacher.length < 3) {
             const randTeacher = randArray(Object.keys(raspCache.teachers.timetable));
 
             teacher = await context.input(`Введите фамилию преподавателя, которого хотите узнать расписание на неделю (например, ${randTeacher})`, {
                 keyboard: withCancelButton(keyboard.TeacherHistory)
+            }).then<string | undefined>(value => {
+                initiator = value?.initiator;
+
+                return value?.text;
             });
         }
 
@@ -31,7 +37,11 @@ export default class extends AbstractCommand {
 
             if (!teacher) {
                 if (teacher === undefined) {
-                    teacher = await context.waitInput();
+                    teacher = await context.waitInput().then<string | undefined>(value => {
+                        initiator = value?.initiator;
+
+                        return value?.text;
+                    });
                     continue;
                 } else {
                     return;
@@ -52,8 +62,14 @@ export default class extends AbstractCommand {
             days: days
         });
 
-        return context.send(message, {
+        const options: MessageOptions = {
             keyboard: keyboard.WeekControl('teacher', teacher, currentWeekIndex, false)
-        });
+        }
+        
+        if (initiator === 'callback') {
+            return context.editOrSend(message, options);
+        }
+
+        return context.send(message, options);
     }
 }

@@ -1,16 +1,16 @@
 import { NextMiddleware } from 'middleware-io';
-import { ContextDefaultState, MessageContext, MessageEventContext, VK } from 'vk-io';
+import { ContextDefaultState, MessageContext, MessageEventContext, MessageSubscriptionContext, VK } from 'vk-io';
 import { config } from '../../../../config';
 import { defines } from '../../../defines';
 import { FromType, InputRequestKey } from '../../../key';
 import { raspCache } from '../../../updater';
-import { createScheduleFormatter, parsePayload } from '../../../utils';
+import { createScheduleFormatter } from '../../../utils';
 import { AbstractBot, AbstractCommand } from '../abstract';
 import { CommandController } from '../controller';
 import { Keyboard } from '../keyboard';
 import { VkBotAction } from './action';
 import { VkChat } from './chat';
-import { VkCommandContext } from './context';
+import { VkCallbackContext, VkCommandContext } from './context';
 import { VkEventListener } from './event';
 
 export class VkBot extends AbstractBot {
@@ -32,12 +32,31 @@ export class VkBot extends AbstractBot {
 
         this.vk = new VK({
             pollingGroupId: config.vk.bot.id,
-            token: config.vk.bot.access_token,
+            token: config.vk.bot.access_token
         });
 
         this.vk.updates.on('message_new', (context, next) => this.messageHandler(context, next))
         this.vk.updates.on('message_event', (context, next) => this.eventHandler(context, next))
         this.vk.updates.on('chat_invite_user', (context, next) => this.inviteUser(context, next))
+        this.vk.updates.on('message_allow', (context, next) => this.setAllowSendMess(context, next, true))
+        this.vk.updates.on('message_deny', (context, next) => this.setAllowSendMess(context, next, false))
+
+        this.vk.api.groups.setLongPollSettings({
+            group_id: config.vk.bot.id,
+            enabled: true,
+
+            message_new: true,
+            message_event: true,
+            message_allow: true,
+            message_deny: true,
+
+            group_join: true,
+            group_leave: true,
+
+            api_version: this.vk.api.options.apiVersion
+        }).then(() => {
+            console.log('[VK Bot] Settings set up')
+        });
 
         new VkEventListener(this.vk);
     }
@@ -77,23 +96,20 @@ export class VkBot extends AbstractBot {
         const chat = new VkChat(context.peerId);
 
         if (chat.ref === null) {
-            chat.ref = context.referralValue?.slice(0, 255) || 'none'
-        }
-
-        const payload = parsePayload(_context.payload);
-
-        //TODO -> убрать временный костыль (payload.action === 'answer')
-        if ((!payload || payload.action === 'answer') && chat.accepted && this.input.has(String(context.peerId))) {
-            return this.input.resolve(String(context.peerId), text);
+            chat.ref = context.referralValue?.slice(0, 255) || 'none';
         }
 
         let cmd: AbstractCommand | null = null;
-        if (_context.payload) {
-            cmd = CommandController.searchCommandByPayload(_context.payload, chat.scene)
+        if (context.messagePayload) {
+            cmd = CommandController.searchCommandByPayload(context.messagePayload, chat.scene);
         }
-        
+
         if (!cmd) {
-            cmd = CommandController.searchCommandByMessage(text, chat.scene)
+            cmd = CommandController.searchCommandByMessage(text, chat.scene);
+        }
+
+        if (!cmd && chat.accepted && this.input.has(String(context.peerId))) {
+            return this.input.resolve(String(context.peerId), text, 'message');
         }
 
         this.handleMessage(cmd, {
@@ -120,46 +136,48 @@ export class VkBot extends AbstractBot {
     }
 
     private eventHandler(context: MessageEventContext<ContextDefaultState>, next: NextMiddleware) {
-        if (context.eventPayload?.action == undefined) return next();
+        if (!context.eventPayload) return next();
 
-        // for (const id in this.callbacks) {
-        //     const callback = this.callbacks[id]
+        let payload: string | undefined = context.eventPayload;
+        if (!payload || typeof payload !== 'string') {
+            return;
+        }
 
-        //     if (callback.action !== context.eventPayload?.action) continue;
+        const chat = new VkChat(context.peerId);
 
-        //     (async () => {
-        //         try {
-        //             const chat = new VkChat(context.peerId)
-        //             if (!chat.accepted) return;
+        const cb = CommandController.getCallbackByPayload(payload);
+        if (!cb) return;
 
-        //             chat.lastMsgTime = Date.now()
+        const _context = new VkCallbackContext(context, this.input, this.cache);
 
-        //             await callback.handler({ context, chat })
-        //         } catch (e: any) {
-        //             console.error(id, e)
-        //             this.vk.api.messages.send({
-        //                 peer_id: context.peerId,
-        //                 random_id: getRandomId(),
-        //                 message: `Произошла ошибка во время выполнения Callback #${id}: ${e.toString()}`
-        //             })
-        //         }
-        //     })()
-
-        //     return;
-        // }
+        return this.handleCallback(cb, {
+            service: 'vk',
+            context: _context,
+            realContext: context,
+            chat: chat,
+            keyboard: new Keyboard(_context, chat),
+            scheduleFormatter: createScheduleFormatter('vk', raspCache, chat),
+            cache: this.cache
+        });
     }
 
     private inviteUser(context: MessageContext<ContextDefaultState>, next: NextMiddleware) {
         if (context.eventMemberId != -config.vk.bot.id) return next();
 
-        const chat = new VkChat(context.peerId)
+        const chat = new VkChat(context.peerId);
 
         const _context = new VkCommandContext(context, this.input, this.cache);
-        const keyboard = new Keyboard(_context, chat.resync())
+        const keyboard = new Keyboard(_context, chat.resync());
 
-        _context.send(defines['message.about'], {
+        return _context.send(defines['message.about'], {
             keyboard: keyboard.MainMenu,
             disable_mentions: true
-        })
+        });
+    }
+
+    private setAllowSendMess(context: MessageSubscriptionContext<ContextDefaultState>, next: NextMiddleware, status: boolean) {
+        const chat = new VkChat(context.userId);
+
+        chat.allowSendMess = status;
     }
 }

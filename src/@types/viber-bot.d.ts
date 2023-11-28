@@ -9,7 +9,7 @@ declare module 'viber-bot' {
         FAILED = "failed"
     }
 
-    type EventsList = 'subscribed' | 'unsubscribed' | 'conversation_started' | 'message' | 'delivered' | 'seen'
+    type EventsList = 'subscribed' | 'unsubscribed' | 'conversation_started' | 'message' | 'delivered' | 'seen' | 'failed'
 
     interface UserProfile {
         id: string,
