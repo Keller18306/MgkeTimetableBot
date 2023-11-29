@@ -32,14 +32,14 @@ export default class StudentParser extends AbstractParser {
 
             this.parseGroup(table, h2)
         }
-        
+
         this.clearSundays(this.groups);
 
         for (const group in this.groups) {
             for (const day of this.groups[group].days) {
                 this.processDay(day)
             }
-        }   
+        }
 
         return this.groups
     }
@@ -134,19 +134,51 @@ export default class StudentParser extends AbstractParser {
         cabinet = this.setNullIfEmpty(this.removeDashes(cabinet))
         let subgroups: GroupLessonExplain[] | null = null;
 
+
+
         if (!lesson) {
             return null;
         } else {
-            const lessonsChunk = chunkArray(
-                Array
-                    .from(lessonCell.childNodes)
-                    .filter(_ => _.nodeType === _.TEXT_NODE)
-                    .map(_ => _.textContent!),
-                3);
+            const p = Array.from(lessonCell.querySelectorAll('p')).filter(element => {
+                return Boolean(element.textContent?.trim());
+            });
+
+            let lessonsChunk: string[][];
+            if (p.length) {
+                lessonsChunk = p.map(p => {
+                    return Array
+                        .from(p.childNodes)
+                        .filter(_ => _.nodeType === _.TEXT_NODE)
+                        .map(_ => (_.textContent || '').trim())
+                        .filter(value => Boolean(value))
+                });
+            } else {
+                lessonsChunk = chunkArray(
+                    Array
+                        .from(lessonCell.childNodes)
+                        .filter(_ => {
+                            return _.nodeType === _.TEXT_NODE || (_.nodeType === _.ELEMENT_NODE && (_ as any).tagName.toLowerCase() === 'p')
+                        })
+                        .map(_ => (_.textContent || '').trim())
+                        .filter(value => Boolean(value)) //is empty
+                    , 3);
+            }
+
             const cabinetChunk = Array
                 .from(cabinetCell.childNodes)
-                .filter(_ => _.nodeType === _.TEXT_NODE)
-                .map(_ => _.textContent!);
+                .filter(_ => _.nodeType === _.TEXT_NODE || (_.nodeType === _.ELEMENT_NODE && (_ as any).tagName.toLowerCase() === 'p'))
+                .flatMap(_ => {
+                    if (_.nodeType === _.ELEMENT_NODE && (_ as any).tagName.toLowerCase() === 'p') {
+                        let cabinets = Array.from(_.childNodes)
+                            .filter(_ => _.nodeType === _.TEXT_NODE)
+                            .map(value => (value.textContent || '').trim())
+                            .filter(value => Boolean(value));
+
+                        return cabinets;
+                    }
+                    return [(_.textContent || '').trim()];
+                })
+                .filter(value => Boolean(value)); // is empty
 
             subgroups = this.parseSubGroupLesson(lessonsChunk, cabinetChunk);
 
