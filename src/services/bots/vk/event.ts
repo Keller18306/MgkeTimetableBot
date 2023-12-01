@@ -6,7 +6,7 @@ import { VkChat, VkDb } from './chat';
 
 export class VkEventListener extends AbstractEventListener<VkChat> {
     protected _tableName: string = 'vk_bot_chats';
-    protected service: Service = 'vk';
+    public readonly service: Service = 'vk';
 
     public enabled: boolean = config.vk.bot.noticer;
 

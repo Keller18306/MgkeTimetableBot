@@ -24,9 +24,14 @@ function getDayPhrase(day: string, nextDayPhrase: string = 'день'): string {
     return nextDayPhrase;
 }
 
+export type ProgressCallback = (data: {
+    position: number,
+    count: number
+}) => void
+
 export abstract class AbstractEventListener<T extends AbstractChat = AbstractChat> {
     protected abstract _tableName: string;
-    protected abstract service: Service;
+    public readonly abstract service: Service;
 
     constructor(enabled: boolean) {
         if (!enabled) return;
@@ -37,13 +42,23 @@ export abstract class AbstractEventListener<T extends AbstractChat = AbstractCha
     protected abstract createChat(chat: DbChat): T;
     protected abstract sendMessage(chat: T, message: string, options?: MessageOptions): Promise<any>;
 
-    protected async sendMessages(chats: T | T[], message: string, options?: MessageOptions): Promise<void> {
+    protected async sendMessages(chats: T | T[], message: string, options?: MessageOptions, cb?: ProgressCallback): Promise<void> {
         if (!Array.isArray(chats)) {
             chats = [chats];
         }
 
-        for (const chat of chats) {
+        if (cb) {
+            cb({ position: 0, count: chats.length })
+        }
+
+        for (const i in chats) {
+            const chat = chats[i];
+
             await this.sendMessage(chat, message, options);
+
+            if (cb) {
+                cb({ position: +i + 1, count: chats.length })
+            }
         }
     }
 
@@ -302,11 +317,11 @@ export abstract class AbstractEventListener<T extends AbstractChat = AbstractCha
         return this.sendMessages(chats, '🆕 Доступно расписание на следующую неделю');
     }
 
-    public async sendDistribution(message: string) {
+    public async sendDistribution(message: string, cb?: ProgressCallback) {
         const chats: T[] = getDistributionChats(this._tableName, this.service)
             .map((chat: any) => this.createChat(chat));
 
-        return this.sendMessages(chats, message);
+        return this.sendMessages(chats, message, undefined, cb);
     }
 
     public async sendError(error: Error) {

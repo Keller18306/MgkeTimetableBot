@@ -9,7 +9,7 @@ import { convertAbstractToTg } from "./keyboard";
 
 export class TgEventListener extends AbstractEventListener<TgChat> {
     protected _tableName: string = 'tg_bot_chats';
-    protected service: Service = 'tg';
+    public readonly service: Service = 'tg';
 
     public enabled: boolean = config.vk.bot.noticer;
 

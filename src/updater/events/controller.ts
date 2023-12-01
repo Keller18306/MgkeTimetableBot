@@ -1,8 +1,10 @@
-import { AbstractEventListener } from ".";
-import { ChatMode } from "../../services/bots/abstract";
+import { AbstractEventListener, ProgressCallback } from ".";
+import { ChatMode, Service } from "../../services/bots/abstract";
 import { strDateToIndex } from "../../utils";
 import { GroupDay, TeacherDay } from "../parser/types";
 import { raspCache, saveCache } from "../raspCache";
+
+export type ServiceProgressCallback = (data: { service: Service } & Parameters<ProgressCallback>[0]) => void;
 
 export class EventController {
     protected static serviceList: AbstractEventListener[] = [];
@@ -80,9 +82,11 @@ export class EventController {
         }
     }
 
-    public static async sendDistibution(message: string) {
+    public static async sendDistibution(message: string, cb?: ServiceProgressCallback) {
         for (const service of this.serviceList) {
-            await service.sendDistribution(message);
+            await service.sendDistribution(message, cb ? (data) => {
+                cb(Object.assign({ service: service.service }, data))
+            } : undefined);
         }
     }
 
