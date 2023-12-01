@@ -1,6 +1,6 @@
 import { TelegramBotCommand } from "puregram/generated";
 import { Updater, raspCache } from "../../../../updater";
-import { getDayIndex, getWeekIndex, randArray, weekBoundsByWeekIndex } from "../../../../utils";
+import { getCurrentWeekIndexToShow, getDayIndex, randArray, weekBoundsByWeekIndex } from "../../../../utils";
 import { AbstractCommand, CmdHandlerParams, MessageOptions } from "../../abstract";
 import { InputInitiator } from "../../input";
 import { withCancelButton } from "../../keyboard";
@@ -44,7 +44,7 @@ export default class extends AbstractCommand {
 
         chat.appendGroupSearchHistory(String(group));
 
-        const currentWeekIndex = raspCache.teachers.lastWeekIndex || getWeekIndex();
+        const currentWeekIndex = getCurrentWeekIndexToShow();
         const weekBounds = weekBoundsByWeekIndex(currentWeekIndex).map(getDayIndex) as [number, number];
         const days = Updater.getInstance().archive.getGroupDaysByBounds(weekBounds, group);
 

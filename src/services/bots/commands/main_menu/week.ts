@@ -1,6 +1,6 @@
 import { TelegramBotCommand } from 'puregram/generated';
 import { Updater, raspCache } from '../../../../updater';
-import { getDayIndex, getWeekIndex, randArray, removePastDays, weekBoundsByWeekIndex } from "../../../../utils";
+import { getCurrentWeekIndexToShow, getDayIndex, randArray, removePastDays, weekBoundsByWeekIndex } from "../../../../utils";
 import { ScheduleFormatter } from '../../../../utils/formatters/abstract';
 import { AbstractAction, AbstractChat, AbstractCommand, AbstractCommandContext, CmdHandlerParams } from "../../abstract";
 import { Keyboard } from '../../keyboard';
@@ -40,7 +40,7 @@ export default class extends AbstractCommand {
         const group = raspCache.groups.timetable[chat.group];
         if (group === undefined) return context.send('Данной учебной группы не существует');
 
-        const currentWeekIndex = raspCache.groups.lastWeekIndex || getWeekIndex();
+        const currentWeekIndex = getCurrentWeekIndexToShow();
         const weekBounds = weekBoundsByWeekIndex(currentWeekIndex).map(getDayIndex) as [number, number];
 
         let days = Updater.getInstance().archive.getGroupDaysByBounds(weekBounds, chat.group);
@@ -80,7 +80,7 @@ export default class extends AbstractCommand {
         const teacher = raspCache.teachers.timetable[chat.teacher];
         if (teacher === undefined) return context.send('Данного преподавателя не существует');
 
-        const currentWeekIndex = raspCache.teachers.lastWeekIndex || getWeekIndex();
+        const currentWeekIndex = getCurrentWeekIndexToShow();
         const weekBounds = weekBoundsByWeekIndex(currentWeekIndex).map(getDayIndex) as [number, number];
 
         let days = Updater.getInstance().archive.getTeacherDaysByBounds(weekBounds, chat.teacher);

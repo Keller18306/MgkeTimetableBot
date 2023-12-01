@@ -1,5 +1,5 @@
 import { Updater, raspCache } from "../../../updater";
-import { getDayIndex, getWeekIndex, removePastDays, weekBoundsByWeekIndex } from "../../../utils";
+import { getCurrentWeekIndexToShow, getDayIndex, removePastDays, weekBoundsByWeekIndex } from "../../../utils";
 import { AbstractCallback, CbHandlerParams } from "../abstract";
 
 export default class extends AbstractCallback {
@@ -7,7 +7,7 @@ export default class extends AbstractCallback {
 
     handler(params: CbHandlerParams) {
         const { context, chat }: CbHandlerParams = params;
-        const currentWeekIndex: number = raspCache.groups.lastWeekIndex || getWeekIndex();
+        const currentWeekIndex: number = getCurrentWeekIndexToShow();
 
         const type: string = context.payload[0];
         const value: string | number = context.payload[1];
@@ -30,7 +30,7 @@ export default class extends AbstractCallback {
         const group = raspCache.groups.timetable[value];
         if (group === undefined) return context.edit('Данной учебной группы не существует');
 
-        const currentWeekIndex: number = raspCache.groups.lastWeekIndex || getWeekIndex();
+        const currentWeekIndex: number = getCurrentWeekIndexToShow();
         const weekBounds = weekBoundsByWeekIndex(weekIndex).map(getDayIndex) as [number, number];
 
         let days = Updater.getInstance().archive.getGroupDaysByBounds(weekBounds, value);
@@ -51,7 +51,7 @@ export default class extends AbstractCallback {
         const teacher = raspCache.teachers.timetable[value];
         if (teacher === undefined) return context.edit('Данного преподавателя не существует');
 
-        const currentWeekIndex: number = raspCache.teachers.lastWeekIndex || getWeekIndex();
+        const currentWeekIndex: number = getCurrentWeekIndexToShow();
         const weekBounds = weekBoundsByWeekIndex(weekIndex).map(getDayIndex) as [number, number];
 
         let days = Updater.getInstance().archive.getTeacherDaysByBounds(weekBounds, value);

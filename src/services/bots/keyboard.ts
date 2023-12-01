@@ -1,4 +1,4 @@
-import { Updater, raspCache } from '../../updater';
+import { Updater } from '../../updater';
 import { SCHEDULE_FORMATTERS, getWeekIndex } from '../../utils';
 import { AbstractChat, AbstractContext, ButtonType, KeyboardBuilder, KeyboardColor } from './abstract';
 
@@ -244,7 +244,6 @@ export class Keyboard {
         }
 
         const { min, max } = Updater.getInstance().archive.getWeekIndexBounds();
-        const currentWeekIndex: number = raspCache.groups.lastWeekIndex || getWeekIndex();
 
         let newLine: boolean = false;
 
@@ -262,7 +261,7 @@ export class Keyboard {
         }
 
         //show full
-        if (hidePastDays && weekIndex === currentWeekIndex) {
+        if (hidePastDays && weekIndex === getWeekIndex()) {
             keyboard.add({
                 type: ButtonType.Callback,
                 text: '🔼',

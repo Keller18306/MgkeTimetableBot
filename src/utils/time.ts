@@ -1,3 +1,5 @@
+import { raspCache } from "../updater";
+
 const startingWeekIndexDate = new Date(1970, 0, 5);
 
 export function seconds2times(seconds: number, values: number = 3) {
@@ -56,7 +58,7 @@ export function getDayIndex(date?: Date): number {
     }
 
     date.setHours(0, 0, 0, 0);
-    
+
 
     return (date.getTime() + (Math.abs(date.getTimezoneOffset()) * 60 * 1e3)) / 1e3 / 24 / 60 / 60;
 }
@@ -64,6 +66,12 @@ export function getDayIndex(date?: Date): number {
 export function getWeekIndex(date?: Date): number {
     if (!date) {
         date = new Date();
+    }
+
+    // Корректировка для воскресенья
+    const dayOfWeek = date.getDay();
+    if (dayOfWeek === 0) { // Воскресенье
+        date = new Date(date.getFullYear(), date.getMonth(), date.getDate() - 1);
     }
 
     const oneWeekMilliseconds = 7 * 24 * 60 * 60 * 1000;
@@ -162,7 +170,7 @@ const ONE_DAY: number = 24 * 60 * 60 * 1000;
 const oneWeekMilliseconds = 7 * 24 * 60 * 60 * 1000;
 
 export function weekBoundsByWeekIndex(weekIndex: number): [Date, Date] {
-    const d1 = new Date((weekIndex * oneWeekMilliseconds) + startingWeekIndexDate.getTime() + ONE_DAY);
+    const d1 = new Date((weekIndex * oneWeekMilliseconds) + startingWeekIndexDate.getTime());
     const d2 = new Date(d1.getTime() + ONE_DAY * 6);
 
     return [d1, d2];
@@ -184,4 +192,15 @@ export function getWeekdayName(date: Date): string {
 
 export function getWeekdayNameByStrDate(str_date: string): string {
     return getWeekdayName(parseStrToDate(str_date))
+}
+
+export function getCurrentWeekIndexToShow() {
+    const date = new Date();
+
+    let weekIndex: number = getWeekIndex(date);
+    if (date.getDay() === 0) {
+        weekIndex += 1;
+    }
+
+    return Math.min(weekIndex, raspCache.teachers.lastWeekIndex);
 }
