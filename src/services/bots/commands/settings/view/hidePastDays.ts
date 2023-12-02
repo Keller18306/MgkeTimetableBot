@@ -1,4 +1,4 @@
-import { AbstractCommand, CmdHandlerParams } from "../../abstract";
+import { AbstractCommand, CmdHandlerParams } from "../../../abstract";
 
 export default class extends AbstractCommand {
     public regexp = /^(✅|🚫)\sСкрывать прошедшие дни$/i
@@ -11,7 +11,7 @@ export default class extends AbstractCommand {
         return context.send(
             `Скрывать прошедшие дни? Установлено: '${chat.hidePastDays ? 'да' : 'нет'}'`,
             {
-                keyboard: keyboard.SettingsMain
+                keyboard: keyboard.SettingsView
             }
         )
     }

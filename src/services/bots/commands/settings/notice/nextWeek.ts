@@ -11,7 +11,7 @@ export default class extends AbstractCommand {
         return context.send(
             `Оповещение о добавлении новой недели: ${chat.noticeNextWeek ? 'включено' : 'выключено'}`,
             {
-                keyboard: keyboard.SettingsMain
+                keyboard: keyboard.SettingsNotice
             }
         )
     }

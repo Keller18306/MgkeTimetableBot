@@ -1,4 +1,4 @@
-import { AbstractCommand, CmdHandlerParams } from "../../abstract";
+import { AbstractCommand, CmdHandlerParams } from "../../../abstract";
 
 export default class extends AbstractCommand {
     public regexp = /^(📃\s)?(Настройка форматировщика|Форматировщик)$/i

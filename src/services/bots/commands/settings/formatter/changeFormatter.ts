@@ -1,5 +1,5 @@
-import { SCHEDULE_FORMATTERS, escapeRegex } from "../../../../utils";
-import { AbstractCommand, CmdHandlerParams } from "../../abstract";
+import { SCHEDULE_FORMATTERS, escapeRegex } from "../../../../../utils";
+import { AbstractCommand, CmdHandlerParams } from "../../../abstract";
 
 export default class extends AbstractCommand {
     public regexp: RegExp | null = null;

@@ -96,7 +96,7 @@ export class Keyboard {
     }
 
     public get SettingsMain() {
-        const keyboard: KeyboardBuilder = new KeyboardBuilder('Settings');
+        const keyboard: KeyboardBuilder = new KeyboardBuilder('SettingsMain');
 
         return keyboard.add({
             text: '📚 Первоначальная настройка',
@@ -106,20 +106,9 @@ export class Keyboard {
         }).add({
             text: '📃 Форматировщик'
         }).row().add({
-            text: noYesSmile(this.chat.hidePastDays, 'Скрывать прошедшие дни'),
-            color: noYesColor(this.chat.hidePastDays)
-        }).row().add({
-            text: noYesSmile(this.chat.showParserTime, 'Время последней загрузки расписания'),
-            color: noYesColor(this.chat.showParserTime)
-        }).row().add({
-            text: noYesSmile(this.chat.showHints, 'Показывать подсказки: ') + (this.chat.showHints ? 'Да' : 'Нет'),
-            color: noYesColor(this.chat.showHints),
-        }).row().add({
-            text: noYesSmile(this.chat.noticeChanges, 'Оповещение о новых днях: ', ['🔈', '🔇']) + (this.chat.noticeChanges ? 'Да' : 'Нет'),
-            color: noYesColor(this.chat.noticeChanges)
-        }).row().add({
-            text: noYesSmile(this.chat.noticeNextWeek, 'Оповещение о новой неделе: ', ['🔈', '🔇']) + (this.chat.noticeNextWeek ? 'Да' : 'Нет'),
-            color: noYesColor(this.chat.noticeNextWeek)
+            text: '🔊 Оповещения'
+        }).add({
+            text: '🖼️ Отображение'
         }).row().add({
             text: 'Показать текущие',
             color: KeyboardColor.PRIMARY_COLOR
@@ -130,7 +119,7 @@ export class Keyboard {
     }
 
     public get SettingsButtons() {
-        const keyboard: KeyboardBuilder = new KeyboardBuilder('Settings');
+        const keyboard: KeyboardBuilder = new KeyboardBuilder('SettingsButtons');
 
         return keyboard.add({
             text: noYesSmile(this.chat.showDaily, 'Кнопка "📄 На день"'),
@@ -150,6 +139,45 @@ export class Keyboard {
         }).add({
             text: noYesSmile(this.chat.showFastTeacher, 'Кнопка "👩‍🏫 Преподаватель"'),
             color: noYesColor(this.chat.showFastTeacher)
+        }).row().add({
+            text: 'Меню настроек',
+            color: KeyboardColor.SECONDARY_COLOR
+        }).add({
+            text: 'Главное меню',
+            color: KeyboardColor.SECONDARY_COLOR
+        })
+    }
+
+    public get SettingsNotice() {
+        const keyboard: KeyboardBuilder = new KeyboardBuilder('SettingsNotice');
+
+        return keyboard.add({
+            text: noYesSmile(this.chat.noticeChanges, 'Оповещение о новых днях: ', ['🔈', '🔇']) + (this.chat.noticeChanges ? 'Да' : 'Нет'),
+            color: noYesColor(this.chat.noticeChanges)
+        }).row().add({
+            text: noYesSmile(this.chat.noticeNextWeek, 'Оповещение о новой неделе: ', ['🔈', '🔇']) + (this.chat.noticeNextWeek ? 'Да' : 'Нет'),
+            color: noYesColor(this.chat.noticeNextWeek)
+        }).row().add({
+            text: 'Меню настроек',
+            color: KeyboardColor.SECONDARY_COLOR
+        }).add({
+            text: 'Главное меню',
+            color: KeyboardColor.SECONDARY_COLOR
+        })
+    }
+
+    public get SettingsView() {
+        const keyboard: KeyboardBuilder = new KeyboardBuilder('SettingsView');
+
+        return keyboard.add({
+            text: noYesSmile(this.chat.hidePastDays, 'Скрывать прошедшие дни'),
+            color: noYesColor(this.chat.hidePastDays)
+        }).row().add({
+            text: noYesSmile(this.chat.showParserTime, 'Время последней загрузки расписания'),
+            color: noYesColor(this.chat.showParserTime)
+        }).row().add({
+            text: noYesSmile(this.chat.showHints, 'Показывать подсказки: ') + (this.chat.showHints ? 'Да' : 'Нет'),
+            color: noYesColor(this.chat.showHints),
         }).row().add({
             text: 'Меню настроек',
             color: KeyboardColor.SECONDARY_COLOR

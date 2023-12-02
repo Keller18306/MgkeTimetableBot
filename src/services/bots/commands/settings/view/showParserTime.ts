@@ -1,4 +1,4 @@
-import { AbstractCommand, CmdHandlerParams } from "../../abstract";
+import { AbstractCommand, CmdHandlerParams } from "../../../abstract";
 
 export default class extends AbstractCommand {
     public regexp = /^(✅|🚫)\sВремя последней загрузки расписания$/i
@@ -11,7 +11,7 @@ export default class extends AbstractCommand {
         return context.send(
             `Отображать в сообщении время последней загрузки расписания? Установлено: '${chat.showParserTime ? 'да' : 'нет'}'`,
             {
-                keyboard: keyboard.SettingsMain
+                keyboard: keyboard.SettingsView
             }
         )
     }
