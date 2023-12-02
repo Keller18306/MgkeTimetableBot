@@ -13,7 +13,7 @@ export class VisualScheduleFormatter extends ScheduleFormatter {
         }
 
         if (options.showLesson) {
-            line.push(this.Lesson(lesson.lesson) + ((options.showType && lesson.type) ? this.Type(lesson.type) : ''));
+            line.push(this.Lesson(this.getLessonAlias(lesson.lesson)) + ((options.showType && lesson.type) ? this.Type(lesson.type) : ''));
         }
 
         if (options.showTeacher && lesson.teacher) {
@@ -35,7 +35,7 @@ export class VisualScheduleFormatter extends ScheduleFormatter {
         const line: string[] = [];
 
         line.push(
-            `${this.Lesson(this.Group(lesson.group) + lesson.lesson) + (lesson.type ? this.Type(lesson.type) : '')}`
+            `${this.Lesson(this.Group(lesson.group) + this.getLessonAlias(lesson.lesson)) + (lesson.type ? this.Type(lesson.type) : '')}`
         );
 
         if (lesson.cabinet != null) {

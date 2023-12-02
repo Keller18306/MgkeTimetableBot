@@ -16,7 +16,7 @@ export default class extends AbstractCallback {
         const showHeader: boolean = Boolean(context.payload[4]);
 
         if (['g', 'group'].includes(type)) {
-            return this.groupRasp(params, String(value), weekIndex, hidePastDays, showHeader);
+            return this.groupRasp(params, value, weekIndex, hidePastDays, showHeader);
         }
 
         if (['t', 'teacher'].includes(type)) {
@@ -26,7 +26,7 @@ export default class extends AbstractCallback {
         return context.edit('unknown type');
     }
 
-    private async groupRasp({ context, scheduleFormatter, keyboard }: CbHandlerParams, value: string, weekIndex: number, hidePastDays: boolean, showHeader: boolean) {
+    private async groupRasp({ context, scheduleFormatter, keyboard }: CbHandlerParams, value: string | number, weekIndex: number, hidePastDays: boolean, showHeader: boolean) {
         const group = raspCache.groups.timetable[value];
         if (group === undefined) return context.edit('Данной учебной группы не существует');
 
@@ -38,7 +38,7 @@ export default class extends AbstractCallback {
             days = removePastDays(days);
         }
 
-        const message = scheduleFormatter.formatGroupFull(value, {
+        const message = scheduleFormatter.formatGroupFull(String(value), {
             showHeader, days
         });
 

@@ -13,7 +13,7 @@ export class DefaultScheduleFormatter extends ScheduleFormatter {
         }
 
         if (options.showLesson) {
-            line.push(this.Lesson(lesson.lesson));
+            line.push(this.Lesson(this.getLessonAlias(lesson.lesson)));
         }
 
         if (options.showType && lesson.type) {
@@ -39,7 +39,7 @@ export class DefaultScheduleFormatter extends ScheduleFormatter {
         const line: string[] = [];
 
         line.push(
-            `${this.Group(lesson.group)}${this.Lesson(lesson.lesson)}`
+            `${this.Group(lesson.group)}${this.Lesson(this.getLessonAlias(lesson.lesson))}`
         );
 
         if (lesson.type) {

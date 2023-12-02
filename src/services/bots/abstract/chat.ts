@@ -212,6 +212,10 @@ abstract class AbstractChat {
         history.unshift(value);
         this.teacherSearchHistory = history;
     }
+
+    public getLesonAliases(): { [key: string]: string } {
+        return {};
+    }
 }
 
 interface AbstractChat extends DbChat { };

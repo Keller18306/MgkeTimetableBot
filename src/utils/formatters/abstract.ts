@@ -225,6 +225,16 @@ export abstract class ScheduleFormatter {
         return text.join('\n\n')
     }
 
+    protected getLessonAlias(lesson: string) {
+        if (!this.chat) {
+            return lesson;
+        }
+
+        const aliases = this.chat.getLesonAliases();
+
+        return aliases[lesson] ?? lesson;
+    }
+
     protected b(text: string): string {
         if (this.service === 'tg') {
             return `<b>${text}</b>`;
