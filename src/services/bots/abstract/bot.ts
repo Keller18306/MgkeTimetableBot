@@ -47,7 +47,7 @@ export abstract class AbstractBot {
             if (chat.accepted && !chat.eula) {
                 chat.eula = true;
 
-                context.send(defines['eula']).catch(() => {});
+                context.send(defines.eula).catch(() => { });
             }
         
             if (chat.accepted && chat.needUpdateButtons) {
@@ -106,7 +106,7 @@ export abstract class AbstractBot {
 
             if (chat.accepted && !chat.eula) {
                 chat.eula = true;
-                context.send(defines['eula']).catch(() => { });
+                context.send(defines.eula).catch(() => { });
             }
 
             if (!cb) {

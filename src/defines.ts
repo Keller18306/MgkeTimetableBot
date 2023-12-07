@@ -2,9 +2,7 @@ const globalLinks: string = 'Небольшая статья, как настр�
     'Статья для преподавателей: https://vk.com/@mgke_slave-ispolzovanie-bota?anchor=dlya-uchiteley\n\n' +
     'Исходный код: https://github.com/Keller18306/MgkeTimetableBot';
 
-export const defines: {
-    [key: string]: string
-} = {
+export const defines = {
     'global.links': globalLinks,
 
     'vk.message.about': 'Бот был создан [id290331922|Алексеем Костюком] из группы 63ТП. Для сообщения о багах или запроса функционала писать ему.\n\n' +
