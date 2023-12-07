@@ -169,7 +169,7 @@ export class VkBot extends AbstractBot {
         const _context = new VkCommandContext(context, this.input, this.cache);
         const keyboard = new Keyboard(_context, chat.resync());
 
-        return _context.send(defines['message.about'], {
+        return _context.send(defines['vk.message.about'], {
             keyboard: keyboard.MainMenu,
             disable_mentions: true
         });
