@@ -53,7 +53,7 @@ export const config: ConfigScheme = {
     },
     updater: {
         enabled: true,
-        syncMode: false, // Режим парсинга. false - параллельный (все запросы выполняются одновременно), true - последовательный (все запросы выполняются по очереди)
+        syncMode: false, // Режим парсинга. false - параллельный (все запросы выполняются одновременно, пирсит быстрее, больше нагружает систему), true - последовательный (все запросы выполняются по очереди, парсит медленнее, меньше нагружает систему)
         localMode: false, // Используется только во время разработки (парсер не делает запросы к сайту, а читает json файл)
         ignoreHash: false,
         end_hour: 17,
@@ -61,9 +61,20 @@ export const config: ConfigScheme = {
         update_interval: {
             default: 1 * 60 * 60, // 1 hour
             activity: 30, // 30 sec
-            error: 60 // 1 min
+            error: 60, // 1 min
+            teams: 1 * 24 * 60 * 60 // 1 day
         },
-        lessonIndexIfEmpty: 2 //Если сегодня пар нет - после данной пары отправятся сообщения людям
+        lessonIndexIfEmpty: 2, //Если сегодня пар нет - после данной пары отправятся сообщения людям
+        endpoints: {
+            timetableGroup: 'https://mgkct.minskedu.gov.by/персоналии/учащимся/расписание-занятий-на-неделю',
+            timetableTeacher: 'https://mgkct.minskedu.gov.by/персоналии/преподавателям/расписание-занятий-на-неделю',
+            team: [
+                'https://mgkct.minskedu.gov.by/о-колледже/администрация-колледжа',
+                'https://mgkct.minskedu.gov.by/о-колледже/портфолио/педагогический-коллектив',
+                'https://mgkct.minskedu.gov.by/о-колледже/портфолио/cлужащие',
+                'https://mgkct.minskedu.gov.by/о-колледже/портфолио/cлужащие-ахч'
+            ]
+        }
     },
     timetable: {
         weekdays: [

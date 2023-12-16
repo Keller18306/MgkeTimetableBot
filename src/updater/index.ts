@@ -9,8 +9,9 @@ import { EventController } from "./events/controller"
 import { NextDayUpdater } from "./nextDay"
 import StudentParser from "./parser/group"
 import TeacherParser from "./parser/teacher"
-import { Group, GroupDay, Groups, Teacher, TeacherDay, Teachers } from "./parser/types"
-import { RaspEntryCache, loadCache, raspCache, saveCache } from "./raspCache"
+import TeamParser from "./parser/team"
+import { Group, GroupDay, Groups, Teacher, TeacherDay, Teachers, Team } from "./parser/types"
+import { RaspEntryCache, TeamCache, loadCache, raspCache, saveCache } from "./raspCache"
 
 const MAX_LOG_LIMIT: number = 10;
 const LOG_COUNT_SEND: number = 3;
@@ -238,6 +239,7 @@ export class Updater {
 
         this._clearKeys = false;
         this._forceParse = false;
+        this._cacheTeamCleared = false;
         this.removeOldLogs();
 
         this.delayPromise = this.getDelayTime(error);
@@ -275,21 +277,34 @@ export class Updater {
 
     private async parse(): Promise<boolean[]> {
         const PARSER_ACTIONS = [
-            {
-                parser: StudentParser,
-                url: encodeURI('https://mgkct.minskedu.gov.by/персоналии/учащимся/расписание-занятий-на-неделю'),
-                cache: raspCache.groups
-            },
-            {
-                parser: TeacherParser,
-                url: encodeURI('https://mgkct.minskedu.gov.by/персоналии/преподавателям/расписание-занятий-на-неделю'),
-                cache: raspCache.teachers
-            }
+            this.parseTimetable.bind(
+                this, StudentParser, encodeURI(config.updater.endpoints.timetableGroup), raspCache.groups
+            ),
+
+            this.parseTimetable.bind(
+                this, TeacherParser, encodeURI(config.updater.endpoints.timetableTeacher), raspCache.teachers
+            )
         ];
+
+        //парсим страницы реже
+        if (
+            this._forceParse || this._clearKeys || config.updater.localMode || !raspCache.team.update ||
+            Date.now() - raspCache.team.update >= config.updater.update_interval.teams * 1e3
+        ) {
+            for (const i in config.updater.endpoints.team) {
+                const url = config.updater.endpoints.team[i];
+
+                const action = this.parseTeam.bind(
+                    this, Number(i), encodeURI(url), raspCache.team
+                )
+
+                PARSER_ACTIONS.push(action);
+            }
+        }
 
         const promises: Promise<boolean>[] = [];
         for (const action of PARSER_ACTIONS) {
-            const result: Promise<boolean> = this.processParse(action.parser, action.url, action.cache);
+            const result: Promise<boolean> = action();
             promises.push(result)
 
             if (config.updater.syncMode) {
@@ -300,11 +315,9 @@ export class Updater {
         return Promise.all(promises);
     }
 
-    private async processParse(Parser: typeof TeacherParser | typeof StudentParser, url: string, cache: RaspEntryCache<Teachers | Groups>) {
+    private async parseTimetable(Parser: typeof TeacherParser | typeof StudentParser, url: string, cache: RaspEntryCache<Teachers | Groups>) {
         const date = new Date();
         const todayIndex = getDayIndex(date);
-
-        //console.log('[Parser - Groups] Start parsing')
 
         let data: Teachers | Groups;
         if (config.updater.localMode) {
@@ -370,13 +383,6 @@ export class Updater {
                 cache.timetable[index] = data[index];
             } else {
                 const { mergedDays, added, changed } = mergeDays(newEntry.days as any, currentEntry.days as any);
-
-                /*
-                TODO оповещения:
-                если на завтра расписание изменилось у большинства групп - оправить всем "расписание на завтра"
-                если на завтра расписание опять изменилось, но уже было отправлено прошлое - сообщить, что поступили правки
-                если на сегодня изменилось - сообщить, что поступили правки
-                */
 
                 const toArchive: (GroupDay | TeacherDay)[] = [...added, ...changed];
                 if (toArchive.length > 0) {
@@ -505,6 +511,61 @@ export class Updater {
         }
 
         cache.lastWeekIndex = maxWeekIndex;
+        cache.update = Date.now();
+
+        return true;
+    }
+
+    private _cacheTeamCleared: boolean = false; //костыль, чтобы два раза не чистилось
+    private async parseTeam(pageIndex: number, url: string, cache: TeamCache): Promise<boolean> {
+        let data: Team;
+        if (config.updater.localMode) {
+            const file: any = JSON.parse(readFileSync(`./cache/rasp/team.json`, 'utf8'));
+
+            data = file.team;
+        } else {
+            const jsdom = await JSDOM.fromURL(url, {
+                userAgent: 'MGKE bot by Keller'
+            });
+
+            const parser = new TeamParser(jsdom.window);
+            const hash = parser.getContentHash();
+
+            if (!config.updater.ignoreHash && !this._forceParse && hash === cache.hash[pageIndex]) {
+                cache.update = Date.now();
+                return true;
+            } else if (hash !== cache.hash[pageIndex]) {
+                cache.changed = Date.now();
+            }
+
+            cache.hash[pageIndex] = hash;
+
+            console.log(`[TeamParser: ${pageIndex}] Start parsing (newHash: ${hash})...`);
+            data = parser.run();
+
+            console.log(`[TeamParser: ${pageIndex}] Start data processing...`);
+        }
+
+        if (Object.keys(data).length == 0) return false;
+
+        // Полная очистка
+        if (this._clearKeys && !this._cacheTeamCleared) {
+            this._cacheTeamCleared = true;
+            for (const index in cache.names) {
+                if (!data[index]) {
+                    delete cache.names[index];
+                }
+            }
+        }
+
+        Object.assign(cache.names, data);
+        cache.names = Object.keys(cache.names).sort().reduce<Team>(
+            (obj, key) => {
+                obj[key] = cache.names[key];
+                return obj;
+            }, {}
+        );
+
         cache.update = Date.now();
 
         return true;

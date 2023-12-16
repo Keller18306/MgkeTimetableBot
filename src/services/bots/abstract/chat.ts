@@ -114,6 +114,7 @@ abstract class AbstractChat {
     public abstract readonly service: Service;
     public abstract db_table: string;
     protected _cache: { [key: string]: any } = {};
+    protected _aliasesCache?: { [key: string]: any } = undefined;
     protected defaultAllowSendMess: boolean = true;
     protected columns: string[] = [];
 
@@ -214,7 +215,11 @@ abstract class AbstractChat {
     }
 
     public getLesonAliases(): { [key: string]: string } {
-        return {};
+        if (!this._aliasesCache) {
+            this._aliasesCache = {};
+        }
+
+        return this._aliasesCache;
     }
 }
 

@@ -14,15 +14,25 @@ export default class extends AbstractCommand {
     };
 
     async handler({ context }: CmdHandlerParams) {
-        const teachers = sort(archive.getTeachers()).map((value, i) => {
-            return `${i + 1}. ${value}`
-        });
+        const cacheTeachers = archive.getTeachers();
+        const teachers = sort(cacheTeachers).map(this.formatTeacher.bind(this, true));
 
-        context.send([
-            '__ Преподаватели в кэше __\n',
+        return context.send([
+            '__ Преподаватели в кэше __',
             teachers.join('\n'),
-            `\nЗагружено: ${formatSeconds(Math.ceil((Date.now() - raspCache.teachers.update) / 1e3))} назад\n`,
-            `Изменено: ${formatSeconds(Math.ceil((Date.now() - raspCache.teachers.changed) / 1e3))} назад`
-        ].join('\n'))
+
+            `\nЗагружено: ${formatSeconds(Math.ceil((Date.now() - raspCache.teachers.update) / 1e3))} назад`,
+            `Изменено: ${formatSeconds(Math.ceil((Date.now() - raspCache.teachers.changed) / 1e3))} назад`,
+
+            '\n__ Страницы с учителями/администрацией __',
+            `Загружено: ${formatSeconds(Math.ceil((Date.now() - raspCache.team.update) / 1e3))} назад`,
+            `Изменено: ${formatSeconds(Math.ceil((Date.now() - raspCache.team.changed) / 1e3))} назад`
+        ].join('\n'));
+    }
+
+    private formatTeacher(useFull: boolean, value: string | number, i: number) {
+        const name = (useFull && raspCache.team.names[value]) ? raspCache.team.names[value] : value;
+
+        return `${i + 1}. ${name}`;
     }
 }

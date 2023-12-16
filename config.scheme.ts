@@ -62,9 +62,15 @@ export type ConfigScheme = {
         update_interval: {
             default: number,
             activity: number,
-            error: number
+            error: number,
+            teams: number
         },
-        lessonIndexIfEmpty: number
+        lessonIndexIfEmpty: number,
+        endpoints: {
+            timetableGroup: string
+            timetableTeacher: string
+            team: string[]
+        }
     },
     timetable: {
         weekdays: DayCall[],

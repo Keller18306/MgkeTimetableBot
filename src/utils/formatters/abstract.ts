@@ -225,7 +225,7 @@ export abstract class ScheduleFormatter {
         return text.join('\n\n')
     }
 
-    protected getLessonAlias(lesson: string) {
+    protected getLessonAlias(lesson: string): string {
         if (!this.chat) {
             return lesson;
         }
@@ -233,6 +233,10 @@ export abstract class ScheduleFormatter {
         const aliases = this.chat.getLesonAliases();
 
         return aliases[lesson] ?? lesson;
+    }
+
+    protected getFullTeacherName(shortName: string): string {
+        return this.raspCache.team.names[shortName] || shortName;
     }
 
     protected b(text: string): string {

@@ -77,7 +77,7 @@ export class VisualScheduleFormatter extends ScheduleFormatter {
     }
 
     protected TeacherHeader(teacher: string): string {
-        return `👩‍🏫 Преподаватель '${teacher}'`;
+        return `👩‍🏫 Преподаватель '${this.getFullTeacherName(teacher)}'`;
     }
 
     protected DayHeader(day: string, weekday: string): string {

@@ -116,20 +116,34 @@ export abstract class AbstractCommand {
             return false;
         }
 
-        const matched: string[] = []
+        const matched: string[] = [];
         const matchLimit: number = 5;
 
-        const fullTeachersList: string[] = Object.keys(raspCache.teachers.timetable)
+        const shortTeachersList: string[] = Object.keys(raspCache.teachers.timetable);
+        for (const sys_teacher of shortTeachersList) {
+            const search = teacher.replaceAll('.', '').toLocaleLowerCase();
+            const needle = sys_teacher.replaceAll('.', '').toLocaleLowerCase();
 
-        for (const sys_teacher of fullTeachersList) {
-            if (sys_teacher.toLocaleLowerCase().search(teacher.toLocaleLowerCase()) === -1) continue;
+            if (needle.search(search) === -1) continue;
 
-            if (sys_teacher.toLocaleLowerCase() === teacher.toLocaleLowerCase()) {
-                matched.push(sys_teacher)
+            if (needle.toLocaleLowerCase() === search) {
+                matched.push(sys_teacher);
                 break;
             }
 
-            matched.push(sys_teacher)
+            matched.push(sys_teacher);
+            if (matched.length > matchLimit) break;
+        }
+
+        for (const sys_teacher in raspCache.team.names) {
+            if (matched.length > matchLimit) break;
+            if (matched.includes(sys_teacher)) continue;
+
+            const fullTeacher = raspCache.team.names[sys_teacher];
+
+            if (fullTeacher.toLocaleLowerCase().search(teacher.toLocaleLowerCase()) === -1) continue;
+
+            matched.push(sys_teacher);
             if (matched.length > matchLimit) break;
         }
 
@@ -140,6 +154,7 @@ export abstract class AbstractCommand {
 
             return false;
         }
+
         if (matched.length > matchLimit) {
             await context.send('Слишком много результатов для выборки.', {
                 keyboard: errorKeyboard
@@ -147,6 +162,7 @@ export abstract class AbstractCommand {
 
             return false;
         }
+
         if (matched.length > 1) {
             await context.send(
                 'Найдено несколько преподавателей.\n' +
