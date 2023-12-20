@@ -47,6 +47,20 @@ export type ConfigScheme = {
     alice: {
         enabled: boolean
     },
+    google: {
+        enabled: boolean,
+        redirectDomain: string,
+        url: string,
+        oauth: {
+            clientId: string,
+            clientSecret: string
+        },
+        service_account: {
+            clientEmail: string,
+            privateKey: string
+        },
+        calendar_owners: string[]
+    },
     accept: {
         room: boolean,
         private: boolean,

@@ -1,5 +1,5 @@
 --
--- Файл сгенерирован с помощью SQLiteStudio v3.4.4 в вт авг. 29 16:31:59 2023
+-- Файл сгенерирован с помощью SQLiteStudio v3.4.4 в чт дек. 21 01:29:15 2023
 --
 -- Использованная кодировка текста: System
 --
@@ -27,42 +27,98 @@ CREATE TABLE api (
 );
 
 
+-- Таблица: chat_aliases
+CREATE TABLE chat_aliases (
+    id      INTEGER PRIMARY KEY AUTOINCREMENT,
+    service STRING,
+    chat_id INTEGER,
+    subject STRING,
+    alias   STRING,
+    UNIQUE (
+        service,
+        chat_id
+    )
+);
+
+
 -- Таблица: chat_options
 CREATE TABLE chat_options (
-    service                  STRING       NOT NULL,
-    id                       INTEGER      NOT NULL,
-    accepted                 BOOLEAN      DEFAULT (0),
+    service                  STRING           NOT NULL,
+    id                       INTEGER          NOT NULL,
+    accepted                 BOOLEAN          DEFAULT (0),
     ref                      STRING (255),
     scene                    STRING,
     mode                     STRING (16),
     [group]                  STRING (255),
     teacher                  STRING (255),
-    showAbout                BOOLEAN      DEFAULT (1),
-    showDaily                BOOLEAN      DEFAULT (1),
-    showWeekly               BOOLEAN      DEFAULT (1),
-    showCalls                BOOLEAN      DEFAULT (1),
-    showFastGroup            BOOLEAN      DEFAULT (1),
-    showFastTeacher          BOOLEAN      DEFAULT (1),
-    hidePastDays             BOOLEAN      DEFAULT (1),
-    deleteLastMsg            BOOLEAN      DEFAULT (0),
+    google_email             STRING (10, 256) REFERENCES google_accounts (email),
+    showAbout                BOOLEAN          DEFAULT (1),
+    showDaily                BOOLEAN          DEFAULT (1),
+    showWeekly               BOOLEAN          DEFAULT (1),
+    showCalls                BOOLEAN          DEFAULT (1),
+    showFastGroup            BOOLEAN          DEFAULT (1),
+    showFastTeacher          BOOLEAN          DEFAULT (1),
+    hidePastDays             BOOLEAN          DEFAULT (1),
+    deleteLastMsg            BOOLEAN          DEFAULT (0),
     lastMsgId                INTEGER,
-    lastMsgTime              BIGINT       DEFAULT (0),
-    deleteUserMsg            BOOLEAN      DEFAULT (0),
-    allowSendMess            BOOLEAN      DEFAULT (1),
-    subscribeDistribution    BOOLEAN      DEFAULT (1),
-    noticeChanges            BOOLEAN      DEFAULT (1),
-    noticeNextWeek           BOOLEAN      DEFAULT (1),
-    noticeParserErrors       BOOLEAN      DEFAULT (0),
-    needUpdateButtons        BOOLEAN      DEFAULT (0),
-    showParserTime           BOOLEAN      DEFAULT (0),
-    showHints                BOOLEAN      DEFAULT (1),
-    historyGroup             STRING       NOT NULL
-                                          DEFAULT "[]",
-    historyTeacher           STRING       NOT NULL
-                                          DEFAULT "[]",
-    scheduleFormatter        INTEGER      DEFAULT (0),
-    eula                     BOOLEAN      DEFAULT (0),
-    deactivateSecondaryCheck BOOLEAN      DEFAULT (0) 
+    lastMsgTime              BIGINT           DEFAULT (0),
+    deleteUserMsg            BOOLEAN          DEFAULT (0),
+    allowSendMess            BOOLEAN          DEFAULT (1),
+    subscribeDistribution    BOOLEAN          DEFAULT (1),
+    noticeChanges            BOOLEAN          DEFAULT (1),
+    noticeNextWeek           BOOLEAN          DEFAULT (1),
+    noticeParserErrors       BOOLEAN          DEFAULT (0),
+    needUpdateButtons        BOOLEAN          DEFAULT (0),
+    showParserTime           BOOLEAN          DEFAULT (0),
+    showHints                BOOLEAN          DEFAULT (1),
+    historyGroup             STRING           NOT NULL
+                                              DEFAULT "[]",
+    historyTeacher           STRING           NOT NULL
+                                              DEFAULT "[]",
+    scheduleFormatter        INTEGER          DEFAULT (0),
+    eula                     BOOLEAN          DEFAULT (0),
+    deactivateSecondaryCheck BOOLEAN          DEFAULT (0),
+    UNIQUE (
+        service,
+        id
+    )
+);
+
+
+-- Таблица: chat_subscription
+CREATE TABLE chat_subscription (
+    id      INTEGER PRIMARY KEY AUTOINCREMENT,
+    service STRING  NOT NULL,
+    chat_id INTEGER NOT NULL,
+    type    STRING  NOT NULL,
+    value   STRING  NOT NULL,
+    UNIQUE (
+        service,
+        chat_id
+    )
+);
+
+
+-- Таблица: google_accounts
+CREATE TABLE google_accounts (
+    id                   INTEGER          PRIMARY KEY AUTOINCREMENT,
+    email                STRING (10, 256) UNIQUE,
+    refresh_token        STRING (128),
+    access_token         STRING (256),
+    access_token_expires INTEGER
+);
+
+
+-- Таблица: google_calendars
+CREATE TABLE google_calendars (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    type       STRING,
+    value      STRING,
+    calendarId STRING,
+    UNIQUE (
+        type,
+        value
+    )
 );
 
 
@@ -71,21 +127,11 @@ CREATE TABLE storage (
     storage STRING NOT NULL,
     key     STRING NOT NULL,
     value   STRING,
-    time    INT
-);
-
-
--- Таблица: students
-CREATE TABLE students (
-    id         BIGINT      PRIMARY KEY,
-    p          INTEGER,
-    peerId     INTEGER     REFERENCES vk_bot_chats (peerId),
-    vk_id      INTEGER,
-    name       TEXT (1024) NOT NULL,
-    skip_count INTEGER     DEFAULT (0),
-    has_access BOOLEAN     DEFAULT (0),
-    skip       BOOLEAN     DEFAULT (0),
-    ignore     BOOLEAN     DEFAULT (0) 
+    time    INT,
+    UNIQUE (
+        storage,
+        key
+    )
 );
 
 
@@ -107,7 +153,15 @@ CREATE TABLE timetable_archive (
     day     INTEGER      NOT NULL,
     [group] STRING (255),
     teacher STRING (255),
-    data    TEXT
+    data    TEXT,
+    UNIQUE (
+        day,
+        [group]
+    ),
+    UNIQUE (
+        day,
+        teacher
+    )
 );
 
 
@@ -160,57 +214,55 @@ CREATE INDEX api_index ON api (
 );
 
 
--- Индекс: archive_group_index
-CREATE UNIQUE INDEX archive_group_index ON timetable_archive (
-    day,
+-- Индекс: chat_options-distribution
+CREATE INDEX [chat_options-distribution] ON chat_options (
+    subscribeDistribution
+);
+
+
+-- Индекс: chat_options-group
+CREATE INDEX [chat_options-group] ON chat_options (
+    mode,
     "group"
 );
 
 
--- Индекс: archive_teacher_index
-CREATE UNIQUE INDEX archive_teacher_index ON timetable_archive (
-    day,
-    teacher
+-- Индекс: chat_options-noticeChanges
+CREATE INDEX [chat_options-noticeChanges] ON chat_options (
+    noticeChanges
 );
 
 
--- Индекс: options_indexes
-CREATE INDEX options_indexes ON chat_options (
-    mode,
-    "group",
-    teacher,
-    noticeChanges,
-    allowSendMess,
-    accepted,
-    deactivateSecondaryCheck,
-    subscribeDistribution,
+-- Индекс: chat_options-noticeNextWeek
+CREATE INDEX [chat_options-noticeNextWeek] ON chat_options (
     noticeNextWeek
 );
 
 
--- Индекс: options_key
-CREATE UNIQUE INDEX options_key ON chat_options (
-    service,
-    id ASC
+-- Индекс: chat_options-secondaryCheck
+CREATE INDEX [chat_options-secondaryCheck] ON chat_options (
+    deactivateSecondaryCheck
 );
 
 
--- Индекс: peer_Id
-CREATE INDEX peer_Id ON students (
-    peerId
+-- Индекс: chat_options-sendMess
+CREATE INDEX [chat_options-sendMess] ON chat_options (
+    accepted,
+    allowSendMess
 );
 
 
--- Индекс: storage_index
-CREATE UNIQUE INDEX storage_index ON storage (
-    storage,
-    key
+-- Индекс: chat_options-teacher
+CREATE INDEX [chat_options-teacher] ON chat_options (
+    mode,
+    teacher
 );
 
 
--- Индекс: vk_id
-CREATE INDEX vk_id ON students (
-    vk_id
+-- Индекс: chat_subscription-entryIndex
+CREATE INDEX [chat_subscription-entryIndex] ON chat_subscription (
+    type,
+    value
 );
 
 

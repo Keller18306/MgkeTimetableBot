@@ -1,5 +1,8 @@
-import express, { Application } from 'express';
+import express, { Application, NextFunction, Request, Response } from 'express';
 import { config } from '../config';
+import { getIp, getParams, replaceWithValueLength } from './utils';
+
+type ErrorWithStatus = Error & Partial<{ status: number; statusCode: number, code: any, type: any }>;
 
 export class HttpServer {
     public app: Application;
@@ -8,7 +11,13 @@ export class HttpServer {
 
     constructor() {
         this.app = express();
+
+        this.app.use(this.errorHandler.bind(this));
         this.app.use(express.static('./public/'));
+
+        if (config.dev) {
+            this.logRoutes();
+        }
 
         this.setupOriginHeaders();
     }
@@ -39,5 +48,51 @@ export class HttpServer {
 
             res.send()
         });
+    }
+
+    private logRoutes() {
+        this.app.use((req, res, next) => {
+            console.log(getIp(req), req.path, replaceWithValueLength(getParams(req)));
+            next();
+        })
+    }
+
+    private errorHandler(err: ErrorWithStatus | null, req: Request, response: Response, next: NextFunction) {
+        if (err === null) return next();
+
+        let status: number = err.status ?? err.statusCode ?? 500;
+
+        if (status < 400) {
+            status = 500;
+        }
+
+        response.status(status);
+
+        const body: any = {
+            status
+        };
+
+        if (process.env.NODE_ENV !== 'production') {
+            // body.stack = err.stack;
+            body.trace = err.stack?.replace(/\ +/g, ' ')
+                .replace(/(\n\ )+/g, '\n')
+                .split('\t')
+                .join('')
+                .split('\n')
+                .slice(1) || [];
+        }
+
+        Object.assign(body, {
+            code: err.code,
+            name: err.name,
+            message: err.message,
+            type: err.type
+        });
+
+        if (status >= 500) {
+            console.error(err);
+        }
+
+        return response.json(body)
     }
 }

@@ -36,6 +36,9 @@ export const config: ConfigScheme = {
         admin_ids: [804594266],
         noticer: true
     },
+    apk: {
+        enabled: false
+    },
     api: {
         enabled: true,
         url: '/api'
@@ -43,8 +46,19 @@ export const config: ConfigScheme = {
     alice: {
         enabled: false
     },
-    apk: {
-        enabled: false
+    google: {
+        enabled: false,
+        redirectDomain: 'https://mgke.keller.by',
+        url: '/google/oauth',
+        oauth: {
+            clientId: '... .apps.googleusercontent.com',
+            clientSecret: ''
+        },
+        service_account: {
+            clientEmail: 'calendar@mgkct-timetable.iam.gserviceaccount.com',
+            privateKey: '-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n'
+        },
+        calendar_owners: []
     },
     accept: {
         room: false,

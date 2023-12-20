@@ -3,17 +3,13 @@ import { startVanishCronJob } from "./db";
 import { HttpServer } from "./http";
 import { AliceApp } from "./services/alice";
 import { Api } from "./services/api";
-import { CommandController } from "./services/bots/controller";
 import { TgBot } from "./services/bots/tg";
 import { ViberBot } from './services/bots/viber';
 import { VkBot } from './services/bots/vk';
+import { GoogleService } from "./services/google";
 import { ImageService } from "./services/image";
 import { VKApp } from './services/vk_app';
 import { Updater } from './updater';
-
-if (config.vk.bot.enabled || config.viber.enabled || config.telegram.enabled) {
-    CommandController.instance
-}
 
 const http = new HttpServer();
 
@@ -49,6 +45,10 @@ if (config.alice.enabled) {
 
 if (config.updater.enabled) {
     Updater.getInstance().start()
+}
+
+if (config.google.enabled) {
+    http.register(GoogleService);
 }
 
 startVanishCronJob();
