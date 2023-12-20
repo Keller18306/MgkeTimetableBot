@@ -76,7 +76,7 @@ export class Api {
         }
     }
 
-    loadMethods() {
+    public loadMethods() {
         const methodsPath = path.join(__dirname, 'methods')
 
         const files = readdirSync(methodsPath)

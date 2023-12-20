@@ -14,21 +14,10 @@ import { VkCallbackContext, VkCommandContext } from './context';
 import { VkEventListener } from './event';
 
 export class VkBot extends AbstractBot {
-    private static _instance?: VkBot;
-
     public vk: VK;
-
-    public static get instance() {
-        if (!this._instance) {
-            this._instance = new this()
-        }
-
-        return this._instance
-    }
 
     constructor() {
         super('vk');
-        if (VkBot._instance) throw new Error('VkBot is singleton');
 
         this.vk = new VK({
             pollingGroupId: config.vk.bot.id,
@@ -92,7 +81,7 @@ export class VkBot extends AbstractBot {
         if (context.isFromGroup) return next();
 
         const { text, selfMention } = this.parseMessage(context.text);
-        const _context = new VkCommandContext(context, this.input, this.cache, text);
+        const _context = new VkCommandContext(this.vk, context, this.input, this.cache, text);
         const chat = new VkChat(context.peerId);
 
         if (chat.ref === null) {
@@ -113,11 +102,11 @@ export class VkBot extends AbstractBot {
         }
 
         this.handleMessage(cmd, {
+            service: 'vk',
             context: _context,
             chat: chat,
-            actions: new VkBotAction(context, chat, this.input, this.cache),
+            actions: new VkBotAction(this.vk, context, chat, this.input, this.cache),
             keyboard: new Keyboard(_context, chat.resync()),
-            service: 'vk',
             realContext: context,
             scheduleFormatter: createScheduleFormatter('vk', raspCache, chat),
             cache: this.cache
@@ -148,7 +137,7 @@ export class VkBot extends AbstractBot {
         const cb = CommandController.getCallbackByPayload(payload);
         if (!cb) return;
 
-        const _context = new VkCallbackContext(context, this.input, this.cache);
+        const _context = new VkCallbackContext(this.vk, context, this.input, this.cache);
 
         return this.handleCallback(cb, {
             service: 'vk',
@@ -166,7 +155,7 @@ export class VkBot extends AbstractBot {
 
         const chat = new VkChat(context.peerId);
 
-        const _context = new VkCommandContext(context, this.input, this.cache);
+        const _context = new VkCommandContext(this.vk, context, this.input, this.cache);
         const keyboard = new Keyboard(_context, chat.resync());
 
         return _context.send(defines['vk.message.about'], {

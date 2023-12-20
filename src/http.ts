@@ -1,26 +1,15 @@
+import express, { Application } from 'express';
 import { config } from '../config';
-import express from 'express';
 
 export class HttpServer {
-    private static _instance: HttpServer;
+    public app: Application;
 
-    public app: express.Application;
-
-    public static get instance(): HttpServer {
-        if (!HttpServer._instance) {
-            HttpServer._instance = new HttpServer();
-        }
-
-        return HttpServer._instance;
-    }
+    private handlers: any[] = [];
 
     constructor() {
-        if (HttpServer._instance) throw new Error('HttpServer is singleton');
-
         this.app = express();
         this.app.use(express.static('./public/'));
 
-        this.setupViberFix();
         this.setupOriginHeaders();
     }
 
@@ -30,12 +19,10 @@ export class HttpServer {
         });
     }
 
-    private setupViberFix() {
-        this.app.use((req, res, next) => {
-            if (req.path.startsWith(config.viber.url)) return next()
-
-            return express.json({})(req, res, next)
-        })
+    public register<T extends new (app: Application) => any>(classHandler: T): InstanceType<T> {
+        const handler = new classHandler(this.app);
+        this.handlers.push(handler);
+        return handler;
     }
 
     private setupOriginHeaders() {

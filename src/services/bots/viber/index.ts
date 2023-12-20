@@ -18,22 +18,6 @@ const WEBHOOK_URL: string = config.viber.url + '/webhook';
 const AVATAR_URL: string = config.viber.url + '/avatar.png';
 
 export class ViberBot extends AbstractBot {
-    private static _instance?: ViberBot;
-
-    public static get instance(): ViberBot {
-        if (!this._instance) {
-            throw new Error('ViberBot is not initialized')
-        }
-
-        return this._instance
-    }
-
-    public static create(app: express.Application) {
-        this._instance = new ViberBot(app)
-
-        return this._instance;
-    }
-
     private bot: Bot;
     private domain?: string;
     private app: Application;
@@ -62,6 +46,8 @@ export class ViberBot extends AbstractBot {
     }
 
     public run() {
+        this.setupViberFix();
+
         this.app.use(WEBHOOK_URL, this.bot.middleware());
 
         this.bot.getBotProfile().then((res) => {
@@ -74,6 +60,14 @@ export class ViberBot extends AbstractBot {
         this.setupWebhook()
 
         new ViberEventListener(this.bot)
+    }
+
+    private setupViberFix() {
+        this.app.use((req, res, next) => {
+            if (req.path.startsWith(config.viber.url)) return next()
+
+            return express.json({})(req, res, next)
+        });
     }
 
     private async setupWebhook() {

@@ -15,33 +15,36 @@ if (config.vk.bot.enabled || config.viber.enabled || config.telegram.enabled) {
     CommandController.instance
 }
 
+const http = new HttpServer();
+
 if (config.vk.bot.enabled) {
-    VkBot.instance.run()
+    new VkBot().run();
 }
 
 if (config.http.enabled) {
-    HttpServer.instance.run()
-    new ImageService(HttpServer.instance.app)
+    http.run()
+
+    http.register(ImageService);
 }
 
 if (config.vk.app.enabled) {
-    new VKApp(HttpServer.instance.app)
+    http.register(VKApp);
 }
 
 if (config.telegram.enabled) {
-    TgBot.instance.run()
+    new TgBot().run();
 }
 
 if (config.viber.enabled) { 
-    ViberBot.create(HttpServer.instance.app).run()
+    http.register(ViberBot).run();
 }
 
 if (config.api.enabled) {
-    new Api(HttpServer.instance.app)
+    http.register(Api);
 }
 
 if (config.alice.enabled) {
-    new AliceApp(HttpServer.instance.app)
+    http.register(AliceApp);
 }
 
 if (config.updater.enabled) {

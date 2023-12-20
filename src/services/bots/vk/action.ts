@@ -1,4 +1,4 @@
-import { ContextDefaultState, MessageContext } from "vk-io";
+import { ContextDefaultState, MessageContext, VK } from "vk-io";
 import { AbstractAction, AbstractCommandContext, FileCache } from "../abstract";
 import { BotInput } from "../input";
 import { VkChat } from "./chat";
@@ -9,11 +9,11 @@ export class VkBotAction extends AbstractAction {
     protected chat: VkChat;
     protected _context: AbstractCommandContext;
 
-    constructor(context: MessageContext<ContextDefaultState>, chat: VkChat, input: BotInput, cache: FileCache) {
+    constructor(vk: VK, context: MessageContext<ContextDefaultState>, chat: VkChat, input: BotInput, cache: FileCache) {
         super()
         this.context = context
         this.chat = chat
-        this._context = new VkCommandContext(context, input, cache)
+        this._context = new VkCommandContext(vk, context, input, cache)
     }
 
     async deleteLastMsg() {

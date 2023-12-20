@@ -21,9 +21,10 @@ export class VkCommandContext extends AbstractCommandContext {
 
     private _isAdmin: boolean | undefined;
 
-    constructor(context: MessageContext<ContextDefaultState>, input: BotInput, cache: FileCache, text?: string) {
-        super(input)
-        this.vk = VkBot.instance.vk;
+    constructor(vk: VK, context: MessageContext<ContextDefaultState>, input: BotInput, cache: FileCache, text?: string) {
+        super(input);
+
+        this.vk = vk;
         this.context = context;
         this.text = text || context.text || '';
         this.cache = cache;
@@ -142,9 +143,10 @@ export class VkCallbackContext extends AbstractCallbackContext {
 
     private _isAdmin: boolean | undefined;
 
-    constructor(context: MessageEventContext<ContextDefaultState>, input: BotInput, cache: FileCache, text?: string) {
+    constructor(vk: VK, context: MessageEventContext<ContextDefaultState>, input: BotInput, cache: FileCache, text?: string) {
         super(input);
-        this.vk = VkBot.instance.vk;
+        
+        this.vk = vk;
         this.messageId = context.conversationMessageId;
         this.context = context;
         this.cache = cache;

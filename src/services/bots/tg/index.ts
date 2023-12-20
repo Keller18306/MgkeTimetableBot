@@ -14,21 +14,10 @@ import { TgCallbackContext, TgCommandContext } from './context';
 import { TgEventListener } from './event';
 
 export class TgBot extends AbstractBot {
-    private static _instance?: TgBot;
-
     public tg: Telegram;
-
-    public static get instance() {
-        if (!this._instance) {
-            this._instance = new this()
-        }
-
-        return this._instance
-    }
 
     constructor() {
         super('tg')
-        if (TgBot._instance) throw new Error('TgBot is singleton')
 
         this.tg = new Telegram({
             token: config.telegram.token

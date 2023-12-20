@@ -4,7 +4,6 @@ import StatusCode from "status-code-enum";
 import { SkillController } from "./controller";
 import { AliceUser } from "./user";
 
-
 export class AliceApp {
     private alice: Alice;
     private controller: SkillController;
