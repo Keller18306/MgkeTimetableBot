@@ -17,11 +17,11 @@ export class TgBot extends AbstractBot {
     public tg: Telegram;
 
     constructor() {
-        super('tg')
+        super('tg');
 
         this.tg = new Telegram({
             token: config.telegram.token
-        })
+        });
 
         this.tg.updates.on('message', (context, next) => this.messageHandler(context, next))
         this.tg.updates.on('my_chat_member', (context, next) => this.myChatMember(context, next))
@@ -32,6 +32,8 @@ export class TgBot extends AbstractBot {
     }
 
     public async run() {
+        await CommandController.instance.init();
+
         await this.tg.updates.startPolling().then(() => {
             console.log('[Telegram Bot] Start polling...')
         }).catch(err => {

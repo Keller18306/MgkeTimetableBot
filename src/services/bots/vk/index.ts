@@ -50,8 +50,10 @@ export class VkBot extends AbstractBot {
         new VkEventListener(this.vk);
     }
 
-    public run() {
-        this.vk.updates.startPolling().then(() => {
+    public async run() {
+        await CommandController.instance.init();
+        
+        await this.vk.updates.startPolling().then(() => {
             console.log('[VK Bot] Start polling...')
         }).catch(err => {
             console.error('polling error', err)

@@ -16,14 +16,6 @@ type LoadedInstance<T> = {
 export class CommandController {
     private static _instance?: CommandController;
 
-    public commands: {
-        [id: string]: LoadedInstance<AbstractCommand>
-    } = {};
-
-    public callbacks: {
-        [id: string]: LoadedInstance<AbstractCallback>
-    } = {};
-
     public static get instance(): CommandController {
         if (!this._instance) {
             this._instance = new CommandController();
@@ -126,45 +118,75 @@ export class CommandController {
         this.instance.reloadCommandById(id);
     }
 
+    public commands: {
+        [id: string]: LoadedInstance<AbstractCommand>
+    } = {};
+
+    public callbacks: {
+        [id: string]: LoadedInstance<AbstractCallback>
+    } = {};
+
+    private _init: Promise<void> | undefined;
+
     constructor() {
         if (CommandController._instance) throw new Error('CommandController is singleton');
         CommandController._instance = this;
+    }
 
-        this.loadFromDirectory(AbstractCommand, cmdRootPath)
-        console.log(`[BOTS] Loaded ${Object.keys(this.commands).length} commands`)
+    public init() {
+        if (!this._init) {
+            this._init = this.load();
+        }
 
-        this.loadFromDirectory(AbstractCallback, cbRootPath)
-        console.log(`[BOTS] Loaded ${Object.keys(this.callbacks).length} callbacks`)
+        return this._init;
+    }
 
-        // if (config.dev) {
-        //     this.initFolderWatcher(cmdsPath);
-        // }
+    private async load() {
+        await Promise.all([
+            (async () => { 
+                const promises = this.loadFromDirectory(AbstractCommand, cmdRootPath);
+                await Promise.all(promises);
+
+                console.log(`[BOTS] Loaded ${Object.keys(this.commands).length} commands`)
+            })(),
+            (async () => { 
+                const promises = this.loadFromDirectory(AbstractCallback, cbRootPath);
+                await Promise.all(promises);
+
+                console.log(`[BOTS] Loaded ${Object.keys(this.callbacks).length} callbacks`)
+            })()
+        ])       
     }
 
     private loadFromDirectory(classType: typeof AbstractCommand | typeof AbstractCallback, dir: string, rootPath?: string) {
+        const promises: Promise<void>[] = [];
+
         if (!rootPath) {
             if (!existsSync(dir)) {
-                return;
+                return promises;
             }
 
             rootPath = dir;
         }
 
         const files = readdirSync(dir);
-
         for (const file of files) {
             const filePath: string = path.join(dir, file);
 
             if (statSync(filePath).isDirectory()) {
-                this.loadFromDirectory(classType, filePath, rootPath);
+                const _promises = this.loadFromDirectory(classType, filePath, rootPath);
+                promises.push(..._promises);
+
                 continue;
             }
 
-            this.loadClassFromFile(classType, rootPath, filePath)
+            promises.push(this.loadClass(classType, rootPath, filePath));
         }
+
+        return promises;
     }
 
-    public loadClassFromFile(classType: typeof AbstractCommand | typeof AbstractCallback, rootPath: string, filePath: string) {
+    public async loadClass(classType: typeof AbstractCommand | typeof AbstractCallback, rootPath: string, filePath: string) {
         if (!filePath.endsWith('.ts') && !filePath.endsWith('.js')) {
             return;
         }
@@ -173,7 +195,7 @@ export class CommandController {
             return;
         }
 
-        const { default: cmdClass } = require(filePath);
+        const { default: cmdClass } = await import(filePath);
         if (cmdClass == undefined) return;
 
         const cmd = new cmdClass();
@@ -217,7 +239,7 @@ export class CommandController {
         }
 
         this.unloadCommand(cmd);
-        this.loadClassFromFile(AbstractCommand, cmdRootPath, cmd.path);
+        this.loadClass(AbstractCommand, cmdRootPath, cmd.path);
     }
 
     private pathToId(rootPath: string, filePath: string) {

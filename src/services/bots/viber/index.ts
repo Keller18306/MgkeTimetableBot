@@ -45,7 +45,9 @@ export class ViberBot extends AbstractBot {
         this.bot.on(Events.UNSUBSCRIBED, (userId) => this.handleUnsubscribe(userId));
     }
 
-    public run() {
+    public async run() {
+        await CommandController.instance.init();
+        
         this.setupViberFix();
 
         this.app.use(WEBHOOK_URL, this.bot.middleware());
