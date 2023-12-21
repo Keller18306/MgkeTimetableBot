@@ -111,6 +111,28 @@ export class Archive {
         return days.map(dbEntryToDayObject);
     }
 
+    public * iterateGroupDays(group: number | string) {
+        const entries = db.prepare('SELECT day, data FROM timetable_archive WHERE `group` = ?')
+            .iterate(group) as IterableIterator<any>;
+
+        for (const entry of entries) {
+            const day: GroupDay = dbEntryToDayObject(entry)
+
+            yield day;
+        }
+    }
+
+    public * iterateTeacherDays(teacher: string) {
+        const entries = db.prepare('SELECT day,data FROM timetable_archive WHERE teacher = ?')
+            .iterate(teacher) as IterableIterator<any>;
+
+        for (const entry of entries) {
+            const day: TeacherDay = dbEntryToDayObject(entry)
+
+            yield day;
+        }
+    }
+
     public appendDays(entries: ArchiveAppendDay[]) {
         for (const entry of entries) {
             // const dayIndex: number = strDateToIndex(entry.day.day);
