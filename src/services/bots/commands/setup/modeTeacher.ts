@@ -51,10 +51,6 @@ export default class extends AbstractCommand {
             keyboard: keyboard.MainMenu
         }
 
-        if (initiator === 'callback') {
-            return context.editOrSend(defines[`${service}.message.about`], options);
-        }
-
         return context.send(defines[`${service}.message.about`], options);
     }
 }
