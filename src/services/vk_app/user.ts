@@ -1,8 +1,8 @@
 import { config } from "../../../config";
 import db from "../../db";
-import { FromType, RequestKey } from "../../key";
-import { checkSign } from "./checkSign";
 import { VkChat } from "../bots/vk/chat";
+import { FromType, RequestKey } from "../key";
+import { checkSign } from "./checkSign";
 
 const acceptTool = new RequestKey(config.encrypt_key)
 

@@ -1,7 +1,7 @@
 import { config } from "../../../../../config";
 import db from "../../../../db";
-import { ApiKey } from "../../../../key";
 import { KeyData } from "../../../api/key";
+import { ApiKey } from "../../../key";
 import { AbstractCommand, CmdHandlerParams } from "../../abstract";
 
 const keyTool = new ApiKey(config.encrypt_key);

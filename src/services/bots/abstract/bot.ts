@@ -1,7 +1,7 @@
 import { format } from "util";
 import { config } from "../../../../config";
 import { defines } from "../../../defines";
-import { InputRequestKey, RequestKey } from "../../../key";
+import { InputRequestKey, RequestKey } from "../../key";
 import { BotInput, InputCancel } from "../input";
 import { StaticKeyboard } from "../keyboard";
 import { FileCache } from "./cache";

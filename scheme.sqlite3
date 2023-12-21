@@ -1,5 +1,5 @@
 --
--- Файл сгенерирован с помощью SQLiteStudio v3.4.4 в чт дек. 21 01:29:15 2023
+-- Файл сгенерирован с помощью SQLiteStudio v3.4.4 в чт дек. 21 01:57:04 2023
 --
 -- Использованная кодировка текста: System
 --
@@ -30,10 +30,10 @@ CREATE TABLE api (
 -- Таблица: chat_aliases
 CREATE TABLE chat_aliases (
     id      INTEGER PRIMARY KEY AUTOINCREMENT,
-    service STRING,
-    chat_id INTEGER,
-    subject STRING,
-    alias   STRING,
+    service STRING  NOT NULL,
+    chat_id INTEGER NOT NULL,
+    subject STRING  NOT NULL,
+    alias   STRING  NOT NULL,
     UNIQUE (
         service,
         chat_id

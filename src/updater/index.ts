@@ -217,7 +217,7 @@ export class Updater {
 
     private async run() {
         while (true) {
-            await this.runParse()
+            await this.runParse();
         }
     }
 
@@ -227,11 +227,11 @@ export class Updater {
         try {
             const ms = await this.update();
 
-            raspCache.successUpdate = true
+            raspCache.successUpdate = true;
 
-            this.log(`success: ${ms}ms`)
+            this.log(`success: ${ms}ms`);
         } catch (e: any) {
-            raspCache.successUpdate = false
+            raspCache.successUpdate = false;
             error = true;
 
             this.log(e)

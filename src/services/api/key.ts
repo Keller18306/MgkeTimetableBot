@@ -1,6 +1,6 @@
 import { config } from "../../../config";
 import { getApiKeyById, updateLastApiKeyUse } from "../../db";
-import { ApiKey } from "../../key";
+import { ApiKey } from "../key";
 
 const keyTool = new ApiKey(config.encrypt_key)
 

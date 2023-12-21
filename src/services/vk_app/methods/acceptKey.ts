@@ -1,6 +1,6 @@
 import { config } from "../../../../config";
 import db from "../../../db";
-import { FromType, RequestKey } from "../../../key";
+import { FromType, RequestKey } from "../../key";
 import VKAppDefaultMethod, { HandlerParams } from "./_default";
 
 const acceptTool = new RequestKey(config.encrypt_key)

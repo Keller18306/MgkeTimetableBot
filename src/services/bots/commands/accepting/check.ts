@@ -1,7 +1,7 @@
 import { format } from "util";
 import { config } from "../../../../../config";
 import { defines } from "../../../../defines";
-import { FromType, RequestKey } from "../../../../key";
+import { FromType, RequestKey } from "../../../key";
 import { AbstractCommand, CmdHandlerParams, Service } from "../../abstract";
 import { StaticKeyboard } from "../../keyboard";
 

@@ -1,5 +1,5 @@
 import { createCipheriv, createDecipheriv, createHmac, createSecretKey, randomBytes } from 'crypto';
-import { ReadBuffer, WriteBuffer } from '../utils';
+import { ReadBuffer, WriteBuffer } from '../../utils';
 
 export enum KeyType {
     Request,
@@ -193,7 +193,7 @@ export abstract class AbstractKey {
 
     protected finallyEncrypt(buffer: WriteBuffer | Buffer, _iv?: Buffer): string {
         if (buffer instanceof WriteBuffer) buffer = buffer.toBuffer()
-        
+
         //buffer = this.encodeZeroBytes(buffer)
 
         const [iv, encrypted] = this.encrypt(buffer, _iv)

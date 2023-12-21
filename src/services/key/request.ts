@@ -1,5 +1,5 @@
 import { randomBytes } from 'crypto';
-import { WriteBuffer } from '../utils';
+import { WriteBuffer } from '../../utils';
 import { AbstractKey, KeyType } from './abstract';
 
 export enum FromType {
@@ -75,7 +75,7 @@ export class RequestKey extends AbstractKey {
                 buffer_writer.writeBuffer(this.packNumberU64LE(input.time))
 
                 const user_id = Buffer.from(input.user_id, 'base64')
-                if(user_id.length != 16) throw new Error('error viber id length')
+                if (user_id.length != 16) throw new Error('error viber id length')
                 buffer_writer.writeBuffer(user_id)
                 break;
             }

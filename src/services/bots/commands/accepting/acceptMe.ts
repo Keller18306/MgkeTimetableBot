@@ -1,6 +1,6 @@
 import { config } from "../../../../../config";
 import db from "../../../../db";
-import { FromType, RequestKey } from "../../../../key";
+import { FromType, RequestKey } from "../../../key";
 import { UserData } from '../../../vk_app/user';
 import { AbstractCommand, CmdHandlerParams, Service } from "../../abstract";
 
