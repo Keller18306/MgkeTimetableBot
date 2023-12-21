@@ -11,11 +11,16 @@ export default class extends AbstractCommand {
         description: 'Перезагрузить команду без перезапуска бота'
     };
 
-    async handler({ context, chat }: CmdHandlerParams) {
+    async handler({ context }: CmdHandlerParams) {
         const id = context.text?.replace(this.regexp, '').trim();
         if (!id) return context.send('id команды не введён');
 
-        CommandController.reloadCommandById(id);
+        try {
+            await CommandController.reloadCommandById(id);
+        } catch (e) {
+            console.log(e);
+            return context.send('Во время перезагрузки команды произошла ошибка');
+        }
 
         return context.send('Команда перезагружена')
     }

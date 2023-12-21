@@ -1,6 +1,8 @@
+import { watch } from "chokidar";
 import { existsSync, readdirSync, statSync } from "fs";
 import path from "path";
 import { TelegramBotCommand } from "puregram/generated";
+import { config } from "../../../config";
 import { parsePayload } from "../../utils";
 import { AbstractCallback, AbstractCommand } from "./abstract";
 
@@ -114,8 +116,8 @@ export class CommandController {
         }, [])
     }
 
-    public static reloadCommandById(id: string) {
-        this.instance.reloadCommandById(id);
+    public static async reloadCommandById(id: string) {
+        return this.instance.reloadCommandById(id);
     }
 
     public commands: {
@@ -142,22 +144,26 @@ export class CommandController {
     }
 
     private async load() {
-        console.log(`[BOTS] Start loading commands...`)
+        console.log(`[BOTS] Start loading commands...`);
 
         await Promise.all([
-            (async () => { 
+            (async () => {
                 const promises = this.loadFromDirectory(AbstractCommand, cmdRootPath);
                 await Promise.all(promises);
 
-                console.log(`[BOTS] Loaded ${Object.keys(this.commands).length} commands`)
+                console.log(`[BOTS] Loaded ${Object.keys(this.commands).length} commands`);
+
+                this.initFolderWatcher(cmdRootPath, AbstractCommand)
             })(),
-            (async () => { 
+            (async () => {
                 const promises = this.loadFromDirectory(AbstractCallback, cbRootPath);
                 await Promise.all(promises);
 
-                console.log(`[BOTS] Loaded ${Object.keys(this.callbacks).length} callbacks`)
+                console.log(`[BOTS] Loaded ${Object.keys(this.callbacks).length} callbacks`);
+
+                this.initFolderWatcher(cbRootPath, AbstractCallback);
             })()
-        ])       
+        ]);
     }
 
     private loadFromDirectory(classType: typeof AbstractCommand | typeof AbstractCallback, dir: string, rootPath?: string) {
@@ -234,14 +240,37 @@ export class CommandController {
         delete this.commands[cmd.id];
     }
 
-    public reloadCommandById(id: string) {
+    public unloadCallback(cb: LoadedInstance<AbstractCallback>) {
+        delete require.cache[cb.path];
+        delete this.callbacks[cb.id];
+    }
+
+    public async reloadCommandById(id: string, path?: string) {
         const cmd = this.commands[id];
-        if (!cmd) {
-            throw new Error(`command with id '${id}' not found`)
+        if (cmd) {
+            path = cmd.path;
+            this.unloadCommand(cmd);
         }
 
-        this.unloadCommand(cmd);
-        this.loadClass(AbstractCommand, cmdRootPath, cmd.path);
+        if (!path) {
+            throw new Error('Could\'t reload unloaded command by id without path')
+        }
+
+        await this.loadClass(AbstractCommand, cmdRootPath, path);
+    }
+
+    public async reloadCallbackById(id: string, path?: string) {
+        const cb = this.callbacks[id];
+        if (cb) {
+            path = cb.path;
+            this.unloadCallback(cb);
+        }
+
+        if (!path) {
+            throw new Error('Could\'t reload unloaded callback by id without path')
+        }
+
+        await this.loadClass(AbstractCallback, cmdRootPath, path);
     }
 
     private pathToId(rootPath: string, filePath: string) {
@@ -252,11 +281,60 @@ export class CommandController {
             .replace(/\\|\//ig, '_');
     }
 
-    // protected initCommandWatcher({ }: CommandValue) {
+    private initFolderWatcher(folderPath: string, classType: typeof AbstractCommand | typeof AbstractCallback) {
+        if (!config.dev) return;
+        const className = classType.name.replace(/^Abstract/, '').toLowerCase();
 
-    // }
+        watch(folderPath)
+            .on('ready', () => {
+                console.log(`[CMD] Watching for ${className} changes:`, folderPath);
+            })
+            .on('change', async (path) => {
+                const id = this.pathToId(folderPath, path);
 
-    // protected initFolderWatcher(folder: string) {
+                console.log(`[CMD] Detected ${className}#${id} change, reloading...`)
+                try {
+                    if (classType === AbstractCommand) {
+                        await this.reloadCommandById(id, path);
+                    } else if (classType === AbstractCallback) {
+                        await this.reloadCallbackById(id, path);
+                    } else throw new Error('unknown class type')
+                } catch (e) {
+                    console.log(`[CMD] Failed to reload ${className}#${id}:`, e)
 
-    // }
+                    return;
+                }
+
+                console.log(`[CMD] Successful reloaded ${className}#${id}`)
+            })
+            .on('unlink', (path) => {
+                const id = this.pathToId(folderPath, path);
+
+                try {
+                    if (classType === AbstractCommand) {
+                        const cmd = this.commands[id];
+                        if (!cmd) {
+                            return;
+                        }
+
+                        console.log(`[CMD] Detected ${className}#${id} unlink, unloading...`)
+                        this.unloadCommand(cmd);
+                    } else if (classType === AbstractCallback) {
+                        const cb = this.callbacks[id];
+                        if (!cb) {
+                            return;
+                        }
+
+                        console.log(`[CMD] Detected ${className}#${id} unlink, unloading...`)
+                        this.unloadCallback(cb);
+                    } else throw new Error('unknown class type')
+                } catch (e) {
+                    console.log(`[CMD] Failed to unload ${className}#${id}:`, e)
+
+                    return;
+                }
+
+                console.log(`[CMD] Successful unloaded ${className}#${id}`);
+            })
+    }
 }
