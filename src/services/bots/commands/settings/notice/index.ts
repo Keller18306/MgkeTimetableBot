@@ -1,11 +1,17 @@
+import { TelegramBotCommand } from "puregram/generated";
 import { AbstractCommand, CmdHandlerParams } from "../../../abstract";
 
 export default class extends AbstractCommand {
-    public regexp = /^(🔊\s)?(Настройка оповещений|Оповещения)$/i
+    public regexp = /^((!|\/)notice)|(🔊\s)?(Настройка оповещений|Оповещения)$/i
     public payload = null;
-    public scene = 'settings';
+    public tgCommand: TelegramBotCommand = {
+        command: 'notice',
+        description: 'Настройки оповещений'
+    };
 
-    handler({ context, keyboard }: CmdHandlerParams) {
+    handler({ context, chat, keyboard }: CmdHandlerParams) {
+        chat.scene = 'settings';
+
         return context.send('Меню настройки оповещений.', {
             keyboard: keyboard.SettingsNotice
         })

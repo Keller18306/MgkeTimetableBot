@@ -6,7 +6,7 @@ export default class extends AbstractCommand {
     public payload = null;
     public tgCommand: TelegramBotCommand = {
         command: 'settings',
-        description: 'Персональные настройки бота'
+        description: 'Настройки бота'
     };
 
     handler({ context, chat, keyboard }: CmdHandlerParams) {

@@ -1,11 +1,17 @@
+import { TelegramBotCommand } from "puregram/generated";
 import { AbstractCommand, CmdHandlerParams } from "../../../abstract";
 
 export default class extends AbstractCommand {
-    public regexp = /^(📃\s)?(Настройка форматировщика|Форматировщик)$/i
+    public regexp = /^((!|\/)formatter)|(📃\s)?(Настройка форматировщика|Форматировщик)$/i
     public payload = null;
-    public scene = 'settings';
+    public tgCommand: TelegramBotCommand = {
+        command: 'formatter',
+        description: 'Настройки форматировщика'
+    };
 
-    handler({ context, keyboard }: CmdHandlerParams) {
+    handler({ context, chat, keyboard }: CmdHandlerParams) {
+        chat.scene = 'settings';
+
         return context.send('Меню настройки форматировщика.', {
             keyboard: keyboard.SettingsFormatters
         });

@@ -212,6 +212,30 @@ export class Keyboard {
         })
     }
 
+    public get SettingsAliases(): KeyboardBuilder {
+        const keyboard: KeyboardBuilder = new KeyboardBuilder('SettingsAliases');
+
+        return keyboard.add({
+            text: 'Список',
+            color: KeyboardColor.PRIMARY_COLOR
+        }).add({
+            text: 'Добавить',
+            color: KeyboardColor.PRIMARY_COLOR
+        }).row().add({
+            text: 'Удалить',
+            color: KeyboardColor.PRIMARY_COLOR
+        }).row().add({
+            text: 'Отчистить все',
+            color: KeyboardColor.PRIMARY_COLOR
+        }).row().add({
+            text: 'Меню настроек',
+            color: KeyboardColor.SECONDARY_COLOR
+        }).add({
+            text: 'Главное меню',
+            color: KeyboardColor.SECONDARY_COLOR
+        });
+    }
+
     public get GroupHistory() {
         const keyboard: KeyboardBuilder = new KeyboardBuilder('GroupHistory', true);
 

@@ -1,11 +1,17 @@
+import { TelegramBotCommand } from "puregram/generated";
 import { AbstractCommand, CmdHandlerParams } from "../../../abstract";
 
 export default class extends AbstractCommand {
-    public regexp = /^(⌨️\s)?(Настройка кнопок|Кнопки)$/i
+    public regexp = /^((!|\/)button(s)?)|(⌨️\s)?(Настройка кнопок|Кнопки)$/i
     public payload = null;
-    public scene = 'settings';
+    public tgCommand: TelegramBotCommand = {
+        command: 'buttons',
+        description: 'Настройки кнопок бота'
+    };
 
-    handler({ context, keyboard }: CmdHandlerParams) {
+    handler({ context, chat, keyboard }: CmdHandlerParams) {
+        chat.scene = 'settings';
+
         return context.send('Меню настройки кнопок.', {
             keyboard: keyboard.SettingsButtons
         })

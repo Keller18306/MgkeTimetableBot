@@ -1,5 +1,5 @@
 --
--- Файл сгенерирован с помощью SQLiteStudio v3.4.4 в чт дек. 21 01:57:04 2023
+-- Файл сгенерирован с помощью SQLiteStudio v3.4.4 в чт дек. 21 12:16:36 2023
 --
 -- Использованная кодировка текста: System
 --
@@ -36,7 +36,8 @@ CREATE TABLE chat_aliases (
     alias   STRING  NOT NULL,
     UNIQUE (
         service,
-        chat_id
+        chat_id,
+        subject
     )
 );
 
@@ -211,6 +212,13 @@ CREATE TABLE vk_bot_chats (
 CREATE INDEX api_index ON api (
     service,
     fromId
+);
+
+
+-- Индекс: chat_aliases-chatIndex
+CREATE INDEX [chat_aliases-chatIndex] ON chat_aliases (
+    service,
+    chat_id
 );
 
 

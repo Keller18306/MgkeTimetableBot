@@ -142,6 +142,8 @@ export class CommandController {
     }
 
     private async load() {
+        console.log(`[BOTS] Start loading commands...`)
+
         await Promise.all([
             (async () => { 
                 const promises = this.loadFromDirectory(AbstractCommand, cmdRootPath);
