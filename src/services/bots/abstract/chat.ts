@@ -1,6 +1,6 @@
 import { Service } from ".";
 import { config } from "../../../../config";
-import { addNewBotUser, getBotUser, updateChatOptionsKeyByPeerId, updateKeyInTableByPeerId } from "../../../db";
+import { addNewBotUser, getBotUser, getChatLessonAliases, updateChatOptionsKeyByPeerId, updateKeyInTableByPeerId } from "../../../db";
 import { arrayUnique } from "../../../utils";
 
 export type ChatMode = 'student' | 'teacher' | 'parent' | 'guest'
@@ -216,7 +216,7 @@ abstract class AbstractChat {
 
     public getLesonAliases(): { [key: string]: string } {
         if (!this._aliasesCache) {
-            this._aliasesCache = {};
+            this._aliasesCache = getChatLessonAliases(this.service, this.id);
         }
 
         return this._aliasesCache;
