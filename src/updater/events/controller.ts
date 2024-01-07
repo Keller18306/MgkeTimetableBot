@@ -76,9 +76,9 @@ export class EventController {
         }
     }
 
-    public static async sendNextWeek(chatMode: ChatMode) {
+    public static async sendNextWeek(chatMode: ChatMode, weekIndex: number) {
         for (const service of this.serviceList) {
-            await service.sendNextWeek(chatMode);
+            await service.sendNextWeek(chatMode, weekIndex);
         }
     }
 

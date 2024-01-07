@@ -169,6 +169,12 @@ export function nowInTime(includedDays: number[], timeFrom: string, timeTo: stri
 const ONE_DAY: number = 24 * 60 * 60 * 1000;
 const oneWeekMilliseconds = 7 * 24 * 60 * 60 * 1000;
 
+export function weekFirstDayByWeekIndex(weekIndex: number): Date {
+    const d1 = new Date((weekIndex * oneWeekMilliseconds) + startingWeekIndexDate.getTime());
+
+    return d1;
+}
+
 export function weekBoundsByWeekIndex(weekIndex: number): [Date, Date] {
     const d1 = new Date((weekIndex * oneWeekMilliseconds) + startingWeekIndexDate.getTime());
     const d2 = new Date(d1.getTime() + ONE_DAY * 6);

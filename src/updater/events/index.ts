@@ -1,9 +1,9 @@
 import { config } from "../../../config";
-import { getDistributionChats, getGroupsChats, getNoticeErrorsChats, getNoticeNextWeekChats, getTeachersChats } from "../../db";
+import { getDistributionChats, getGroupsChats, getGroupsNoticeNextWeekChats, getNoticeErrorsChats, getTeachersChats, getTeachersNoticeNextWeekChats } from "../../db";
 import { MessageOptions } from "../../services/bots/abstract";
 import { AbstractChat, ChatMode, DbChat } from "../../services/bots/abstract/chat";
 import { Service } from "../../services/bots/abstract/command";
-import { createScheduleFormatter, getDayIndex, getNextDays, isNextWeek, isToday, isTomorrow, prepareError, strDateToIndex } from "../../utils";
+import { createScheduleFormatter, getDayIndex, getNextDays, isNextWeek, isToday, isTomorrow, parseStrToDate, prepareError, strDateToIndex, weekFirstDayByWeekIndex } from "../../utils";
 import { GroupDay, TeacherDay } from "../parser/types";
 import { raspCache, saveCache } from "../raspCache";
 import { EventController } from "./controller";
@@ -75,7 +75,7 @@ export abstract class AbstractEventListener<T extends AbstractChat = AbstractCha
         if (!Array.isArray(teachers)) teachers = [teachers];
 
         const chats: T[] = getTeachersChats(this._tableName, this.service, teachers)
-            .map((chat: any) => this.createChat(chat));;
+            .map((chat: any) => this.createChat(chat));
 
         return chats;
     }
@@ -310,9 +310,46 @@ export abstract class AbstractEventListener<T extends AbstractChat = AbstractCha
         }
     }
 
-    public async sendNextWeek(chatMode: ChatMode) {
-        const chats: T[] = getNoticeNextWeekChats(this._tableName, this.service, chatMode)
-            .map((chat: any) => this.createChat(chat));
+    public async sendNextWeek(chatMode: ChatMode, weekIndex: number) {       
+        const firstWeekDay = weekFirstDayByWeekIndex(weekIndex);
+        
+        let chats: T[] | undefined;
+
+        if (chatMode === 'student') {
+            const groups: string[] = Object.entries(raspCache.groups.timetable).map(([group, { days }]): [string, GroupDay[]] => {
+                const daysOfWeek = days.filter((day) => {
+                    return parseStrToDate(day.day) >= firstWeekDay && day.lessons.length > 0;
+                });
+
+                return [group, daysOfWeek];
+            }).filter(([, days]): boolean => {
+                return days.length > 0;
+            }).map(([group]): string => {
+                return group;
+            });
+
+            chats = getGroupsNoticeNextWeekChats(this._tableName, this.service, groups)
+                .map((chat: any) => this.createChat(chat));
+        }
+
+        if (chatMode === 'teacher') {
+            const teachers: string[] = Object.entries(raspCache.teachers.timetable).map(([group, { days }]): [string, TeacherDay[]] => {
+                const daysOfWeek = days.filter((day) => {
+                    return parseStrToDate(day.day) >= firstWeekDay && day.lessons.length > 0;
+                });
+
+                return [group, daysOfWeek];
+            }).filter(([, days]): boolean => {
+                return days.length > 0;
+            }).map(([teacher]): string => {
+                return teacher;
+            });
+
+            chats = getTeachersNoticeNextWeekChats(this._tableName, this.service, teachers)
+                .map((chat: any) => this.createChat(chat));
+        }
+        
+        if (!chats || chats.length === 0) return;
 
         return this.sendMessages(chats, '🆕 Доступно расписание на следующую неделю');
     }

@@ -507,7 +507,7 @@ export class Updater {
         // оповещение в чаты, что на сайте вывесили новую неделю
         if (cache.lastWeekIndex && maxWeekIndex > cache.lastWeekIndex) {
             const chatMode: ChatMode = onParser<ChatMode>(Parser, 'student', 'teacher');
-            EventController.sendNextWeek(chatMode);
+            EventController.sendNextWeek(chatMode, maxWeekIndex);
         }
 
         cache.lastWeekIndex = maxWeekIndex;

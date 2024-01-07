@@ -41,11 +41,18 @@ export function getTeachersChats(table: string, service: Service, teachers: stri
     ).all(service, ...teachers);
 }
 
-export function getNoticeNextWeekChats(table: string, service: Service, chatMode: ChatMode): any {
+export function getGroupsNoticeNextWeekChats(table: string, service: Service, groups: string | string[]): any {
     return db.prepare(
-        "SELECT * FROM chat_options JOIN `" + table + "` ON chat_options.id = " + table + ".id WHERE `service` = ? AND `accepted` = 1 AND `allowSendMess` = 1 AND `noticeNextWeek` = 1 AND `mode` = ?"
+        "SELECT * FROM chat_options JOIN `" + table + "` ON chat_options.id = " + table + ".id WHERE `service` = ? AND `accepted` = 1 AND `allowSendMess` = 1 AND `noticeNextWeek` = 1 AND `mode` = 'student' AND `group` IN (" + Array(groups.length).fill('?') + ")"
         + (config.dev ? ' AND `noticeParserErrors` = 1' : '')
-    ).all(service, chatMode)
+    ).all(service, ...groups)
+}
+
+export function getTeachersNoticeNextWeekChats(table: string, service: Service, teachers: string | string[]): any {
+    return db.prepare(
+        "SELECT * FROM chat_options JOIN `" + table + "` ON chat_options.id = " + table + ".id WHERE `service` = ? AND `accepted` = 1 AND `allowSendMess` = 1 AND `noticeNextWeek` = 1 AND `mode` = 'teacher' AND `teacher` IN (" + Array(teachers.length).fill('?') + ")"
+        + (config.dev ? ' AND `noticeParserErrors` = 1' : '')
+    ).all(service, ...teachers)
 }
 
 export function getDistributionChats(table: string, service: Service): any {
