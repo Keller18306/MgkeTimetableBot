@@ -196,8 +196,6 @@ export abstract class AbstractEventListener<T extends AbstractChat = AbstractCha
     }
 
     public async nextTeacherDay({ index }: { index: number }) {
-        const today: number = DayIndex.now().valueOf();
-
         const teachers: string[] = Object.entries(raspCache.teachers.timetable).map(([teacher, { days }]): [string, TeacherDay | undefined] => {
             const todayDay = days.find((day) => {
                 return DayIndex.fromStringDate(day.day).isToday();
