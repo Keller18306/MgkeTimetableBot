@@ -21,7 +21,7 @@ export default class TeacherParser extends AbstractParser {
 
         for (const teacher in this.teachers) {
             for (const day of this.teachers[teacher].days) {
-                this.processDay(day)
+                this.postProcessDay(day);
             }
         }
 
@@ -33,19 +33,18 @@ export default class TeacherParser extends AbstractParser {
         if (!label) return;
 
         if (!label.toLowerCase().startsWith('преподаватель')) {
-            throw new Error('Это раписание не для преподавателя')
+            throw new Error('Это расписание не для преподавателя')
         }
 
         const teacherName = label.split('-')[1].trim()
-        if (teacherName == undefined) throw new Error('Невозможно получить имя преподавателя')
+        if (teacherName == undefined) {
+            throw new Error('Невозможно получить имя преподавателя')
+        }
 
         const rows = Array.from(table.rows)
 
         const days: TeacherDay[] = this.getDays(rows[0]);
         this.parseLessons(rows, days);
-        // for (const { lessons } of days) {
-        //     this.clearEndingNull(lessons);
-        // }
 
         const teacherWeek: Teacher = {
             teacher: teacherName,
@@ -139,7 +138,7 @@ export default class TeacherParser extends AbstractParser {
         }
     }
 
-    private processDay(day: TeacherDay) {
+    private postProcessDay(day: TeacherDay) {
         for (let i: number = 0; i <= day.lessons.length; i++) {
             const lesson: TeacherLesson = day.lessons[i];
             if (!lesson || Array.isArray(lesson)) continue;

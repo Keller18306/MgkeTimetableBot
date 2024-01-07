@@ -37,7 +37,7 @@ export default class StudentParser extends AbstractParser {
 
         for (const group in this.groups) {
             for (const day of this.groups[group].days) {
-                this.processDay(day)
+                this.postProcessDay(day)
             }
         }
 
@@ -49,20 +49,19 @@ export default class StudentParser extends AbstractParser {
         if (!label) return;
 
         if (!label.toLowerCase().startsWith('группа')) {
-            throw new Error('Это раписание не для группы')
+            throw new Error('Это расписание не для группы')
         }
 
         const group = label.split('-', 2)[1]?.trim();
         const groupNumber = this.parseGroupNumber(group);
-        if (!group || !groupNumber) throw new Error('Невозможно получить номер группы')
+        if (!group || !groupNumber) {
+            throw new Error('Невозможно получить номер группы');
+        }
 
         const rows = Array.from(table.rows)
 
         const days: GroupDay[] = this.getDays(rows[0]);
         this.parseLessons(rows, days);
-        // for (const { lessons } of days) {
-        //     this.clearEndingNull(lessons);
-        // }
 
         this.groups[groupNumber] = {
             group: group,
@@ -110,6 +109,8 @@ export default class StudentParser extends AbstractParser {
             const row = rows[row_i]
             const cells = row.cells
 
+            const lessonIndex = cells[0].textContent ? Number(cells[0].textContent) : null;
+
             for (let cell_i: number = 1; cell_i < Math.ceil(cells.length / 2); cell_i++) {
                 const day = cell_i - 1;
 
@@ -117,6 +118,16 @@ export default class StudentParser extends AbstractParser {
                 const cabinetCell = cells[cell_i * 2];
 
                 const lesson = this.parseLesson(lessonCell, cabinetCell);
+
+                //appending null
+                if (lessonIndex && lessonIndex > days[day].lessons.length + 1) {
+                    const removedLines = lessonIndex - days[day].lessons.length - 1
+
+                    for (let i = 0; i < removedLines; i++) {
+                        days[day].lessons.push(null);
+                    }
+                }
+
                 days[day].lessons.push(lesson)
             }
         }
@@ -265,7 +276,7 @@ export default class StudentParser extends AbstractParser {
         return parsed
     }
 
-    private processDay(day: GroupDay) {
+    private postProcessDay(day: GroupDay) {
         for (let i: number = 0; i <= day.lessons.length; i++) {
             let lesson: GroupLesson = day.lessons[i];
             if (!lesson) continue;
