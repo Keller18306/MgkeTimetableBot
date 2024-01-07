@@ -1,5 +1,5 @@
 import { Updater, raspCache } from "../../../updater";
-import { getCurrentWeekIndexToShow, getDayIndex, weekBoundsByWeekIndex } from "../../../utils";
+import { WeekIndex, getCurrentWeekIndexToShow } from "../../../utils";
 import { ImageBuilder, ImageFile } from "../../image/builder";
 import { AbstractCallback, CbHandlerParams } from "../abstract";
 
@@ -10,8 +10,8 @@ export default class extends AbstractCallback {
         const [type, value] = context.payload;
         if (!type || !value) return;
 
-        const weekIndex: number = context.payload[2] || getCurrentWeekIndexToShow();;
-        const weekBounds = weekBoundsByWeekIndex(weekIndex).map(getDayIndex) as [number, number];
+        const weekIndex: number = context.payload[2] || getCurrentWeekIndexToShow();
+        const weekBounds = WeekIndex.fromNumber(weekIndex).getWeekDayIndexRange();
 
         let image: ImageFile | undefined;
         if (['g', 'group'].includes(type)) {

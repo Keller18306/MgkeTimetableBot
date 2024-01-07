@@ -1,6 +1,5 @@
-import { raspCache } from "../updater";
-
-const startingWeekIndexDate = new Date(1970, 0, 5);
+import { raspCache } from "../../updater";
+import { WeekIndex } from "./WeekIndex";
 
 export function seconds2times(seconds: number, values: number = 3) {
     let times = [];
@@ -52,35 +51,6 @@ export function formatDate(date: Date): string {
         `${date.getFullYear()}`;
 }
 
-export function getDayIndex(date?: Date): number {
-    if (!date) {
-        date = new Date();
-    }
-
-    date.setHours(0, 0, 0, 0);
-
-
-    return (date.getTime() + (Math.abs(date.getTimezoneOffset()) * 60 * 1e3)) / 1e3 / 24 / 60 / 60;
-}
-
-export function getWeekIndex(date?: Date): number {
-    if (!date) {
-        date = new Date();
-    }
-
-    // Корректировка для воскресенья
-    const dayOfWeek = date.getDay();
-    if (dayOfWeek === 0) { // Воскресенье
-        date = new Date(date.getFullYear(), date.getMonth(), date.getDate() - 1);
-    }
-
-    const oneWeekMilliseconds = 7 * 24 * 60 * 60 * 1000;
-    const millisecondsElapsed = date.getTime() - startingWeekIndexDate.getTime();
-    const weekNumber = Math.floor(millisecondsElapsed / oneWeekMilliseconds);
-
-    return weekNumber;
-}
-
 export function parseStrToDate(str_date: string, utc: boolean = false): Date {
     const date = new Date();
 
@@ -99,43 +69,6 @@ export function parseStrToDate(str_date: string, utc: boolean = false): Date {
     }
 
     return date;
-}
-
-export function strDateToIndex(str_date: string): number {
-    const date = parseStrToDate(str_date, true);
-
-    return date.getTime() / 1e3 / 24 / 60 / 60;
-}
-
-export function dayIndexToDate(dayIndex: number): Date {
-    return new Date(dayIndex * 1e3 * 24 * 60 * 60);
-}
-
-export function getStrWeekIndex(str_date: string): number {
-    const date = parseStrToDate(str_date);
-
-    return getWeekIndex(date);
-}
-
-export function isToday(str_date: string): boolean {
-    const todayIndex = getDayIndex();
-    const dayIndex = strDateToIndex(str_date);
-
-    return todayIndex === dayIndex;
-}
-
-export function isTomorrow(str_date: string): boolean {
-    const todayIndex = getDayIndex() + 1;
-    const dayIndex = strDateToIndex(str_date);
-
-    return todayIndex === dayIndex;
-}
-
-export function isNextWeek(str_date: string): boolean {
-    const todayWeekNumber = getWeekIndex();
-    const weekNumber = getStrWeekIndex(str_date);
-
-    return weekNumber > todayWeekNumber;
 }
 
 export function getIsSaturday(): boolean {
@@ -166,22 +99,6 @@ export function nowInTime(includedDays: number[], timeFrom: string, timeTo: stri
     }
 }
 
-const ONE_DAY: number = 24 * 60 * 60 * 1000;
-const oneWeekMilliseconds = 7 * 24 * 60 * 60 * 1000;
-
-export function weekFirstDayByWeekIndex(weekIndex: number): Date {
-    const d1 = new Date((weekIndex * oneWeekMilliseconds) + startingWeekIndexDate.getTime());
-
-    return d1;
-}
-
-export function weekBoundsByWeekIndex(weekIndex: number): [Date, Date] {
-    const d1 = new Date((weekIndex * oneWeekMilliseconds) + startingWeekIndexDate.getTime());
-    const d2 = new Date(d1.getTime() + ONE_DAY * 6);
-
-    return [d1, d2];
-}
-
 export function getWeekdayName(date: Date): string {
     const days: string[] = [
         'Воскресенье',
@@ -203,10 +120,13 @@ export function getWeekdayNameByStrDate(str_date: string): string {
 export function getCurrentWeekIndexToShow() {
     const date = new Date();
 
-    let weekIndex: number = getWeekIndex(date);
+    let weekIndex: number = WeekIndex.fromDate(date).valueOf();
     if (date.getDay() === 0) {
         weekIndex += 1;
     }
 
     return Math.min(weekIndex, raspCache.teachers.lastWeekIndex);
 }
+
+export * from './DayIndex';
+export * from './WeekIndex';

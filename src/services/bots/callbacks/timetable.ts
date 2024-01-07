@@ -1,5 +1,5 @@
 import { Updater, raspCache } from "../../../updater";
-import { getCurrentWeekIndexToShow, getDayIndex, removePastDays, weekBoundsByWeekIndex } from "../../../utils";
+import { WeekIndex, getCurrentWeekIndexToShow, removePastDays } from "../../../utils";
 import { AbstractCallback, CbHandlerParams } from "../abstract";
 
 export default class extends AbstractCallback {
@@ -31,7 +31,7 @@ export default class extends AbstractCallback {
         if (group === undefined) return context.edit('Данной учебной группы не существует');
 
         const currentWeekIndex: number = getCurrentWeekIndexToShow();
-        const weekBounds = weekBoundsByWeekIndex(weekIndex).map(getDayIndex) as [number, number];
+        const weekBounds = WeekIndex.fromNumber(weekIndex).getWeekDayIndexRange();
 
         let days = Updater.getInstance().archive.getGroupDaysByBounds(weekBounds, value);
         if (weekIndex === currentWeekIndex && hidePastDays) {
@@ -52,7 +52,7 @@ export default class extends AbstractCallback {
         if (teacher === undefined) return context.edit('Данного преподавателя не существует');
 
         const currentWeekIndex: number = getCurrentWeekIndexToShow();
-        const weekBounds = weekBoundsByWeekIndex(weekIndex).map(getDayIndex) as [number, number];
+        const weekBounds = WeekIndex.fromNumber(weekIndex).getWeekDayIndexRange();
 
         let days = Updater.getInstance().archive.getTeacherDaysByBounds(weekBounds, value);
         if (weekIndex === currentWeekIndex && hidePastDays) {

@@ -3,21 +3,23 @@ import { getDistributionChats, getGroupsChats, getGroupsNoticeNextWeekChats, get
 import { MessageOptions } from "../../services/bots/abstract";
 import { AbstractChat, ChatMode, DbChat } from "../../services/bots/abstract/chat";
 import { Service } from "../../services/bots/abstract/command";
-import { createScheduleFormatter, getDayIndex, getNextDays, isNextWeek, isToday, isTomorrow, parseStrToDate, prepareError, strDateToIndex, weekFirstDayByWeekIndex } from "../../utils";
+import { DayIndex, WeekIndex, createScheduleFormatter, getFutureDays, parseStrToDate, prepareError } from "../../utils";
 import { GroupDay, TeacherDay } from "../parser/types";
 import { raspCache, saveCache } from "../raspCache";
 import { EventController } from "./controller";
 
 function getDayPhrase(day: string, nextDayPhrase: string = 'день'): string {
-    if (isNextWeek(day)) {
+    if (WeekIndex.fromStringDate(day).isFutureWeek()) {
         return 'следующую неделю';
     }
 
-    if (isToday(day)) {
+    const dayIndex = DayIndex.fromStringDate(day);
+
+    if (dayIndex.isToday()) {
         return 'сегодня';
     }
 
-    if (isTomorrow(day)) {
+    if (dayIndex.isTomorrow()) {
         return 'завтра';
     }
 
@@ -81,11 +83,9 @@ export abstract class AbstractEventListener<T extends AbstractChat = AbstractCha
     }
 
     public async nextGroupDay({ index }: { index: number }) {
-        const today: number = getDayIndex();
-
         const groups: string[] = Object.entries(raspCache.groups.timetable).map(([group, { days }]): [string, GroupDay | undefined] => {
             const todayDay = days.find((day) => {
-                return strDateToIndex(day.day) === today;
+                return DayIndex.fromStringDate(day.day).isToday();
             });
 
             return [group, todayDay];
@@ -116,7 +116,7 @@ export abstract class AbstractEventListener<T extends AbstractChat = AbstractCha
             const groupEntry = raspCache.groups.timetable[group];
             const chats: T[] = chatsKeyed[group];
 
-            const nextDays = getNextDays(groupEntry.days);
+            const nextDays = getFutureDays(groupEntry.days);
             if (!nextDays.length) continue;
 
             //если дальше всё расписание пустое, то больше не оповещаем
@@ -125,7 +125,7 @@ export abstract class AbstractEventListener<T extends AbstractChat = AbstractCha
 
             const day = nextDays[0];
 
-            const dayIndex = strDateToIndex(day.day);
+            const dayIndex = DayIndex.fromStringDate(day.day).valueOf();
             if (groupEntry.lastNoticedDay && dayIndex <= groupEntry.lastNoticedDay) {
                 continue;
             }
@@ -196,11 +196,11 @@ export abstract class AbstractEventListener<T extends AbstractChat = AbstractCha
     }
 
     public async nextTeacherDay({ index }: { index: number }) {
-        const today: number = getDayIndex();
+        const today: number = DayIndex.now().valueOf();
 
         const teachers: string[] = Object.entries(raspCache.teachers.timetable).map(([teacher, { days }]): [string, TeacherDay | undefined] => {
             const todayDay = days.find((day) => {
-                return strDateToIndex(day.day) === today;
+                return DayIndex.fromStringDate(day.day).isToday();
             });
 
             return [teacher, todayDay];
@@ -231,7 +231,7 @@ export abstract class AbstractEventListener<T extends AbstractChat = AbstractCha
             const teacherEntry = raspCache.teachers.timetable[teacher];
             const chats: T[] = chatsKeyed[teacher];
 
-            const nextDays = getNextDays(teacherEntry.days);
+            const nextDays = getFutureDays(teacherEntry.days);
             if (!nextDays.length) continue;
 
             //если дальше всё расписание пустое, то больше не оповещаем
@@ -240,7 +240,7 @@ export abstract class AbstractEventListener<T extends AbstractChat = AbstractCha
 
             const day = nextDays[0];
 
-            const dayIndex = strDateToIndex(day.day);
+            const dayIndex = DayIndex.fromStringDate(day.day).valueOf();
             if (teacherEntry.lastNoticedDay && dayIndex <= teacherEntry.lastNoticedDay) {
                 continue;
             }
@@ -310,9 +310,9 @@ export abstract class AbstractEventListener<T extends AbstractChat = AbstractCha
         }
     }
 
-    public async sendNextWeek(chatMode: ChatMode, weekIndex: number) {       
-        const firstWeekDay = weekFirstDayByWeekIndex(weekIndex);
-        
+    public async sendNextWeek(chatMode: ChatMode, weekIndex: number) {
+        const firstWeekDay = WeekIndex.fromNumber(weekIndex).getFirstDayDate();
+
         let chats: T[] | undefined;
 
         if (chatMode === 'student') {
@@ -348,7 +348,7 @@ export abstract class AbstractEventListener<T extends AbstractChat = AbstractCha
             chats = getTeachersNoticeNextWeekChats(this._tableName, this.service, teachers)
                 .map((chat: any) => this.createChat(chat));
         }
-        
+
         if (!chats || chats.length === 0) return;
 
         return this.sendMessages(chats, '🆕 Доступно расписание на следующую неделю');

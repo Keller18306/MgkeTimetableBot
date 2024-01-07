@@ -1,5 +1,5 @@
 import { Updater } from '../../updater';
-import { SCHEDULE_FORMATTERS, getWeekIndex } from '../../utils';
+import { SCHEDULE_FORMATTERS, WeekIndex } from '../../utils';
 import { AbstractChat, AbstractContext, ButtonType, KeyboardBuilder, KeyboardColor } from './abstract';
 
 function noYesSmile(value: number | boolean, text: string, smiles: [string, string] = ['✅', '🚫']): string {
@@ -313,7 +313,7 @@ export class Keyboard {
         }
 
         //show full
-        if (hidePastDays && weekIndex === getWeekIndex()) {
+        if (hidePastDays && weekIndex === WeekIndex.now().valueOf()) {
             keyboard.add({
                 type: ButtonType.Callback,
                 text: '🔼',

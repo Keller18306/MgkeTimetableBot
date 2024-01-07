@@ -1,6 +1,6 @@
 import { AbstractEventListener, ProgressCallback } from ".";
 import { ChatMode, Service } from "../../services/bots/abstract";
-import { strDateToIndex } from "../../utils";
+import { DayIndex } from "../../utils";
 import { GroupDay, TeacherDay } from "../parser/types";
 import { raspCache, saveCache } from "../raspCache";
 
@@ -26,7 +26,7 @@ export class EventController {
         const { day, group } = data;
 
         const groupEntry = raspCache.groups.timetable[group];
-        const dayIndex = strDateToIndex(day.day);
+        const dayIndex = DayIndex.fromStringDate(day.day).valueOf();
         if (groupEntry.lastNoticedDay && dayIndex <= groupEntry.lastNoticedDay) {
             return;
         }
@@ -56,7 +56,7 @@ export class EventController {
         const { day, teacher } = data;
 
         const teacherEntry = raspCache.teachers.timetable[teacher];
-        const dayIndex = strDateToIndex(day.day);
+        const dayIndex = DayIndex.fromStringDate(day.day).valueOf();
         if (teacherEntry.lastNoticedDay && dayIndex <= teacherEntry.lastNoticedDay) {
             return;
         }

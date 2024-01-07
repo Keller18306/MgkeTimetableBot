@@ -3,7 +3,7 @@ import { JSDOM } from "jsdom"
 import { config } from "../../config"
 import { ChatMode } from "../services/bots/abstract"
 import { clearOldImages } from "../services/image/clear"
-import { getDayIndex, getStrWeekIndex, mergeDays, strDateToIndex } from "../utils"
+import { DayIndex, WeekIndex, mergeDays } from "../utils"
 import { Archive, ArchiveAppendDay } from "./archive"
 import { EventController } from "./events/controller"
 import { NextDayUpdater } from "./nextDay"
@@ -316,9 +316,6 @@ export class Updater {
     }
 
     private async parseTimetable(Parser: typeof TeacherParser | typeof StudentParser, url: string, cache: RaspEntryCache<Teachers | Groups>) {
-        const date = new Date();
-        const todayIndex = getDayIndex(date);
-
         let data: Teachers | Groups;
         if (config.updater.localMode) {
             const fileName: string = onParser<string>(Parser, 'groups', 'teachers');
@@ -354,10 +351,10 @@ export class Updater {
 
         const siteMinimalDayIndex: number = Math.min(...Object.entries(data).reduce<number[]>((bounds: number[], [, entry]): number[] => {
             for (const day of entry.days) {
-                const date: number = strDateToIndex(day.day);
-                if (bounds.includes(date)) continue;
+                const dayIndex: number = DayIndex.fromStringDate(day.day).valueOf();
+                if (bounds.includes(dayIndex)) continue;
 
-                bounds.push(date);
+                bounds.push(dayIndex);
             }
 
             return bounds;
@@ -400,8 +397,7 @@ export class Updater {
                 }
 
                 for (const day of changed) {
-                    const todayIndex = getDayIndex();
-                    const dayIndex = strDateToIndex(day.day);
+                    const dayIndex = DayIndex.fromStringDate(day.day);
 
                     let sendFunc: ((data: any) => Promise<void>) | undefined;
                     let sendData = onParser(Parser, {
@@ -412,17 +408,17 @@ export class Updater {
                         teacher: index
                     });
 
-                    if (dayIndex === todayIndex) {
+                    if (dayIndex.isToday()) {
                         //расписание на сегодня изменено
 
                         sendFunc = onParser<any>(Parser,
                             EventController.updateGroupDay,
                             EventController.updateTeacherDay
                         );
-                    } else if (dayIndex === todayIndex + 1) {
+                    } else if (dayIndex.isTomorrow()) {
                         //расписание на завтра изменилось
 
-                        if (currentEntry.lastNoticedDay === dayIndex) {
+                        if (currentEntry.lastNoticedDay === dayIndex.valueOf()) {
                             //уже расписание было отправлено ранее, а значит поступили новые правки
                             sendFunc = onParser<any>(Parser,
                                 EventController.updateGroupDay,
@@ -467,8 +463,8 @@ export class Updater {
 
             //удаление старых дней (удаляются дни, которые одновременно старше указанных на сайте и старше сегодняшнего дня)
             entry.days = (entry.days as any).filter((day: GroupDay | TeacherDay): boolean => {
-                const dayIndex: number = strDateToIndex(day.day);
-                const keep: boolean = (dayIndex >= todayIndex || dayIndex >= siteMinimalDayIndex);
+                const dayIndex = DayIndex.fromStringDate(day.day);
+                const keep: boolean = (dayIndex.isNotPast() || dayIndex.valueOf() >= siteMinimalDayIndex);
 
                 if (!keep) {
                     archiveDays.push(onParser<ArchiveAppendDay>(Parser, {
@@ -497,7 +493,7 @@ export class Updater {
         const maxWeekIndex = Math.max(...(Object.values(cache.timetable) as (Group | Teacher)[])
             .map((entry) => {
                 const weekIndexes = entry.days.map((day) => {
-                    return getStrWeekIndex(day.day);
+                    return WeekIndex.fromStringDate(day.day).valueOf();
                 });
 
                 return Math.max(...weekIndexes);

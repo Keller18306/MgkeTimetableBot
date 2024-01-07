@@ -1,5 +1,5 @@
 import db from "../db";
-import { dayIndexToDate, formatDate, getDayIndex, getWeekIndex, strDateToIndex } from "../utils";
+import { DayIndex, WeekIndex, formatDate } from "../utils";
 import { GroupDay, TeacherDay } from "./parser/types";
 
 export type ArchiveAppendDay = {
@@ -14,7 +14,7 @@ export type ArchiveAppendDay = {
 
 function dbEntryToDayObject(entry: any): any {
     return {
-        day: formatDate(dayIndexToDate(entry.day)),
+        day: formatDate(DayIndex.fromNumber(entry.day).toDate()),
         lessons: JSON.parse(entry.data)
     };
 }
@@ -41,9 +41,10 @@ export class Archive {
     public getWeekIndexBounds(): { min: number, max: number } {
         const { min, max } = this.getDayIndexBounds();
 
+
         return {
-            min: getWeekIndex(dayIndexToDate(min)),
-            max: getWeekIndex(dayIndexToDate(max))
+            min: WeekIndex.fromDayIndex(min).valueOf(),
+            max: WeekIndex.fromDayIndex(max).valueOf()
         }
     }
 
@@ -71,7 +72,7 @@ export class Archive {
         this._dayIndexBounds = undefined;
         this._groups = undefined;
 
-        const dayIndex: number = strDateToIndex(day.day);
+        const dayIndex: number = DayIndex.fromStringDate(day.day).valueOf();
         const data = JSON.stringify(day.lessons);
 
         db.prepare('INSERT INTO timetable_archive (day, `group`, data) VALUES (?, ?, ?) ON CONFLICT(day, `group`) DO UPDATE SET data = ?')
@@ -82,7 +83,7 @@ export class Archive {
         this._dayIndexBounds = undefined;
         this._teachers = undefined;
 
-        const dayIndex: number = strDateToIndex(day.day);
+        const dayIndex: number = DayIndex.fromStringDate(day.day).valueOf();
         const data = JSON.stringify(day.lessons);
 
         db.prepare('INSERT INTO timetable_archive (day, teacher, data) VALUES (?, ?, ?) ON CONFLICT(day, teacher) DO UPDATE SET data = ?')

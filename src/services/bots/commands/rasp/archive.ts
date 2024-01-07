@@ -1,7 +1,7 @@
 import { TelegramBotCommand } from "puregram/generated";
 import { Updater } from "../../../../updater";
 import { GroupDay, TeacherDay } from "../../../../updater/parser/types";
-import { dayIndexToDate, formatDate, strDateToIndex } from "../../../../utils";
+import { DayIndex, formatDate } from "../../../../utils";
 import { AbstractCommand, CmdHandlerParams } from "../../abstract";
 
 const archive = Updater.getInstance().archive;
@@ -21,7 +21,7 @@ export default class extends AbstractCommand {
             return context.send('День не указан');
         }
 
-        const dayIndex: number = strDateToIndex(day);
+        const dayIndex: number = DayIndex.fromStringDate(day).valueOf();
 
         let entry: GroupDay | TeacherDay | null = null;
         let text: string;
@@ -48,8 +48,8 @@ export default class extends AbstractCommand {
             const { min: minDayIndex, max: maxDayIndex } = archive.getDayIndexBounds();
             
             if (dayIndex < minDayIndex || dayIndex > maxDayIndex) {
-                const fromDay = formatDate(dayIndexToDate(minDayIndex));
-                const toDay = formatDate(dayIndexToDate(maxDayIndex));
+                const fromDay = formatDate(DayIndex.fromNumber(minDayIndex).toDate());
+                const toDay = formatDate(DayIndex.fromNumber(maxDayIndex).toDate());
 
                 //todo another day format
                 return context.send([

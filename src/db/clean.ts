@@ -1,8 +1,8 @@
 import { CronJob } from 'cron';
 import db from '.';
-import { getDayIndex } from '../utils';
-import { vaccum } from './common';
 import { Updater } from '../updater';
+import { DayIndex } from '../utils';
+import { vaccum } from './common';
 
 export function vanish() {
     //clean storage larger then 30 days
@@ -11,7 +11,7 @@ export function vanish() {
 
     //clean timetable days larger then 365 days
     db.prepare('DELETE FROM timetable_archive WHERE day <= ?')
-        .run(getDayIndex(new Date(Date.now() - (1e3 * 60 * 60 * 24 * 365))));
+        .run(DayIndex.fromDate(new Date(Date.now() - (1e3 * 60 * 60 * 24 * 365))));
 
     //TODO DELETE OLD CHATS
 

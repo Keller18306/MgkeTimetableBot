@@ -1,6 +1,6 @@
 import db from '../src/db';
 import { GroupLesson, GroupLessonExplain } from '../src/updater/parser/types';
-import { strDateToIndex } from '../src/utils';
+import { DayIndex } from '../src/utils';
 
 const days: string[] = [
     '01.09.2023', '04.09.2023', '19.09.2023'
@@ -12,7 +12,7 @@ const mySubgroup = 2;
 let totalGroups: number[] = [];
 
 for (const day of days) {
-    const index = strDateToIndex(day)
+    const index = DayIndex.fromStringDate(day).valueOf();
 
     const groups: any[] = db.prepare('SELECT * FROM timetable_archive WHERE day = ? AND teacher IS NULL')
         .all(index)

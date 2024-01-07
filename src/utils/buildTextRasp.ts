@@ -6,7 +6,7 @@ import { RaspCache } from '../updater/raspCache';
 import { ScheduleFormatter } from './formatters/abstract';
 import { DefaultScheduleFormatter } from './formatters/default';
 import { VisualScheduleFormatter } from './formatters/visual';
-import { getDayIndex, getIsSaturday, nowInTime, strDateToIndex } from './time';
+import { DayIndex, getIsSaturday, nowInTime } from './time';
 
 export const SCHEDULE_FORMATTERS = [
     DefaultScheduleFormatter, VisualScheduleFormatter
@@ -22,16 +22,15 @@ export function createScheduleFormatter(service: Service, raspCache: RaspCache, 
     }
 
     const Formatter = SCHEDULE_FORMATTERS[chat.scheduleFormatter];
-    
+
     return new Formatter(service, raspCache, chat);
 }
 
 export function removePastDays<T extends GroupDay | TeacherDay>(days: T[], processAutoskip: boolean = true): T[] {
     const isSaturday: boolean = getIsSaturday();
-    const todayDate: number = getDayIndex();
 
     const dayIndex: number = days.findIndex(_ => {
-        return strDateToIndex(_.day) >= todayDate;
+        return DayIndex.fromStringDate(_.day).isNotPast();
     });
 
     if (dayIndex === -1) {
@@ -52,7 +51,7 @@ export function removePastDays<T extends GroupDay | TeacherDay>(days: T[], proce
         const lastLessonTime: string = timetable[todayLessons - 1][1][1];
 
         if (
-            strDateToIndex(currentDay.day) === todayDate &&
+            DayIndex.fromStringDate(currentDay.day).isToday() &&
             !nowInTime(isSaturday ? [6] : [1, 2, 3, 4, 5], '00:00', lastLessonTime)
         ) {
             nextDays.splice(0, 1);
@@ -71,7 +70,7 @@ export function getDayRasp<T extends GroupDay | TeacherDay>(days: T[], processAu
     }
 
     showDays.push(nextDays[0]);
-    
+
     if (maxDays > 1) {
         for (let i = 1; i < maxDays; i++) {
             const day = nextDays[i];
@@ -84,11 +83,9 @@ export function getDayRasp<T extends GroupDay | TeacherDay>(days: T[], processAu
     return showDays;
 }
 
-export function getNextDays<T extends GroupDay | TeacherDay>(days: T[]): T[] {
-    const todayDate: number = getDayIndex();
-
+export function getFutureDays<T extends GroupDay | TeacherDay>(days: T[]): T[] {
     const dayIndex: number = days.findIndex(_ => {
-        return strDateToIndex(_.day) > todayDate;
+        return DayIndex.fromStringDate(_.day).isFuture();
     });
 
     if (dayIndex === -1) {
@@ -100,8 +97,8 @@ export function getNextDays<T extends GroupDay | TeacherDay>(days: T[]): T[] {
     return nextDays;
 }
 
-export function getNextDay<T extends GroupDay | TeacherDay>(days: T[]): T | null {
-    const nextDays = getNextDays(days);
+export function getFutureDay<T extends GroupDay | TeacherDay>(days: T[]): T | null {
+    const nextDays = getFutureDays(days);
 
     return nextDays[0] || null;
 }

@@ -1,6 +1,6 @@
 import { TelegramBotCommand } from "puregram/generated";
 import { Updater, raspCache } from "../../../../updater";
-import { getCurrentWeekIndexToShow, getDayIndex, randArray, weekBoundsByWeekIndex } from "../../../../utils";
+import { WeekIndex, getCurrentWeekIndexToShow, randArray } from "../../../../utils";
 import { AbstractCommand, CmdHandlerParams, MessageOptions } from "../../abstract";
 import { InputInitiator } from "../../input";
 import { withCancelButton } from "../../keyboard";
@@ -54,7 +54,7 @@ export default class extends AbstractCommand {
         chat.appendTeacherSearchHistory(teacher);
         
         const currentWeekIndex = getCurrentWeekIndexToShow();
-        const weekBounds = weekBoundsByWeekIndex(currentWeekIndex).map(getDayIndex) as [number, number];
+        const weekBounds = WeekIndex.fromNumber(currentWeekIndex).getWeekDayIndexRange();
         const days = Updater.getInstance().archive.getTeacherDaysByBounds(weekBounds, teacher);
 
         const message = scheduleFormatter.formatTeacherFull(teacher, {
