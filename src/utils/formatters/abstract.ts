@@ -5,7 +5,7 @@ import { Updater } from "../../updater";
 import { GroupDay, GroupLesson, GroupLessonExplain, Groups, TeacherDay, TeacherLesson, TeacherLessonExplain, Teachers } from "../../updater/parser/types";
 import { RaspCache, RaspEntryCache } from "../../updater/raspCache";
 import { randArray } from "../rand";
-import { StringDate, formatSeconds } from "../time";
+import { DayIndex, StringDate, formatSeconds } from "../time";
 
 export type InputFormatGroupOptions = {
     showHeader?: boolean,
@@ -50,6 +50,9 @@ export abstract class ScheduleFormatter {
     protected abstract formatLessonHeader(header: string, mainLessons: string, withSubgroups: boolean): string;
     protected abstract formatSubgroupLesson(value: string, currentIndex: number, lastIndex: number): string;
     protected abstract formatTeacherLesson(lesson: TeacherLessonExplain): string;
+
+    protected afterGroupLessonFormat?(lessons: GroupLessonExplain[]): string;
+    protected afterTeacherLessonFormat?(lesson: TeacherLessonExplain): string;
 
     protected abstract GroupHeader(group: string): string;
     protected abstract TeacherHeader(group: string): string;
@@ -170,6 +173,10 @@ export abstract class ScheduleFormatter {
 
                 text.push(lines.join('\n'));
             }
+
+            if (this.afterGroupLessonFormat) {
+                text.push(this.afterGroupLessonFormat(subs));
+            }
         }
 
         return text.join('\n').trim();
@@ -190,6 +197,10 @@ export abstract class ScheduleFormatter {
             const mainLessons = this.formatTeacherLesson(lesson);
 
             text.push(this.formatLessonHeader(header, mainLessons, false));
+
+            if (this.afterTeacherLessonFormat) {
+                text.push(this.afterTeacherLessonFormat(lesson));
+            }
         }
 
         return text.join('\n').trim();
@@ -237,6 +248,20 @@ export abstract class ScheduleFormatter {
 
     protected getFullTeacherName(shortName: string): string {
         return this.raspCache.team.names[shortName] || shortName;
+    }
+
+    protected dayHint(day: string): string | undefined {
+        const dayIndex = DayIndex.fromStringDate(day);
+
+        if (dayIndex.isToday()) {
+            return '(сегодня)';
+        }
+
+        if (dayIndex.isTomorrow()) {
+            return '(завтра)';
+        }
+
+        return;
     }
 
     protected b(text: string): string {

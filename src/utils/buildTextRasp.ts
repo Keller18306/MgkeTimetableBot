@@ -5,11 +5,12 @@ import { GroupDay, TeacherDay } from '../updater/parser/types';
 import { RaspCache } from '../updater/raspCache';
 import { ScheduleFormatter } from './formatters/abstract';
 import { DefaultScheduleFormatter } from './formatters/default';
+import { LitolaxScheduleFormatter } from './formatters/litolax';
 import { VisualScheduleFormatter } from './formatters/visual';
 import { DayIndex, StringDate, nowInTime } from './time';
 
 export const SCHEDULE_FORMATTERS = [
-    DefaultScheduleFormatter, VisualScheduleFormatter
+    DefaultScheduleFormatter, VisualScheduleFormatter, LitolaxScheduleFormatter
 ];
 
 export function createScheduleFormatter(service: Service, raspCache: RaspCache, chat: AbstractChat): ScheduleFormatter {

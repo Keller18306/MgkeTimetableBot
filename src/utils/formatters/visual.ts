@@ -1,5 +1,4 @@
 import { GroupLessonExplain, TeacherLessonExplain } from "../../updater/parser/types";
-import { DayIndex } from "../time";
 import { GroupLessonOptions, ScheduleFormatter } from "./abstract";
 
 export class VisualScheduleFormatter extends ScheduleFormatter {
@@ -81,17 +80,7 @@ export class VisualScheduleFormatter extends ScheduleFormatter {
     }
 
     protected DayHeader(day: string, weekday: string): string {
-        let hint: string | undefined;
-
-        const dayIndex = DayIndex.fromStringDate(day);
-
-        if (dayIndex.isToday()) {
-            hint = '(сегодня)'
-        }
-
-        if (dayIndex.isTomorrow()) {
-            hint = '(завтра)'
-        }
+        const hint: string | undefined = this.dayHint(day);
 
         return `📅 ${this.b(weekday + (hint ? ` ${this.i(hint)}` : ''))}, ${day}`;
     }

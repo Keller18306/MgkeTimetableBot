@@ -3,64 +3,128 @@ import { GroupLessonOptions, ScheduleFormatter } from "./abstract";
 
 export class LitolaxScheduleFormatter extends ScheduleFormatter {
     public static readonly label: string = '💩 LitolaxStyle';
-    
-    protected NoTimetable(): string {
-        throw new Error("Method not implemented.");
-    }
-    protected formatLessonHeader(header: string, mainLessons: string, withSubgroups: boolean): string {
-        throw new Error("Method not implemented.");
-    }
-    protected formatSubgroupLesson(value: string, currentIndex: number, lastIndex: number): string {
-        throw new Error("Method not implemented.");
-    }
+
     protected formatGroupLesson(lesson: GroupLessonExplain, options: GroupLessonOptions): string {
-        throw new Error("Method not implemented.");
-    }
-    protected formatTeacherLesson(lesson: TeacherLessonExplain): string {
-        throw new Error("Method not implemented.");
-    }
-    protected GroupHeader(group: string): string {
-        throw new Error("Method not implemented.");
-    }
-    protected TeacherHeader(group: string): string {
-        throw new Error("Method not implemented.");
-    }
-    protected DayHeader(day: string, weekday: string): string {
-        throw new Error("Method not implemented.");
-    }
-    protected LessonHeader(i: number): string {
-        throw new Error("Method not implemented.");
-    }
-    protected Subgroup(subgroup: string): string {
-        throw new Error("Method not implemented.");
-    }
-    protected Lesson(lesson: string): string {
-        throw new Error("Method not implemented.");
-    }
-    protected Type(type: string): string {
-        throw new Error("Method not implemented.");
-    }
-    protected Group(group: string): string {
-        throw new Error("Method not implemented.");
-    }
-    protected Teacher(teacher: string): string {
-        throw new Error("Method not implemented.");
-    }
-    protected Cabinet(cabinet: string): string {
-        throw new Error("Method not implemented.");
-    }
-    protected Comment(comment: string): string {
-        throw new Error("Method not implemented.");
-    }
-    protected NoLessons(): string {
-        throw new Error("Method not implemented.");
+        const line: string[] = [];
+
+        if (lesson.subgroup) {
+            line.push(this.Subgroup(`${lesson.subgroup}`));
+        }
+
+        line.push(this.Lesson(this.getLessonAlias(lesson.lesson)));
+
+        if (lesson.type) {
+            line.push(this.Type(lesson.type));
+        }
+
+        if (lesson.teacher) {
+            line.push(this.Teacher(lesson.teacher));
+        }
+
+        if (lesson.comment != null) {
+            line.push(this.Comment(lesson.comment));
+        }
+
+        return line.join(' ');
     }
 
-    protected groupHeader(group: string): string {
+    protected formatTeacherLesson(lesson: TeacherLessonExplain): string {
+        const line: string[] = [];
+
+        line.push(
+            `${this.Group(lesson.group)}${this.Lesson(this.getLessonAlias(lesson.lesson))}`
+        );
+
+        if (lesson.type) {
+            line.push(this.Type(lesson.type));
+        }
+
+        if (lesson.comment) {
+            line.push(this.Comment(lesson.comment));
+        }
+
+        return line.join(' ');
+    }
+
+    protected afterGroupLessonFormat(lessons: GroupLessonExplain[]): string {
+        const cabinets = lessons.map((lesson) => {
+            return lesson.cabinet || '-';
+        })
+
+        return `Каб: ${cabinets.join(' ')}`;
+    }
+
+    protected afterTeacherLessonFormat(lesson: TeacherLessonExplain): string {
+        return `Каб: ${lesson.cabinet || '-'}`;
+    }
+
+    protected formatLessonHeader(header: string, mainLessons: string, withSubgroups: boolean): string {
+        const line: string[] = [
+            header
+        ];
+
+        if (!withSubgroups && mainLessons) {
+            line.push(mainLessons);
+        }
+
+        return line.join('\n');
+    }
+
+    protected formatSubgroupLesson(value: string, currentIndex: number, lastIndex: number): string {
+        return value;
+    }
+
+    protected GroupHeader(group: string): string {
         return `Группа: ${this.b(group)}`;
     }
 
-    protected teacherHeader(teacher: string): string {
-        return `Преподаватель: ${this.b(teacher)}`;
+    protected TeacherHeader(teacher: string): string {
+        return `Преподаватель: ${this.b(this.getFullTeacherName(teacher))}`;
+    }
+
+    protected DayHeader(day: string, weekday: string): string {
+        const hint: string | undefined = this.dayHint(day);
+
+        return `\nДень - ${weekday + (hint ? ` ${this.i(hint)}` : '')}, ${day}\n`;
+    }
+
+    protected LessonHeader(i: number): string {
+        return '\n' + this.b(`Пара: №${+i + 1}`);
+    }
+
+    protected Subgroup(subgroup: string): string {
+        return `${subgroup}.`;
+    }
+
+    protected Lesson(lesson: string): string {
+        return lesson;
+    }
+
+    protected Type(type: string): string {
+        return `(${type})`;
+    }
+
+    protected Group(group: string): string {
+        return `${group}-`;
+    }
+
+    protected Teacher(teacher: string): string {
+        return teacher;
+    }
+
+    protected Cabinet(cabinet: string): string {
+        return `Каб: ${cabinet}`;
+    }
+
+    protected Comment(comment: string): string {
+        return `// ${comment}`;
+    }
+
+    protected NoLessons(): string {
+        return this.i('Пар нет');
+    }
+
+    protected NoTimetable(): string {
+        return 'Нет расписания для отображения';
     }
 }
