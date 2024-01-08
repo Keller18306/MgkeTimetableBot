@@ -1,4 +1,5 @@
 import { CallbackQueryContext, MediaInput, MediaSourceType, MessageContext, PhotoAttachment } from "puregram";
+import { config } from "../../../../config";
 import { parsePayload } from "../../../utils";
 import { ImageFile } from "../../image/builder";
 import { AbstractCallbackContext, AbstractCommandContext, FileCache, MessageOptions } from "../abstract";
@@ -232,7 +233,7 @@ export class TgCallbackContext extends AbstractCallbackContext {
         let fileId = this.cache.get(image.id);
 
         let photo: MediaInput;
-        if (fileId) {
+        if (!config.dev && fileId) {
             photo = {
                 type: MediaSourceType.FileId,
                 value: fileId
