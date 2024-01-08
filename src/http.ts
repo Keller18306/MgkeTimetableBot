@@ -8,6 +8,7 @@ export class HttpServer {
     public app: Application;
 
     private handlers: any[] = [];
+    public ignoreJsonParserUrls: string[] = [];
 
     constructor() {
         this.app = express();
@@ -20,6 +21,7 @@ export class HttpServer {
         }
 
         this.setupOriginHeaders();
+        this.setupJsonBodyParser();
     }
 
     public run() {
@@ -28,8 +30,8 @@ export class HttpServer {
         });
     }
 
-    public register<T extends new (app: Application) => any>(classHandler: T): InstanceType<T> {
-        const handler = new classHandler(this.app);
+    public register<T extends new (app: Application, httpServer: HttpServer) => any>(classHandler: T): InstanceType<T> {
+        const handler = new classHandler(this.app, this);
         this.handlers.push(handler);
         return handler;
     }
@@ -48,6 +50,18 @@ export class HttpServer {
 
             res.send()
         });
+    }
+
+    private setupJsonBodyParser() {
+        this.app.use((req, res, next) => {
+            for (const url of this.ignoreJsonParserUrls) {
+                if (req.path.startsWith(url)) {
+                    return next();
+                }
+            }
+
+            return express.json({})(req, res, next)
+        })
     }
 
     private logRoutes() {

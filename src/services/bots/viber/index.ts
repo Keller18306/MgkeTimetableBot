@@ -2,6 +2,7 @@ import express, { Application } from 'express';
 import { Bot, Events, ReceivedTextMessage, Response } from 'viber-bot';
 import { config } from '../../../../config';
 import { defines } from '../../../defines';
+import { HttpServer } from '../../../http';
 import { raspCache } from '../../../updater';
 import { createScheduleFormatter } from '../../../utils';
 import { FromType, InputRequestKey } from '../../key/index';
@@ -13,19 +14,22 @@ import { ViberChat } from './chat';
 import { ViberCommandContext } from './context';
 import { ViberEventListener } from './event';
 
-const REDIRECT_URL: string = config.viber.url;
-const WEBHOOK_URL: string = config.viber.url + '/webhook';
-const AVATAR_URL: string = config.viber.url + '/avatar.png';
+const VIBER_URL = config.viber.url;
+const REDIRECT_URL: string = VIBER_URL;
+const WEBHOOK_URL: string = VIBER_URL + '/webhook';
+const AVATAR_URL: string = VIBER_URL + '/avatar.png';
 
 export class ViberBot extends AbstractBot {
     private bot: Bot;
     private domain?: string;
     private app: Application;
+    private httpServer: HttpServer;
 
-    constructor(app: express.Application) {
+    constructor(app: express.Application, httpServer: HttpServer) {
         super('viber');
 
         this.app = app;
+        this.httpServer = httpServer;
 
         this.bot = new Bot({
             authToken: config.viber.token,
@@ -47,9 +51,8 @@ export class ViberBot extends AbstractBot {
 
     public async run() {
         await CommandController.instance.init();
-        
-        this.setupViberFix();
 
+        this.httpServer.ignoreJsonParserUrls.push(VIBER_URL); //fix for viber
         this.app.use(WEBHOOK_URL, this.bot.middleware());
 
         this.bot.getBotProfile().then((res) => {
@@ -62,14 +65,6 @@ export class ViberBot extends AbstractBot {
         this.setupWebhook()
 
         new ViberEventListener(this.bot)
-    }
-
-    private setupViberFix() {
-        this.app.use((req, res, next) => {
-            if (req.path.startsWith(config.viber.url)) return next()
-
-            return express.json({})(req, res, next)
-        });
     }
 
     private async setupWebhook() {
