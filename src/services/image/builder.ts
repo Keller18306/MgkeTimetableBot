@@ -185,7 +185,7 @@ export class ImageBuilder {
     }
 
     private _generateCanvasListForGroup(days: GroupDay[]): Canvas[] {
-        const maxLessons: number = Math.max(...days.map(_ => _.lessons.length));
+        const maxLessons: number = Math.max(3, ...days.map(_ => _.lessons.length));
         const canvasList: Canvas[] = [];
 
         for (const day of days) {
@@ -197,6 +197,7 @@ export class ImageBuilder {
                     table.appendData([{
                         i: String(+i + 1)
                     }]);
+
                     continue;
                 }
 
