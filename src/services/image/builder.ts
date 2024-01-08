@@ -96,13 +96,13 @@ export class ImageBuilder {
                 };
             }
 
-            const data = await new this().buildGroupImage(group, days);
-            await writeFile(filePath, data);
-
             return {
                 id: id,
-                data: () => {
-                    return data
+                data: async () => {
+                    const data = await new this().buildGroupImage(group, days);
+                    await writeFile(filePath, data);
+
+                    return data;
                 }
             };
         })();
@@ -132,13 +132,13 @@ export class ImageBuilder {
                 };
             }
 
-            const data = await new this().buildTeacherImage(teacher, days);
-            await writeFile(filePath, data);
-
             return {
                 id: id,
-                data: () => {
-                    return data
+                data: async () => {
+                    const data = await new this().buildTeacherImage(teacher, days);
+                    await writeFile(filePath, data);
+
+                    return data;
                 }
             };
         })();
