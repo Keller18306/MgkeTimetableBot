@@ -1,12 +1,16 @@
-import { parseStrToDate } from ".";
+import { StringDate } from ".";
 
 export class DayIndex {
     public static now() {
         return this.fromDate(new Date());
     }
 
-    public static fromStringDate(strDate: string) {
-        return this.fromDate(parseStrToDate(strDate));
+    public static fromStringDate(strDate: string | StringDate) {
+        if (typeof strDate === 'string') {
+            strDate = StringDate.fromStringDate(strDate);
+        }
+
+        return this.fromDate(strDate.toDate());
     }
 
     public static fromDate(date: Date) {

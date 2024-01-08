@@ -1,6 +1,6 @@
 import { TelegramBotCommand } from 'puregram/generated';
 import { Updater, raspCache } from '../../../../updater';
-import { WeekIndex, getCurrentWeekIndexToShow, randArray, removePastDays } from "../../../../utils";
+import { WeekIndex, randArray, removePastDays } from "../../../../utils";
 import { ScheduleFormatter } from '../../../../utils/formatters/abstract';
 import { AbstractAction, AbstractChat, AbstractCommand, AbstractCommandContext, CmdHandlerParams } from "../../abstract";
 import { Keyboard } from '../../keyboard';
@@ -40,10 +40,10 @@ export default class extends AbstractCommand {
         const group = raspCache.groups.timetable[chat.group];
         if (group === undefined) return context.send('Данной учебной группы не существует');
 
-        const currentWeekIndex = getCurrentWeekIndexToShow();
-        const weekBounds = WeekIndex.fromNumber(currentWeekIndex).getWeekDayIndexRange();
+        const weekIndex = WeekIndex.getRelevant();
+        const weekRange = weekIndex.getWeekDayIndexRange();
 
-        let days = Updater.getInstance().archive.getGroupDaysByBounds(weekBounds, chat.group);
+        let days = Updater.getInstance().archive.getGroupDaysByRange(weekRange, chat.group);
         if (chat.hidePastDays) {
             days = removePastDays(days);
         }
@@ -58,7 +58,7 @@ export default class extends AbstractCommand {
         actions.deleteUserMsg();
 
         return context.send(message, {
-            keyboard: keyboard.WeekControl('group', String(chat.group), currentWeekIndex, chat.hidePastDays)
+            keyboard: keyboard.WeekControl('group', String(chat.group), weekIndex.valueOf(), chat.hidePastDays)
         }).then(id => {
             actions.handlerLastMsgUpdate(context);
             return id;
@@ -80,10 +80,10 @@ export default class extends AbstractCommand {
         const teacher = raspCache.teachers.timetable[chat.teacher];
         if (teacher === undefined) return context.send('Данного преподавателя не существует');
 
-        const currentWeekIndex = getCurrentWeekIndexToShow();
-        const weekBounds = WeekIndex.fromNumber(currentWeekIndex).getWeekDayIndexRange();
+        const weekIndex = WeekIndex.getRelevant();
+        const weekRange = weekIndex.getWeekDayIndexRange();
 
-        let days = Updater.getInstance().archive.getTeacherDaysByBounds(weekBounds, chat.teacher);
+        let days = Updater.getInstance().archive.getTeacherDaysByRange(weekRange, chat.teacher);
         if (chat.hidePastDays) {
             days = removePastDays(days);
         }
@@ -98,7 +98,7 @@ export default class extends AbstractCommand {
         actions.deleteUserMsg();
 
         return context.send(message, {
-            keyboard: keyboard.WeekControl('teacher', chat.teacher, currentWeekIndex, chat.hidePastDays)
+            keyboard: keyboard.WeekControl('teacher', chat.teacher, weekIndex.valueOf(), chat.hidePastDays)
         }).then(context => actions.handlerLastMsgUpdate(context));
     }
 }

@@ -1,5 +1,5 @@
 import { config } from "../../../../../config";
-import { formatDateTime } from "../../../../utils";
+import { StringDate } from "../../../../utils";
 import { RequestKey, appType } from "../../../key";
 import { AbstractCommand, CmdHandlerParams } from "../../abstract";
 
@@ -26,10 +26,10 @@ export default class extends AbstractCommand {
             rows.push(`${key}: ${_data[key]}`)
         }
 
-        context.send(
+        return context.send(
             `from: ${appType[data.from]}\n` +
             rows.join('\n') +
-            `\ntime: ${data.time} (${formatDateTime(new Date(Number(data.time)))})\n` +
+            `\ntime: ${data.time} (${StringDate.fromUnixTime(data.time).toStringDateTime()})\n` +
             `payload: ${data.payload}`
         )
     }

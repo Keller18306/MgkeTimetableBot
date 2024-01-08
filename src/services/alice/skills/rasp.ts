@@ -1,10 +1,10 @@
 import { IContext, Reply } from "@keller18306/yandex-dialogs-sdk";
 import { raspCache } from "../../../updater";
 import { GroupDay, TeacherDay } from "../../../updater/parser/types";
-import { closestJaroWinkler, getDayRasp, getFullSubjectName, getWeekdayNameByStrDate } from "../../../utils";
+import { StringDate, closestJaroWinkler, getDayRasp, getFullSubjectName } from "../../../utils";
+import { DefaultScheduleFormatter } from "../../../utils/formatters/default";
 import { AliceSkill } from "../skill";
 import { AliceUser } from "../user";
-import { DefaultScheduleFormatter } from "../../../utils/formatters/default";
 
 type MatchResult = {
     day?: string,
@@ -91,7 +91,7 @@ export default class extends AliceSkill {
             return Reply.text('Я не смогла найти указанный день')
         }
 
-        const weekday: string = getWeekdayNameByStrDate(day.day);
+        const weekday: string = StringDate.fromStringDate(day.day).getWeekdayName();
 
         const tts: string[] = [];
         tts.push(`Расписание на ${weekday}${showGroup ? ` для ${group}-ей группы` : ''}`)
@@ -165,7 +165,7 @@ export default class extends AliceSkill {
             return Reply.text('Я не смогла найти указанный день')
         }
 
-        const weekday: string = getWeekdayNameByStrDate(day.day);
+        const weekday: string = StringDate.fromStringDate(day.day).getWeekdayName();
 
         const tts: string[] = [];
         tts.push(`Расписание на ${weekday}${showTeacher ? ` для преподавателя "${teacher}"` : ''}`)
@@ -237,7 +237,7 @@ export default class extends AliceSkill {
                 }
 
                 return days
-                    .find(_ => getWeekdayNameByStrDate(_.day).toLowerCase() === matched)
+                    .find(_ => StringDate.fromStringDate(_.day).getWeekdayName().toLowerCase() === matched)
             default:
                 return false;
         }

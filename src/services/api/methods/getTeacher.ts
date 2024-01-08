@@ -1,6 +1,6 @@
 import StatusCode from "status-code-enum";
 import { raspCache } from "../../../updater";
-import { getWeekdayNameByStrDate } from "../../../utils";
+import { StringDate } from "../../../utils";
 import VKAppDefaultMethod, { HandlerParams } from "./_default";
 
 export default class VkAppAuthMethod extends VKAppDefaultMethod {
@@ -20,7 +20,7 @@ export default class VkAppAuthMethod extends VKAppDefaultMethod {
 
         const days = raspCache.teachers.timetable[body.teacher]?.days.map(day => {
             return Object.assign({}, {
-                weekday: getWeekdayNameByStrDate(day.day)
+                weekday: StringDate.fromStringDate(day.day).getWeekdayName()
             }, day);
         }) || null;
 

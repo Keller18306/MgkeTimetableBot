@@ -1,4 +1,4 @@
-import { DayIndex, formatDate } from "../../../../utils";
+import { StringDate } from "../../../../utils";
 import { AbstractCommand, CmdHandlerParams } from "../../abstract";
 
 export default class extends AbstractCommand {
@@ -9,6 +9,6 @@ export default class extends AbstractCommand {
         const index: number = +context.text?.replace(this.regexp, '').trim()
         if (isNaN(+index)) return context.send('Индекс дня не число');
 
-        return context.send(formatDate(DayIndex.fromNumber(index).toDate()));
+        return context.send(StringDate.fromDayIndex(index).toString());
     }
 }

@@ -1,6 +1,3 @@
-import { raspCache } from "../../updater";
-import { WeekIndex } from "./WeekIndex";
-
 export function seconds2times(seconds: number, values: number = 3) {
     let times = [];
     let count_zero = false;
@@ -37,44 +34,6 @@ export function formatSeconds(sec: number, limit: number | null = null) {
     return end.join(' ');
 }
 
-export function formatDateTime(date: Date, microtime: boolean = false): string {
-    return formatDate(date) + ' ' +
-        `${date.getHours().toString().padStart(2, '0')}:` +
-        `${date.getMinutes().toString().padStart(2, '0')}:` +
-        `${date.getSeconds().toString().padStart(2, '0')}` +
-        (microtime ? `,${date.getMilliseconds().toString().padStart(3, '0')}` : '');
-}
-
-export function formatDate(date: Date): string {
-    return `${date.getDate().toString().padStart(2, '0')}.` +
-        `${(date.getMonth() + 1).toString().padStart(2, '0')}.` +
-        `${date.getFullYear()}`;
-}
-
-export function parseStrToDate(str_date: string, utc: boolean = false): Date {
-    const date = new Date();
-
-    const parts = str_date.split('.').map((value: string): number => {
-        return Number(value);
-    }).slice(0, 3).reverse() as [number, number, number];
-
-    parts[1] -= 1; //js format
-
-    if (utc) {
-        date.setUTCFullYear(...parts);
-        date.setUTCHours(0, 0, 0, 0);
-    } else {
-        date.setFullYear(...parts);
-        date.setHours(0, 0, 0, 0);
-    }
-
-    return date;
-}
-
-export function getIsSaturday(): boolean {
-    return new Date().getDay() === 6;
-}
-
 export function nowInTime(includedDays: number[], timeFrom: string, timeTo: string): boolean {
     const partsFrom = timeFrom.split(':');
     const hoursFrom = Number(partsFrom[0]);
@@ -99,34 +58,6 @@ export function nowInTime(includedDays: number[], timeFrom: string, timeTo: stri
     }
 }
 
-export function getWeekdayName(date: Date): string {
-    const days: string[] = [
-        'Воскресенье',
-        'Понедельник',
-        'Вторник',
-        'Среда',
-        'Четверг',
-        'Пятница',
-        'Суббота'
-    ];
-
-    return days[date.getDay()];
-}
-
-export function getWeekdayNameByStrDate(str_date: string): string {
-    return getWeekdayName(parseStrToDate(str_date))
-}
-
-export function getCurrentWeekIndexToShow() {
-    const date = new Date();
-
-    let weekIndex: number = WeekIndex.fromDate(date).valueOf();
-    if (date.getDay() === 0) {
-        weekIndex += 1;
-    }
-
-    return Math.min(weekIndex, raspCache.teachers.lastWeekIndex);
-}
-
 export * from './DayIndex';
+export * from './StringDate';
 export * from './WeekIndex';

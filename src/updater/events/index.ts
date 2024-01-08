@@ -3,7 +3,7 @@ import { getDistributionChats, getGroupsChats, getGroupsNoticeNextWeekChats, get
 import { MessageOptions } from "../../services/bots/abstract";
 import { AbstractChat, ChatMode, DbChat } from "../../services/bots/abstract/chat";
 import { Service } from "../../services/bots/abstract/command";
-import { DayIndex, WeekIndex, createScheduleFormatter, getFutureDays, parseStrToDate, prepareError } from "../../utils";
+import { DayIndex, StringDate, WeekIndex, createScheduleFormatter, getFutureDays, prepareError } from "../../utils";
 import { GroupDay, TeacherDay } from "../parser/types";
 import { raspCache, saveCache } from "../raspCache";
 import { EventController } from "./controller";
@@ -309,14 +309,14 @@ export abstract class AbstractEventListener<T extends AbstractChat = AbstractCha
     }
 
     public async sendNextWeek(chatMode: ChatMode, weekIndex: number) {
-        const firstWeekDay = WeekIndex.fromNumber(weekIndex).getFirstDayDate();
+        const firstWeekDay = WeekIndex.fromWeekIndexNumber(weekIndex).getFirstDayDate();
 
         let chats: T[] | undefined;
 
         if (chatMode === 'student') {
             const groups: string[] = Object.entries(raspCache.groups.timetable).map(([group, { days }]): [string, GroupDay[]] => {
                 const daysOfWeek = days.filter((day) => {
-                    return parseStrToDate(day.day) >= firstWeekDay && day.lessons.length > 0;
+                    return StringDate.fromStringDate(day.day).toDate() >= firstWeekDay && day.lessons.length > 0;
                 });
 
                 return [group, daysOfWeek];
@@ -333,7 +333,7 @@ export abstract class AbstractEventListener<T extends AbstractChat = AbstractCha
         if (chatMode === 'teacher') {
             const teachers: string[] = Object.entries(raspCache.teachers.timetable).map(([group, { days }]): [string, TeacherDay[]] => {
                 const daysOfWeek = days.filter((day) => {
-                    return parseStrToDate(day.day) >= firstWeekDay && day.lessons.length > 0;
+                    return StringDate.fromStringDate(day.day).toDate() >= firstWeekDay && day.lessons.length > 0;
                 });
 
                 return [group, daysOfWeek];

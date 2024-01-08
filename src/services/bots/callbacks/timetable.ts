@@ -1,5 +1,5 @@
 import { Updater, raspCache } from "../../../updater";
-import { WeekIndex, getCurrentWeekIndexToShow, removePastDays } from "../../../utils";
+import { WeekIndex, removePastDays } from "../../../utils";
 import { AbstractCallback, CbHandlerParams } from "../abstract";
 
 export default class extends AbstractCallback {
@@ -7,11 +7,10 @@ export default class extends AbstractCallback {
 
     handler(params: CbHandlerParams) {
         const { context, chat }: CbHandlerParams = params;
-        const currentWeekIndex: number = getCurrentWeekIndexToShow();
 
         const type: string = context.payload[0];
         const value: string | number = context.payload[1];
-        const weekIndex: number = context.payload[2] || currentWeekIndex;
+        const weekIndex: number = context.payload[2] || WeekIndex.getRelevant().valueOf();
         const hidePastDays: boolean = context.payload[3] !== undefined ? context.payload[3] : chat.hidePastDays;
         const showHeader: boolean = Boolean(context.payload[4]);
 
@@ -30,11 +29,11 @@ export default class extends AbstractCallback {
         const group = raspCache.groups.timetable[value];
         if (group === undefined) return context.edit('Данной учебной группы не существует');
 
-        const currentWeekIndex: number = getCurrentWeekIndexToShow();
-        const weekBounds = WeekIndex.fromNumber(weekIndex).getWeekDayIndexRange();
+        const relevantWeekIndex: number = WeekIndex.getRelevant().valueOf();
+        const weekBounds = WeekIndex.fromWeekIndexNumber(weekIndex).getWeekDayIndexRange();
 
-        let days = Updater.getInstance().archive.getGroupDaysByBounds(weekBounds, value);
-        if (weekIndex === currentWeekIndex && hidePastDays) {
+        let days = Updater.getInstance().archive.getGroupDaysByRange(weekBounds, value);
+        if (weekIndex === relevantWeekIndex && hidePastDays) {
             days = removePastDays(days);
         }
 
@@ -51,11 +50,11 @@ export default class extends AbstractCallback {
         const teacher = raspCache.teachers.timetable[value];
         if (teacher === undefined) return context.edit('Данного преподавателя не существует');
 
-        const currentWeekIndex: number = getCurrentWeekIndexToShow();
-        const weekBounds = WeekIndex.fromNumber(weekIndex).getWeekDayIndexRange();
+        const relevantWeekIndex: number = WeekIndex.getRelevant().valueOf();
+        const weekBounds = WeekIndex.fromWeekIndexNumber(weekIndex).getWeekDayIndexRange();
 
-        let days = Updater.getInstance().archive.getTeacherDaysByBounds(weekBounds, value);
-        if (weekIndex === currentWeekIndex && hidePastDays) {
+        let days = Updater.getInstance().archive.getTeacherDaysByRange(weekBounds, value);
+        if (weekIndex === relevantWeekIndex && hidePastDays) {
             days = removePastDays(days);
         }
 

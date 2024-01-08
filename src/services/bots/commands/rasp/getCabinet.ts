@@ -1,7 +1,7 @@
 import { TelegramBotCommand } from "puregram/generated";
 import { raspCache } from "../../../../updater";
 import { TeacherLessonExplain } from "../../../../updater/parser/types";
-import { getWeekdayNameByStrDate } from "../../../../utils";
+import { StringDate } from "../../../../utils";
 import { AbstractCommand, CmdHandlerParams } from "../../abstract";
 
 export default class extends AbstractCommand {
@@ -75,7 +75,7 @@ export default class extends AbstractCommand {
             for (const { day, lessons } of Object.values(info[cabinet])) {
                 const dayMessage: string[] = [];
 
-                dayMessage.push(`${getWeekdayNameByStrDate(day)}, ${day}`);
+                dayMessage.push(`${StringDate.fromStringDate(day).getWeekdayName()}, ${day}`);
 
                 for (const lesson of lessons) {
                     dayMessage.push(`${lesson.index + 1}. ${lesson.lesson} (${lesson.type}), ${lesson.group}, ${lesson.teacher}`);

@@ -1,8 +1,8 @@
+import { createHash } from "crypto";
 import { DOMWindow } from "jsdom";
-import { parseStrToDate } from "../../utils";
+import { StringDate } from "../../utils";
 import { GroupLesson, Groups } from "./types/group";
 import { TeacherLesson, Teachers } from "./types/teacher";
-import { createHash } from "crypto";
 
 export abstract class AbstractParser {
     protected readonly window: Window | DOMWindow;
@@ -107,7 +107,7 @@ export abstract class AbstractParser {
             const { days } = rasp[key];
 
             const sundayIndex = days.findIndex((day): boolean => {
-                return parseStrToDate(day.day).getDay() === 0; //воскресенье
+                return StringDate.fromStringDate(day.day).isSunday(); //воскресенье
             });
             if (sundayIndex === -1) continue;
 

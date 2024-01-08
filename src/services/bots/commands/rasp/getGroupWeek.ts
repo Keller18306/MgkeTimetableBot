@@ -1,6 +1,6 @@
 import { TelegramBotCommand } from "puregram/generated";
 import { Updater, raspCache } from "../../../../updater";
-import { WeekIndex, getCurrentWeekIndexToShow, randArray } from "../../../../utils";
+import { WeekIndex, randArray } from "../../../../utils";
 import { AbstractCommand, CmdHandlerParams, MessageOptions } from "../../abstract";
 import { InputInitiator } from "../../input";
 import { withCancelButton } from "../../keyboard";
@@ -44,9 +44,9 @@ export default class extends AbstractCommand {
 
         chat.appendGroupSearchHistory(String(group));
 
-        const currentWeekIndex = getCurrentWeekIndexToShow();
-        const weekBounds = WeekIndex.fromNumber(currentWeekIndex).getWeekDayIndexRange();
-        const days = Updater.getInstance().archive.getGroupDaysByBounds(weekBounds, group);
+        const weekIndex = WeekIndex.getRelevant();
+        const weekRange = weekIndex.getWeekDayIndexRange();
+        const days = Updater.getInstance().archive.getGroupDaysByRange(weekRange, group);
 
         const message = scheduleFormatter.formatGroupFull(String(group), {
             showHeader: true,
@@ -54,7 +54,7 @@ export default class extends AbstractCommand {
         });
 
         const options: MessageOptions = {
-            keyboard: keyboard.WeekControl('group', group, currentWeekIndex, false)
+            keyboard: keyboard.WeekControl('group', group, weekIndex.valueOf(), false)
         }
 
         if (initiator === 'callback') {

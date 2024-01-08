@@ -12,7 +12,7 @@ const mySubgroup = 2;
 let totalGroups: number[] = [];
 
 for (const day of days) {
-    const index = DayIndex.fromStringDate(day).valueOf();
+    const index: number = DayIndex.fromStringDate(day).valueOf();
 
     const groups: any[] = db.prepare('SELECT * FROM timetable_archive WHERE day = ? AND teacher IS NULL')
         .all(index)

@@ -6,7 +6,7 @@ import { RaspCache } from '../updater/raspCache';
 import { ScheduleFormatter } from './formatters/abstract';
 import { DefaultScheduleFormatter } from './formatters/default';
 import { VisualScheduleFormatter } from './formatters/visual';
-import { DayIndex, getIsSaturday, nowInTime } from './time';
+import { DayIndex, StringDate, nowInTime } from './time';
 
 export const SCHEDULE_FORMATTERS = [
     DefaultScheduleFormatter, VisualScheduleFormatter
@@ -27,7 +27,7 @@ export function createScheduleFormatter(service: Service, raspCache: RaspCache, 
 }
 
 export function removePastDays<T extends GroupDay | TeacherDay>(days: T[], processAutoskip: boolean = true): T[] {
-    const isSaturday: boolean = getIsSaturday();
+    const isSaturday: boolean = StringDate.now().isSaturday();
 
     const dayIndex: number = days.findIndex(_ => {
         return DayIndex.fromStringDate(_.day).isNotPast();

@@ -6,7 +6,7 @@ import { readFile, writeFile } from "fs/promises";
 import path from "path";
 import { config } from "../../../config";
 import { GroupDay, GroupLessonExplain, TeacherDay } from "../../updater/parser/types";
-import { formatDateTime, getWeekdayNameByStrDate } from "../../utils";
+import { StringDate } from "../../utils";
 
 const groupColumns: IColumn[] = [
     {
@@ -307,7 +307,7 @@ export class ImageBuilder {
         ctx.fillText('VK: https://vk.com/mgke_slave', paddingX, height - fontSize - paddingY * 0);
 
         ctx.textAlign = 'right';
-        ctx.fillText(`Сгенерированно в: ${formatDateTime(new Date(), true)}`, width - paddingX, height - fontSize - paddingY * 1)
+        ctx.fillText(`Сгенерированно в: ${StringDate.now().toStringDateTime(true)}`, width - paddingX, height - fontSize - paddingY * 1)
         ctx.fillText('Таблица с расписанием была сгенерированна в ботах Алексея Костюка из 63 группы', width - paddingX, height - fontSize - paddingY * 0);
         ctx.drawImage(await logo, 10 * this.devicePixelRatio, 10 * this.devicePixelRatio, 70 * this.devicePixelRatio, 70 * this.devicePixelRatio);
 
@@ -321,7 +321,7 @@ export class ImageBuilder {
             bgColor: 'white',
             canvas: canvas,
             columns: columns,
-            text: `${getWeekdayNameByStrDate(day.day)}, ${day.day}`,
+            text: `${StringDate.fromStringDate(day.day).getWeekdayName()}, ${day.day}`,
             textStyle: {
                 fontSize: '18px'
             },

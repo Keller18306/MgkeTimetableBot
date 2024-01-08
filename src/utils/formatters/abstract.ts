@@ -5,7 +5,7 @@ import { Updater } from "../../updater";
 import { GroupDay, GroupLesson, GroupLessonExplain, Groups, TeacherDay, TeacherLesson, TeacherLessonExplain, Teachers } from "../../updater/parser/types";
 import { RaspCache, RaspEntryCache } from "../../updater/raspCache";
 import { randArray } from "../rand";
-import { formatSeconds, getWeekdayNameByStrDate } from "../time";
+import { StringDate, formatSeconds } from "../time";
 
 export type InputFormatGroupOptions = {
     showHeader?: boolean,
@@ -114,7 +114,7 @@ export abstract class ScheduleFormatter {
     }
 
     public formatDayHeader(day: string) {
-        return this.DayHeader(day, getWeekdayNameByStrDate(day));
+        return this.DayHeader(day, StringDate.fromStringDate(day).getWeekdayName());
     }
 
     public formatGroupLessons(lessons?: GroupLesson[]): string {

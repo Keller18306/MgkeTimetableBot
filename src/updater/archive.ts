@@ -1,5 +1,5 @@
 import db from "../db";
-import { DayIndex, WeekIndex, formatDate } from "../utils";
+import { DayIndex, StringDate, WeekIndex } from "../utils";
 import { GroupDay, TeacherDay } from "./parser/types";
 
 export type ArchiveAppendDay = {
@@ -14,7 +14,7 @@ export type ArchiveAppendDay = {
 
 function dbEntryToDayObject(entry: any): any {
     return {
-        day: formatDate(DayIndex.fromNumber(entry.day).toDate()),
+        day: StringDate.fromDayIndex(entry.day).toString(),
         lessons: JSON.parse(entry.data)
     };
 }
@@ -100,13 +100,13 @@ export class Archive {
         return entry ? dbEntryToDayObject(entry) : null;
     }
 
-    public getGroupDaysByBounds(dayBounds: [number, number], group: number | string): GroupDay[] {
+    public getGroupDaysByRange(dayBounds: [number, number], group: number | string): GroupDay[] {
         const days = db.prepare('SELECT day,data FROM timetable_archive WHERE day >= ? AND day <= ? AND `group` = ?').all(...dayBounds, group) as any;
 
         return days.map(dbEntryToDayObject);
     }
 
-    public getTeacherDaysByBounds(dayBounds: [number, number], teacher: string): TeacherDay[] {
+    public getTeacherDaysByRange(dayBounds: [number, number], teacher: string): TeacherDay[] {
         const days = db.prepare('SELECT day,data FROM timetable_archive WHERE day >= ? AND day <= ? AND teacher = ?').all(...dayBounds, teacher) as any;
 
         return days.map(dbEntryToDayObject);
