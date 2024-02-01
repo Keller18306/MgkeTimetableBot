@@ -1,5 +1,6 @@
 import { readFileSync } from "fs"
-import { JSDOM, ResourceLoader } from "jsdom"
+import got from "got"
+import { JSDOM } from "jsdom"
 import { config } from "../../config"
 import { ChatMode } from "../services/bots/abstract"
 import { clearOldImages } from "../services/image/clear"
@@ -565,17 +566,24 @@ export class Updater {
         return true;
     }
 
-    private getJSDOM(url: string): Promise<JSDOM> {
-        const resourceLoader = new ResourceLoader({
-            proxy: config.updater.proxy || undefined,
-            userAgent: 'MGKE timetable bot by Keller (https://github.com/Keller18306/MgkeTimetableBot)',
-        });
+    private async getJSDOM(url: string): Promise<JSDOM> {
+        // let agent: Agents | undefined;
 
-        return JSDOM.fromURL(url, {
-            resources: resourceLoader
-        });
+        if (config.updater.proxy) {
+            //TODO PROXY AGENT
+        }
+
+        const response = await got({
+            url: url,
+            // agent: agent,
+            headers: {
+                'User-Agent': 'MGKE timetable bot by Keller (https://github.com/Keller18306/MgkeTimetableBot)'
+            },
+            retry: 0
+        })
+
+        return new JSDOM(response.body);
     }
 }
 
 export { raspCache }
-
