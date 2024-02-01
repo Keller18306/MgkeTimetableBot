@@ -84,7 +84,8 @@ export type ConfigScheme = {
             timetableGroup: string
             timetableTeacher: string
             team: string[]
-        }
+        },
+        proxy: string | null
     },
     timetable: {
         weekdays: DayCall[],

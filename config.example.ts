@@ -88,7 +88,8 @@ export const config: ConfigScheme = {
                 'https://mgkct.minskedu.gov.by/о-колледже/портфолио/cлужащие',
                 'https://mgkct.minskedu.gov.by/о-колледже/портфолио/cлужащие-ахч'
             ]
-        }
+        },
+        proxy: null
     },
     timetable: {
         weekdays: [

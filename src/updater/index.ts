@@ -1,5 +1,5 @@
 import { readFileSync } from "fs"
-import { JSDOM } from "jsdom"
+import { JSDOM, ResourceLoader } from "jsdom"
 import { config } from "../../config"
 import { ChatMode } from "../services/bots/abstract"
 import { clearOldImages } from "../services/image/clear"
@@ -325,9 +325,7 @@ export class Updater {
 
             data = file.timetable;
         } else {
-            const jsdom = await JSDOM.fromURL(url, {
-                userAgent: 'MGKE bot by Keller'
-            });
+            const jsdom = await this.getJSDOM(url);
 
             const parser = new Parser(jsdom.window);
             const hash = parser.getContentHash();
@@ -522,9 +520,7 @@ export class Updater {
 
             data = file.team;
         } else {
-            const jsdom = await JSDOM.fromURL(url, {
-                userAgent: 'MGKE bot by Keller'
-            });
+            const jsdom = await this.getJSDOM(url);
 
             const parser = new TeamParser(jsdom.window);
             const hash = parser.getContentHash();
@@ -567,6 +563,17 @@ export class Updater {
         cache.update = Date.now();
 
         return true;
+    }
+
+    private getJSDOM(url: string): Promise<JSDOM> {
+        const resourceLoader = new ResourceLoader({
+            proxy: config.updater.proxy || undefined,
+            userAgent: 'MGKE timetable bot by Keller (https://github.com/Keller18306/MgkeTimetableBot)',
+        });
+
+        return JSDOM.fromURL(url, {
+            resources: resourceLoader
+        });
     }
 }
 
