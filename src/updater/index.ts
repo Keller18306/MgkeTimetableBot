@@ -248,7 +248,9 @@ export class Updater {
 
     private async update() {
         return new Promise<number>(async (resolve, reject) => {
-            const timeout = setTimeout(() => { reject('update timed out') }, 60e3);
+            const timeout = setTimeout(() => {
+                reject(new Error('update timed out'))
+            }, 60e3);
 
             let ms: number;
             try {
