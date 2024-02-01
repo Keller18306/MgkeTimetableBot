@@ -11,7 +11,7 @@ export function vanish() {
 
     //clean timetable days larger then 365 days
     db.prepare('DELETE FROM timetable_archive WHERE day <= ?')
-        .run(DayIndex.fromDate(new Date(Date.now() - (1e3 * 60 * 60 * 24 * 365))));
+        .run(DayIndex.fromDate(new Date(Date.now() - (1e3 * 60 * 60 * 24 * 365))).valueOf());
 
     //TODO DELETE OLD CHATS
 
