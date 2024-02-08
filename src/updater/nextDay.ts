@@ -1,6 +1,6 @@
 import { CronJob } from "cron";
 import { config } from "../../config";
-import { EventController } from "./events/controller";
+import { BotEventController } from "../services/bots/events/controller";
 
 export class NextDayUpdater {
     private list: CronJob[] = [];
@@ -43,8 +43,8 @@ export class NextDayUpdater {
 
     public static async onExecute(index: number) {
         return Promise.all([
-            EventController.nextGroupDay({ index }),
-            EventController.nextTeacherDay({ index })
+            BotEventController.nextGroupDay({ index }),
+            BotEventController.cronTeacherDay({ index })
         ]);
     }
 }

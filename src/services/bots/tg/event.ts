@@ -1,13 +1,13 @@
 import { APIError, Telegram } from "puregram";
 import StatusCode from "status-code-enum";
 import { config } from "../../../../config";
-import { AbstractEventListener } from "../../../updater/events";
 import { MessageOptions, Service } from "../abstract";
+import { AbstractBotEventListener } from "../events";
 import { Keyboard } from '../keyboard';
 import { TgChat, TgDb } from './chat';
 import { convertAbstractToTg } from "./keyboard";
 
-export class TgEventListener extends AbstractEventListener<TgChat> {
+export class TgEventListener extends AbstractBotEventListener<TgChat> {
     protected _tableName: string = 'tg_bot_chats';
     public readonly service: Service = 'tg';
 

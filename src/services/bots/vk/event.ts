@@ -1,10 +1,10 @@
 import { APIError, getRandomId, VK } from "vk-io";
 import { config } from "../../../../config";
-import { AbstractEventListener } from "../../../updater/events";
 import { MessageOptions, Service } from "../abstract";
+import { AbstractBotEventListener } from "../events";
 import { VkChat, VkDb } from './chat';
 
-export class VkEventListener extends AbstractEventListener<VkChat> {
+export class VkEventListener extends AbstractBotEventListener<VkChat> {
     protected _tableName: string = 'vk_bot_chats';
     public readonly service: Service = 'vk';
 

@@ -1,6 +1,6 @@
 import { TelegramBotCommand } from 'puregram/generated';
-import { EventController, ServiceProgressCallback } from '../../../../updater/events/controller';
 import { AbstractCommand, CmdHandlerParams } from "../../abstract";
+import { BotEventController, ServiceProgressCallback } from '../../events/controller';
 
 export default class extends AbstractCommand {
     public regexp = /^(!|\/)send/i
@@ -29,7 +29,7 @@ export default class extends AbstractCommand {
             await context.editOrSend(text);
         }, 1e3);
 
-        await EventController.sendDistibution(message, (data) => {
+        await BotEventController.getInstance().sendDistibution(message, (data) => {
             progress = data
         });
 

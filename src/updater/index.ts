@@ -2,17 +2,17 @@ import { readFileSync } from "fs"
 import got from "got"
 import { JSDOM } from "jsdom"
 import { config } from "../../config"
+import { TypedEventEmitter } from "../@types/events"
 import { ChatMode } from "../services/bots/abstract"
 import { clearOldImages } from "../services/image/clear"
 import { DayIndex, WeekIndex, mergeDays } from "../utils"
 import { Archive, ArchiveAppendDay } from "./archive"
-import { EventController } from "./events/controller"
 import { NextDayUpdater } from "./nextDay"
 import StudentParser from "./parser/group"
 import TeacherParser from "./parser/teacher"
 import TeamParser from "./parser/team"
-import { Group, GroupDay, Groups, Teacher, TeacherDay, Teachers, Team } from "./parser/types"
-import { RaspEntryCache, TeamCache, loadCache, raspCache, saveCache } from "./raspCache"
+import { Group, GroupDay, Groups, Teacher, TeacherDay, Teachers, Team } from './parser/types'
+import { RaspEntryCache, TeamCache, loadCache, raspCache, saveCache } from './raspCache'
 
 const MAX_LOG_LIMIT: number = 10;
 const LOG_COUNT_SEND: number = 3;
@@ -56,6 +56,21 @@ function onParser<T>(Parser: typeof StudentParser | typeof TeacherParser, onStud
     throw new Error('unknown parser')
 }
 
+export type GroupDayEvent = { day: GroupDay, group: string };
+export type TeacherDayEvent = { day: TeacherDay, teacher: string };
+
+type UpdaterEvents = {
+    addGroupDay: [data: GroupDayEvent];
+    updateGroupDay: [data: GroupDayEvent];
+
+    addTeacherDay: [data: TeacherDayEvent];
+    updateTeacherDay: [data: TeacherDayEvent];
+
+    updateWeek: [chatMode: ChatMode, weekIndex: number];
+
+    error: [error: Error];
+}
+
 export class Updater {
     private static instance?: Updater;
 
@@ -66,6 +81,7 @@ export class Updater {
     }
 
     public archive: Archive;
+    public events: TypedEventEmitter<UpdaterEvents>;
 
     private logs: { date: Date, result: string | Error }[] = [];
     private delayPromise?: Delay;
@@ -75,6 +91,7 @@ export class Updater {
 
     constructor() {
         this.archive = new Archive();
+        this.events = new TypedEventEmitter<UpdaterEvents>();
     }
 
     public getLogs() {
@@ -212,7 +229,7 @@ export class Updater {
 
         if (hits === LOG_COUNT_SEND) {
             console.error('update error', error);
-            EventController.sendError(error);
+            this.events.emit('error', error);
         }
     }
 
@@ -400,42 +417,43 @@ export class Updater {
                 for (const day of changed) {
                     const dayIndex = DayIndex.fromStringDate(day.day);
 
-                    let sendFunc: ((data: any) => Promise<void>) | undefined;
-                    let sendData = onParser(Parser, {
-                        day: day as GroupDay,
-                        group: index
-                    }, {
-                        day: day as TeacherDay,
-                        teacher: index
-                    });
+                    let eventName: keyof UpdaterEvents | undefined;
 
                     if (dayIndex.isToday()) {
                         //расписание на сегодня изменено
 
-                        sendFunc = onParser<any>(Parser,
-                            EventController.updateGroupDay,
-                            EventController.updateTeacherDay
+                        eventName = onParser<keyof UpdaterEvents>(Parser,
+                            'updateGroupDay',
+                            'updateTeacherDay'
                         );
                     } else if (dayIndex.isTomorrow()) {
                         //расписание на завтра изменилось
 
                         if (currentEntry.lastNoticedDay === dayIndex.valueOf()) {
                             //уже расписание было отправлено ранее, а значит поступили новые правки
-                            sendFunc = onParser<any>(Parser,
-                                EventController.updateGroupDay,
-                                EventController.updateTeacherDay
+                            eventName = onParser<keyof UpdaterEvents>(Parser,
+                                'updateGroupDay',
+                                'updateTeacherDay'
                             );
                         } else {
                             //новое расписание на завтра
-                            sendFunc = onParser<any>(Parser,
-                                EventController.sendGroupDay,
-                                EventController.sendTeacherDay
+                            eventName = onParser<keyof UpdaterEvents>(Parser,
+                                'addGroupDay',
+                                'addTeacherDay'
                             );
                         }
                     }
 
-                    if (sendFunc) {
-                        sendFunc.call(EventController, sendData);
+                    if (eventName) {
+                        const eventData = onParser<GroupDayEvent | TeacherDayEvent>(Parser, {
+                            day: day as GroupDay,
+                            group: index
+                        }, {
+                            day: day as TeacherDay,
+                            teacher: index
+                        });
+
+                        this.events.emit(eventName, eventData as any)
                     }
                 }
 
@@ -504,7 +522,7 @@ export class Updater {
         // оповещение в чаты, что на сайте вывесили новую неделю
         if (cache.lastWeekIndex && maxWeekIndex > cache.lastWeekIndex) {
             const chatMode: ChatMode = onParser<ChatMode>(Parser, 'student', 'teacher');
-            EventController.sendNextWeek(chatMode, maxWeekIndex);
+            this.events.emit('updateWeek', chatMode, maxWeekIndex);
         }
 
         cache.lastWeekIndex = maxWeekIndex;
@@ -587,3 +605,4 @@ export class Updater {
 }
 
 export { raspCache }
+

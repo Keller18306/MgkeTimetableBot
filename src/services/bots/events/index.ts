@@ -1,12 +1,13 @@
-import { config } from "../../../config";
-import { getDistributionChats, getGroupsChats, getGroupsNoticeNextWeekChats, getNoticeErrorsChats, getTeachersChats, getTeachersNoticeNextWeekChats } from "../../db";
-import { MessageOptions } from "../../services/bots/abstract";
-import { AbstractChat, ChatMode, DbChat } from "../../services/bots/abstract/chat";
-import { Service } from "../../services/bots/abstract/command";
-import { DayIndex, StringDate, WeekIndex, createScheduleFormatter, getFutureDays, prepareError } from "../../utils";
-import { GroupDay, TeacherDay } from "../parser/types";
-import { raspCache, saveCache } from "../raspCache";
-import { EventController } from "./controller";
+import { config } from "../../../../config";
+import { getDistributionChats, getGroupsChats, getGroupsNoticeNextWeekChats, getNoticeErrorsChats, getTeachersChats, getTeachersNoticeNextWeekChats } from "../../../db";
+import { GroupDayEvent, TeacherDayEvent } from "../../../updater";
+import { GroupDay, TeacherDay } from "../../../updater/parser/types";
+import { raspCache, saveCache } from "../../../updater/raspCache";
+import { DayIndex, StringDate, WeekIndex, createScheduleFormatter, getFutureDays, prepareError } from "../../../utils";
+import { MessageOptions } from "../abstract";
+import { AbstractChat, ChatMode, DbChat } from "../abstract/chat";
+import { Service } from "../abstract/command";
+import { BotEventController } from "./controller";
 
 function getDayPhrase(day: string, nextDayPhrase: string = 'день'): string {
     if (WeekIndex.fromStringDate(day).isFutureWeek()) {
@@ -31,14 +32,17 @@ export type ProgressCallback = (data: {
     count: number
 }) => void
 
-export abstract class AbstractEventListener<T extends AbstractChat = AbstractChat> {
+export abstract class AbstractBotEventListener<T extends AbstractChat = AbstractChat> {
     protected abstract _tableName: string;
     public readonly abstract service: Service;
+    private eventController: BotEventController;
 
     constructor(enabled: boolean) {
-        if (!enabled) return;
+        this.eventController = BotEventController.getInstance();
 
-        EventController.registerService(this);
+        if (enabled) {
+            this.eventController.registerService(this);
+        }
     }
 
     protected abstract createChat(chat: DbChat): T;
@@ -130,7 +134,7 @@ export abstract class AbstractEventListener<T extends AbstractChat = AbstractCha
                 continue;
             }
 
-            EventController.deferFunction(`updateLastGroupNoticedDay_${group}`, async () => {
+            this, this.eventController.deferFunction(`updateLastGroupNoticedDay_${group}`, async () => {
                 groupEntry.lastNoticedDay = dayIndex;
                 await saveCache();
             })
@@ -153,7 +157,7 @@ export abstract class AbstractEventListener<T extends AbstractChat = AbstractCha
         }
     }
 
-    public async sendGroupDay({ day, group }: { day: GroupDay, group: string }) {
+    public async addGroupDay({ day, group }: GroupDayEvent) {
         const chats: T[] = this.getGroupsChats(group);
         if (chats.length === 0) return;
 
@@ -174,7 +178,7 @@ export abstract class AbstractEventListener<T extends AbstractChat = AbstractCha
         }
     }
 
-    public async updateGroupDay({ day, group }: { day: GroupDay, group: string }) {
+    public async updateGroupDay({ day, group }: GroupDayEvent) {
         const chats: T[] = this.getGroupsChats(group);
         if (chats.length === 0) return;
 
@@ -195,7 +199,7 @@ export abstract class AbstractEventListener<T extends AbstractChat = AbstractCha
         }
     }
 
-    public async nextTeacherDay({ index }: { index: number }) {
+    public async cronTeacherDay({ index }: { index: number }) {
         const teachers: string[] = Object.entries(raspCache.teachers.timetable).map(([teacher, { days }]): [string, TeacherDay | undefined] => {
             const todayDay = days.find((day) => {
                 return DayIndex.fromStringDate(day.day).isToday();
@@ -243,7 +247,7 @@ export abstract class AbstractEventListener<T extends AbstractChat = AbstractCha
                 continue;
             }
 
-            EventController.deferFunction(`updateLastTeacherNoticedDay_${teacher}`, async () => {
+            this, this.eventController.deferFunction(`updateLastTeacherNoticedDay_${teacher}`, async () => {
                 teacherEntry.lastNoticedDay = dayIndex;
                 await saveCache();
             })
@@ -266,7 +270,7 @@ export abstract class AbstractEventListener<T extends AbstractChat = AbstractCha
         }
     }
 
-    public async sendTeacherDay({ day, teacher }: { day: TeacherDay, teacher: string }) {
+    public async addTeacherDay({ day, teacher }: TeacherDayEvent) {
         const chats: T[] = this.getTeachersChats(teacher);
         if (chats.length === 0) return;
 
@@ -287,7 +291,7 @@ export abstract class AbstractEventListener<T extends AbstractChat = AbstractCha
         }
     }
 
-    public async updateTeacherDay({ day, teacher }: { day: TeacherDay, teacher: string }) {
+    public async updateTeacherDay({ day, teacher }: TeacherDayEvent) {
         const chats: T[] = this.getTeachersChats(teacher);
         if (chats.length === 0) return;
 
@@ -308,7 +312,7 @@ export abstract class AbstractEventListener<T extends AbstractChat = AbstractCha
         }
     }
 
-    public async sendNextWeek(chatMode: ChatMode, weekIndex: number) {
+    public async updateWeek(chatMode: ChatMode, weekIndex: number) {
         const firstWeekDay = WeekIndex.fromWeekIndexNumber(weekIndex).getFirstDayDate();
 
         let chats: T[] | undefined;
