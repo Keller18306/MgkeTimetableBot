@@ -5,6 +5,7 @@ export * from './buildTextRasp';
 export * from './bytes';
 export * from './combineRasp';
 export * from './error';
+export * from './events';
 export * from './http';
 export * from './natural';
 export * from './rand';
