@@ -3,7 +3,7 @@ import { config } from "../../../../config";
 import { App } from "../../../app";
 import { parsePayload } from "../../../utils";
 import { ImageFile } from "../../image/builder";
-import { AbstractCallbackContext, AbstractCommandContext, MessageOptions, ServiceCache } from "../abstract";
+import { AbstractCallbackContext, AbstractCommandContext, MessageOptions, ServiceStorage } from "../abstract";
 import { BotInput } from "../input";
 import { convertAbstractToVK } from "./keyboard";
 
@@ -17,11 +17,11 @@ export class VkCommandContext extends AbstractCommandContext {
 
     private context: MessageContext<ContextDefaultState>;
     private vk: VK;
-    private cache: ServiceCache;
+    private cache: ServiceStorage;
 
     private _isAdmin: boolean | undefined;
 
-    constructor(vk: VK, context: MessageContext<ContextDefaultState>, app: App, input: BotInput, cache: ServiceCache, text?: string) {
+    constructor(vk: VK, context: MessageContext<ContextDefaultState>, app: App, input: BotInput, cache: ServiceStorage, text?: string) {
         super(app, input);
 
         this.vk = vk;
@@ -139,11 +139,11 @@ export class VkCallbackContext extends AbstractCallbackContext {
 
     private context: MessageEventContext<ContextDefaultState>;
     private vk: VK;
-    private cache: ServiceCache;
+    private cache: ServiceStorage;
 
     private _isAdmin: boolean | undefined;
 
-    constructor(vk: VK, context: MessageEventContext<ContextDefaultState>, app: App, input: BotInput, cache: ServiceCache, text?: string) {
+    constructor(vk: VK, context: MessageEventContext<ContextDefaultState>, app: App, input: BotInput, cache: ServiceStorage, text?: string) {
         super(app, input);
 
         this.vk = vk;

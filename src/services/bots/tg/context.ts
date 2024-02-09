@@ -3,7 +3,7 @@ import { config } from "../../../../config";
 import { App } from "../../../app";
 import { parsePayload } from "../../../utils";
 import { ImageFile } from "../../image/builder";
-import { AbstractCallbackContext, AbstractCommandContext, MessageOptions, ServiceCache } from "../abstract";
+import { AbstractCallbackContext, AbstractCommandContext, MessageOptions, ServiceStorage } from "../abstract";
 import { BotInput } from "../input";
 import { StaticKeyboard } from "../keyboard";
 import { convertAbstractToTg } from "./keyboard";
@@ -17,9 +17,9 @@ export class TgCommandContext extends AbstractCommandContext {
     protected lastSentMessageId?: number;
 
     private context: MessageContext;
-    private cache: ServiceCache;
+    private cache: ServiceStorage;
 
-    constructor(context: MessageContext, app: App, input: BotInput, cache: ServiceCache) {
+    constructor(context: MessageContext, app: App, input: BotInput, cache: ServiceStorage) {
         super(app, input)
         this.context = context
         this.text = context.text || ''
@@ -152,9 +152,9 @@ export class TgCallbackContext extends AbstractCallbackContext {
     private context: CallbackQueryContext;
     private messageContext: MessageContext;
 
-    private cache: ServiceCache;
+    private cache: ServiceStorage;
 
-    constructor(context: CallbackQueryContext, app: App, input: BotInput, cache: ServiceCache) {
+    constructor(context: CallbackQueryContext, app: App, input: BotInput, cache: ServiceStorage) {
         super(app, input)
 
         this.context = context;

@@ -1,6 +1,6 @@
 import { addValueIntoStorageByKey, getValueFromStorageByKey, updateMetaStorageByKey } from "../db";
 
-export class ServiceCache {
+export class ServiceStorage {
     constructor(private storageName: string) { }
 
     public get(key: string): string | null {
@@ -9,8 +9,10 @@ export class ServiceCache {
         return entry?.value || null;
     }
 
-    public add(key: string, value: string) {
-        addValueIntoStorageByKey(this.storageName, key, value, Math.floor(Date.now() / 1e3))
+    public add(key: string, value: string, ttl: number = 0) {
+        const time = Math.floor(Date.now() / 1e3);
+
+        addValueIntoStorageByKey(this.storageName, key, value, time, ttl ? time + ttl : 0)
     }
 
     public getMeta(key: string, metaKey: string): any {

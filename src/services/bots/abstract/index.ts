@@ -1,4 +1,4 @@
-export * from '../../cache';
+export * from '../../storage';
 export * from './action';
 export * from './bot';
 export * from './callback';

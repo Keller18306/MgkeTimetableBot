@@ -1,5 +1,5 @@
 --
--- Файл сгенерирован с помощью SQLiteStudio v3.4.4 в сб февр. 10 01:45:26 2024
+-- Файл сгенерирован с помощью SQLiteStudio v3.4.4 в сб февр. 10 02:01:25 2024
 --
 -- Использованная кодировка текста: System
 --
@@ -116,6 +116,7 @@ CREATE TABLE storage (
     key     STRING NOT NULL,
     value   STRING,
     time    INT,
+    expires INT    DEFAULT (0),
     meta    STRING,
     UNIQUE (
         storage,

@@ -1,20 +1,20 @@
 import { config } from "../../../config";
 import { App } from "../../app";
 import { DayIndex, StringDate } from "../../utils";
-import { ServiceCache } from "../cache";
 import { GroupDayEvent, TeacherDayEvent } from "../parser";
+import { ServiceStorage } from "../storage";
 import { GroupDay, GroupLessonExplain, TeacherDay, TeacherLessonExplain } from "../timetable/types";
 import { GoogleServiceApi } from "./api";
 import { GoogleCalendarApi } from "./api/calendar";
 
 export class GoogleCalendar {
     public api: GoogleCalendarApi;
-    private cache: ServiceCache;
+    private cache: ServiceStorage;
     private app: App;
 
     constructor(app: App) {
         this.app = app;
-        this.cache = new ServiceCache('google_calendar');
+        this.cache = new ServiceStorage('google_calendar');
         this.api = new GoogleServiceApi().calendar;
     }
 

@@ -1,6 +1,6 @@
 import { ContextDefaultState, MessageContext, VK } from "vk-io";
 import { App } from "../../../app";
-import { AbstractAction, AbstractCommandContext, ServiceCache } from "../abstract";
+import { AbstractAction, AbstractCommandContext, ServiceStorage } from "../abstract";
 import { BotInput } from "../input";
 import { VkChat } from "./chat";
 import { VkCommandContext } from "./context";
@@ -10,7 +10,7 @@ export class VkBotAction extends AbstractAction {
     protected chat: VkChat;
     protected _context: AbstractCommandContext;
 
-    constructor(vk: VK, context: MessageContext<ContextDefaultState>, chat: VkChat, app: App, input: BotInput, cache: ServiceCache) {
+    constructor(vk: VK, context: MessageContext<ContextDefaultState>, chat: VkChat, app: App, input: BotInput, cache: ServiceStorage) {
         super()
         this.context = context
         this.chat = chat

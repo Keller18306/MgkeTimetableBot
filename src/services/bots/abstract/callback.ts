@@ -1,7 +1,8 @@
 import { CallbackQueryContext as TgRealCallbackContext } from 'puregram'
 import { ContextDefaultState, MessageEventContext } from 'vk-io'
+import { App } from '../../../app'
 import { ScheduleFormatter } from "../../../utils/formatters/abstract"
-import { ServiceCache } from '../../cache'
+import { ServiceStorage } from '../../storage'
 import { Keyboard } from "../keyboard"
 import { TgChat } from "../tg/chat"
 import { TgCallbackContext } from '../tg/context'
@@ -10,7 +11,6 @@ import { VkCallbackContext } from '../vk/context'
 import { AbstractChat } from "./chat"
 import { Service } from "./command"
 import { AbstractCallbackContext } from './context'
-import { App } from '../../../app'
 
 export type CbHandlerParams = {
     context: AbstractCallbackContext,
@@ -19,7 +19,7 @@ export type CbHandlerParams = {
     keyboard: Keyboard,
     service: Service,
     scheduleFormatter: ScheduleFormatter,
-    cache: ServiceCache
+    cache: ServiceStorage
 } & ({
     service: 'vk',
     context: VkCallbackContext,

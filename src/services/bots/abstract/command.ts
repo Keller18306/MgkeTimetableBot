@@ -2,9 +2,9 @@ import { MessageContext as TgMessageContext } from 'puregram';
 import { TelegramBotCommand } from 'puregram/generated';
 import { ContextDefaultState, MessageContext as VkMessageContext } from 'vk-io';
 import { App } from '../../../app';
-import { raspCache } from '../../parser';
 import { ScheduleFormatter } from '../../../utils/formatters/abstract';
-import { ServiceCache } from '../../cache';
+import { raspCache } from '../../parser';
+import { ServiceStorage } from '../../storage';
 import { Keyboard, StaticKeyboard, withCancelButton } from '../keyboard';
 import { TgChat } from '../tg/chat';
 import { TgCommandContext } from '../tg/context';
@@ -27,7 +27,7 @@ export type CmdHandlerParams = {
     keyboard: Keyboard,
     service: Service,
     scheduleFormatter: ScheduleFormatter,
-    cache: ServiceCache
+    cache: ServiceStorage
 } & ({
     service: 'vk',
     context: VkCommandContext,

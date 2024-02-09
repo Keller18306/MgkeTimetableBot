@@ -1,15 +1,15 @@
 import { format } from "util";
 import { config } from "../../../../config";
+import { App } from "../../../app";
 import { defines } from "../../../defines";
-import { ServiceCache } from "../../cache";
 import { InputRequestKey, RequestKey } from "../../key";
+import { ServiceStorage } from "../../storage";
 import { BotInput, InputCancel } from "../input";
 import { StaticKeyboard } from "../keyboard";
 import { AbstractCallback, CbHandlerParams } from "./callback";
 import { AbstractChat } from "./chat";
 import { AbstractCommand, CmdHandlerParams, Service } from "./command";
 import { AbstractCallbackContext, AbstractCommandContext } from "./context";
-import { App, AppService } from "../../../app";
 
 export type HandleMessageOptions = {
     /** Есть ли упоминание бота в сообщении (для ВК) */
@@ -24,7 +24,7 @@ export abstract class AbstractBot {
     
     protected readonly acceptTool: RequestKey = new RequestKey(config.encrypt_key);
     protected readonly input: BotInput = new BotInput();
-    protected readonly cache: ServiceCache;
+    protected readonly cache: ServiceStorage;
     protected readonly app: App;
 
     public service: Service;
@@ -32,7 +32,7 @@ export abstract class AbstractBot {
     constructor(app: App, service: Service) {
         this.app = app;
         this.service = service;
-        this.cache = new ServiceCache(this.service);
+        this.cache = new ServiceStorage(this.service);
     }
 
     protected getBotService() {

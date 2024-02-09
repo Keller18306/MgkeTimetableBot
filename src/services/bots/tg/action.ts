@@ -1,16 +1,16 @@
 import { MessageContext } from "puregram";
-import { AbstractAction, AbstractCommandContext, ServiceCache } from "../abstract";
+import { App } from "../../../app";
+import { AbstractAction, AbstractCommandContext, ServiceStorage } from "../abstract";
 import { BotInput } from "../input";
 import { TgChat } from "./chat";
 import { TgCommandContext } from "./context";
-import { App } from "../../../app";
 
 export class TgBotAction extends AbstractAction {
     protected context: MessageContext;
     protected chat: TgChat;
     protected _context: AbstractCommandContext;
 
-    constructor(context: MessageContext, chat: TgChat, app: App, input: BotInput, cache: ServiceCache) {
+    constructor(context: MessageContext, chat: TgChat, app: App, input: BotInput, cache: ServiceStorage) {
         super();
         this.context = context;
         this.chat = chat;
