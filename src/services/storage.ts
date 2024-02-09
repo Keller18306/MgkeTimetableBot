@@ -17,11 +17,8 @@ export class ServiceStorage {
 
     public getMeta(key: string, metaKey: string): any {
         const entry: any = getValueFromStorageByKey(this.storageName, key);
-        if (!entry) {
-            throw new Error('calendar not exists in cache');
-        }
 
-        const store = entry.meta ? JSON.parse(entry.meta) : {}
+        const store = entry?.meta ? JSON.parse(entry.meta) : {}
 
         return store[metaKey];
     }
@@ -29,7 +26,7 @@ export class ServiceStorage {
     public setMeta(key: string, metaKey: string, metaValue: string | number) {
         const entry: any = getValueFromStorageByKey(this.storageName, key);
         if (!entry) {
-            throw new Error('calendar not exists in cache');
+            throw new Error('key not exists in cache');
         }
 
         const store = entry.meta ? JSON.parse(entry.meta) : {}
