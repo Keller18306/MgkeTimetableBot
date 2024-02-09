@@ -1,5 +1,5 @@
 import { TelegramBotCommand } from "puregram/generated";
-import { raspCache } from "../../../../updater";
+import { raspCache } from "../../../parser";
 import { getDayRasp } from "../../../../utils";
 import { AbstractCommand, CmdHandlerParams } from "../../abstract";
 

@@ -1,6 +1,6 @@
 import StatusCode from "status-code-enum";
-import { raspCache } from "../../../updater";
 import { StringDate } from "../../../utils";
+import { raspCache } from "../../parser";
 import VKAppDefaultMethod, { HandlerParams } from "./_default";
 
 export default class VkAppAuthMethod extends VKAppDefaultMethod {

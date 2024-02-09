@@ -1,6 +1,6 @@
 import { config } from "../../../../config";
 import db from "../../../db";
-import { raspCache } from "../../../updater";
+import { raspCache } from "../../parser";
 import { StringDate, sort } from "../../../utils";
 import VKAppDefaultMethod, { HandlerParams } from "./_default";
 

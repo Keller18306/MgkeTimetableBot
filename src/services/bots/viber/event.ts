@@ -5,6 +5,7 @@ import { AbstractBotEventListener } from "../events";
 import { Keyboard } from "../keyboard";
 import { ViberChat, ViberDb } from "./chat";
 import { convertAbstractToViber } from './keyboard';
+import { App } from '../../../app';
 
 export class ViberEventListener extends AbstractBotEventListener<ViberChat> {
     protected _tableName: string = 'viber_bot_chats';
@@ -12,8 +13,8 @@ export class ViberEventListener extends AbstractBotEventListener<ViberChat> {
 
     private bot: Bot
 
-    constructor(bot: Bot) {
-        super(config.viber.noticer)
+    constructor(app: App, bot: Bot) {
+        super(app)
         this.bot = bot
     }
 
@@ -22,7 +23,7 @@ export class ViberEventListener extends AbstractBotEventListener<ViberChat> {
     }
 
     protected async sendMessage(chat: ViberChat, message: string, options: MessageOptions = {}) {
-        const keyboard = new Keyboard(undefined, chat)
+        const keyboard = new Keyboard(this.app, chat)
 
         return this.bot.sendMessage({ id: chat.peerId }, [
             new Message.Text(message, convertAbstractToViber(keyboard.MainMenu))

@@ -1,4 +1,4 @@
-import { GroupLessonExplain, TeacherLessonExplain } from "../../updater/parser/types";
+import { GroupLessonExplain, TeacherLessonExplain } from "../../services/timetable/types";
 import { GroupLessonOptions, ScheduleFormatter } from "./abstract";
 
 export class DefaultScheduleFormatter extends ScheduleFormatter {

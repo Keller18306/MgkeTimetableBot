@@ -1,6 +1,6 @@
 import { TelegramBotCommand } from "puregram/generated";
+import { BotService } from "../..";
 import { AbstractCommand, CmdHandlerParams } from "../../abstract";
-import { CommandController } from "../../controller";
 
 export default class extends AbstractCommand {
     public regexp = /^(!|\/)regexp$/i
@@ -12,7 +12,7 @@ export default class extends AbstractCommand {
     };
 
     handler({ context }: CmdHandlerParams) {
-        const commands = CommandController.instance.commands;
+        const commands = this.app.getService('bot').commands;
 
         const message: string[] = [];
         for (const id in commands) {

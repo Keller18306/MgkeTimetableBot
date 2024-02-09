@@ -1,7 +1,7 @@
 import { TelegramBotCommand } from "puregram/generated";
-import { raspCache } from "../../../../updater";
+import { raspCache } from "../../../parser";
 import { randArray } from "../../../../utils";
-import { ImageBuilder, ImageFile } from "../../../image/builder";
+import { ImageFile } from "../../../image/builder";
 import { AbstractCommand, CmdHandlerParams } from "../../abstract";
 
 export default class extends AbstractCommand {
@@ -36,7 +36,7 @@ export default class extends AbstractCommand {
             return context.send('Данной учебной группы не существует');
         }
 
-        const image: ImageFile = await ImageBuilder.getGroupImage(group, groupRasp.days);
+        const image: ImageFile = await this.app.getService('image').builder.getGroupImage(group, groupRasp.days);
 
         return context.sendPhoto(image);
     }

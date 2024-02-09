@@ -1,6 +1,6 @@
 import { chunkArray, getShortSubjectName } from "../../utils";
+import { GroupDay, GroupLesson, GroupLessonExplain, Groups } from '../timetable/types/group';
 import { AbstractParser } from "./abstract";
-import { GroupDay, GroupLesson, GroupLessonExplain, Groups } from './types/group';
 
 export default class StudentParser extends AbstractParser {
     protected groups: Groups = {}

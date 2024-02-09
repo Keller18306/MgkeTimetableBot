@@ -16,7 +16,7 @@ export default class extends AbstractCommand {
     async handler({ context }: CmdHandlerParams) {
         const { size: bdSize_before } = fs.statSync('./sqlite3.db')
 
-        vanish();
+        vanish(this.app);
 
         const { size: bdSize_after } = fs.statSync('./sqlite3.db')
 

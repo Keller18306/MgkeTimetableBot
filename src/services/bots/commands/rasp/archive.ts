@@ -1,10 +1,7 @@
 import { TelegramBotCommand } from "puregram/generated";
-import { Updater } from "../../../../updater";
-import { GroupDay, TeacherDay } from "../../../../updater/parser/types";
 import { DayIndex, StringDate } from "../../../../utils";
+import { GroupDay, TeacherDay } from "../../../timetable/types";
 import { AbstractCommand, CmdHandlerParams } from "../../abstract";
-
-const archive = Updater.getInstance().archive;
 
 export default class extends AbstractCommand {
     public regexp = /^((!|\/)archive)(\b|$|\s)/i;
@@ -21,6 +18,7 @@ export default class extends AbstractCommand {
             return context.send('День не указан');
         }
 
+        const archive = this.app.getService('timetable');
         const dayIndex: number = DayIndex.fromStringDate(day).valueOf();
 
         let entry: GroupDay | TeacherDay | null = null;

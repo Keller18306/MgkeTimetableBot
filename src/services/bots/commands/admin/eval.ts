@@ -3,12 +3,8 @@ import * as fs from 'fs';
 import { TelegramBotCommand } from 'puregram/generated';
 import { runInNewContext } from 'vm';
 import db from '../../../../db';
-import { Updater } from '../../../../updater';
-import { loadCache, raspCache, saveCache } from "../../../../updater/raspCache";
+import { loadCache, raspCache, saveCache } from "../../../parser/raspCache";
 import { AbstractCommand, CmdHandlerParams } from "../../abstract";
-import { CommandController } from "../../controller";
-
-const cmds = CommandController.instance.commands
 
 export default class extends AbstractCommand {
     public regexp = /^(!|\/)eval/i
@@ -32,11 +28,11 @@ export default class extends AbstractCommand {
         execTime = Date.now()
         try {
             result = await runInNewContext(code, {
+                app: this.app,
                 global, clearInterval, clearTimeout, setInterval,
                 setTimeout, queueMicrotask, clearImmediate, setImmediate,
                 context, fs, crypto, require, process, Buffer,
-                cmds, console, db, chat, CommandController,
-                raspCache, saveCache, loadCache, Updater
+                console, db, chat, raspCache, saveCache, loadCache
             }, {
                 timeout: 10000
             })

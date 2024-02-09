@@ -1,16 +1,33 @@
-import { Application, Request, Response } from 'express';
+import { Request, Response } from 'express';
 import path from 'path';
 import StatusCode from 'status-code-enum';
 import { config } from '../../../config';
+import { App, AppService } from '../../app';
 import { ImageKey } from '../key/image';
 import { ImageBuilder } from './builder';
 
-export class ImageService {
-    constructor(app: Application) {
-        app.get('/image/:image', this.getImage.bind(this))
+export class ImageService implements AppService {
+    public builder: ImageBuilder;
+    private app: App;
 
-        if (config.dev) {
-            app.get('/image-sign/:image', this.getImageSign.bind(this))
+    constructor(app: App) {
+        this.app = app;
+        this.builder = new ImageBuilder();
+    }
+
+    public register(): boolean {
+        return true;
+    }
+
+    public run() {
+        if (this.app.isServiceRegistered('http')) {
+            const server = this.app.getService('http').getServer();
+
+            server.get('/image/:image', this.getImage.bind(this));
+
+            if (config.dev) {
+                server.get('/image-sign/:image', this.getImageSign.bind(this));
+            }
         }
     }
 

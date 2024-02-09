@@ -1,5 +1,5 @@
 import { TelegramBotCommand } from "puregram/generated";
-import { Updater, raspCache } from "../../../../updater";
+import { raspCache } from "../../../parser";
 import { WeekIndex, randArray } from "../../../../utils";
 import { AbstractCommand, CmdHandlerParams, MessageOptions } from "../../abstract";
 import { InputInitiator } from "../../input";
@@ -46,7 +46,7 @@ export default class extends AbstractCommand {
 
         const weekIndex = WeekIndex.getRelevant();
         const weekRange = weekIndex.getWeekDayIndexRange();
-        const days = Updater.getInstance().archive.getGroupDaysByRange(weekRange, group);
+        const days = this.app.getService('timetable').getGroupDaysByRange(weekRange, group);
 
         const message = scheduleFormatter.formatGroupFull(String(group), {
             showHeader: true,

@@ -1,5 +1,4 @@
 import { TelegramBotCommand } from "puregram/generated";
-import { Updater } from "../../../../updater";
 import { StringDate, prepareError } from "../../../../utils";
 import { AbstractCommand, CmdHandlerParams } from "../../abstract";
 
@@ -14,7 +13,7 @@ export default class extends AbstractCommand {
     public adminOnly: boolean = true;
 
     handler({ context }: CmdHandlerParams) {
-        let logs = Updater.getInstance().getLogs();
+        let logs = this.app.getService('parser').getLogs();
         if (logs.length == 0) {
             return context.send('Логов нет');
         }

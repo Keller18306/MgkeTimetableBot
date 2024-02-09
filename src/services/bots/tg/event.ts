@@ -6,17 +6,16 @@ import { AbstractBotEventListener } from "../events";
 import { Keyboard } from '../keyboard';
 import { TgChat, TgDb } from './chat';
 import { convertAbstractToTg } from "./keyboard";
+import { App } from "../../../app";
 
 export class TgEventListener extends AbstractBotEventListener<TgChat> {
     protected _tableName: string = 'tg_bot_chats';
     public readonly service: Service = 'tg';
 
-    public enabled: boolean = config.vk.bot.noticer;
-
     private tg: Telegram;
 
-    constructor(tg: Telegram) {
-        super(config.telegram.noticer)
+    constructor(app: App, tg: Telegram) {
+        super(app)
         this.tg = tg
     }
 
@@ -25,7 +24,7 @@ export class TgEventListener extends AbstractBotEventListener<TgChat> {
     }
 
     public async sendMessage(chat: TgChat, message: string, options: MessageOptions = {}) {
-        const keyboard = new Keyboard(undefined, chat)
+        const keyboard = new Keyboard(this.app, chat)
 
         return this.tg.api.sendMessage({
             text: message,

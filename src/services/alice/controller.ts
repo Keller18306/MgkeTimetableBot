@@ -2,17 +2,16 @@ import { IContext } from '@keller18306/yandex-dialogs-sdk';
 import { readdirSync } from 'fs';
 import path from 'path';
 import { AliceSkill } from "./skill";
+import { App } from '../../app';
 
 export class SkillController {
     private skills: {
         [id: string]: AliceSkill
     } = {};
 
-    constructor() {
-        this.loadSkills()
-    }
+    constructor(private app: App) {}
 
-    private loadSkills() {
+    public loadSkills() {
         const cmdsPath = path.join(__dirname, 'skills')
 
         const dir = readdirSync(cmdsPath)
@@ -22,7 +21,7 @@ export class SkillController {
 
             if (skillClass == undefined) continue;
 
-            const skill: AliceSkill = new skillClass();
+            const skill: AliceSkill = new skillClass(this.app);
 
             if (skill.id == undefined) continue;
 

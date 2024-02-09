@@ -1,5 +1,5 @@
 import { DayIndex, StringDate } from ".";
-import { raspCache } from "../../updater";
+import { raspCache } from "../../services/parser";
 
 const startingWeekIndexDate = new Date(1970, 0, 5);
 const ONE_DAY: number = 24 * 60 * 60 * 1000;

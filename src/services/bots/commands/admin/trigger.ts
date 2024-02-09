@@ -1,4 +1,3 @@
-import { NextDayUpdater } from "../../../../updater/nextDay";
 import { AbstractCommand, CmdHandlerParams } from "../../abstract";
 
 export default class extends AbstractCommand {
@@ -7,21 +6,21 @@ export default class extends AbstractCommand {
 
     public adminOnly: boolean = true;
 
-    async handler({ context, chat }: CmdHandlerParams) {
+    async handler({ context }: CmdHandlerParams) {
         const [trigger, arg] = context.text?.replace(this.regexp, '').trim().split(' ');
 
         switch (trigger) {
             case 'NextDayUpdater':
-                const index = Number(arg)
+                const index = Number(arg);
                 if (isNaN(index)) {
-                    return context.send('index is not a number')
+                    return context.send('index is not a number');
                 }
-                
-                await NextDayUpdater.onExecute(index - 1)
 
-                return context.send('ok')
+                await this.app.getService('bot').cron.execute(index - 1);
+
+                return context.send('ok');
             default:
-                return context.send('not found')
+                return context.send('not found');
         }
     }
 }

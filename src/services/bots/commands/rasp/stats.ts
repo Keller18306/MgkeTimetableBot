@@ -1,9 +1,7 @@
 import { TelegramBotCommand } from "puregram/generated";
-import { Updater } from "../../../../updater";
-import { GroupLessonExplain, TeacherLessonExplain } from "../../../../updater/parser/types";
+import { Timetable } from "../../../timetable";
+import { GroupLessonExplain, TeacherLessonExplain } from "../../../timetable/types";
 import { AbstractCommand, CmdHandlerParams } from "../../abstract";
-
-const archive = Updater.getInstance().archive;
 
 export default class extends AbstractCommand {
     public regexp = /^(!|\/)stats$/i;
@@ -17,10 +15,12 @@ export default class extends AbstractCommand {
     async handler({ context, chat }: CmdHandlerParams) {
         let message: string;
 
+        const archive = this.app.getService('timetable');
+
         if ((chat.mode === 'student' || chat.mode === 'parent') && chat.group) {
-            message = this.getGroupStats(chat.group);
+            message = this.getGroupStats(archive, chat.group);
         } else if(chat.mode === 'teacher' && chat.teacher) {
-            message = this.getTeacherStats(chat.teacher);
+            message = this.getTeacherStats(archive, chat.teacher);
         } else {
             message = 'Группа или учитель не были выбраны';
         }
@@ -28,10 +28,10 @@ export default class extends AbstractCommand {
         return context.send(message);
     }
 
-    private getGroupStats(group: string | number) {
+    private getGroupStats(archive: Timetable, group: string | number) {
         const message: string[] = [];
 
-        const days = archive.iterateGroupDays(group);
+        const days = archive.getGroupDays(group);
 
         const total: {
             [lesson: string]: number
@@ -94,10 +94,10 @@ export default class extends AbstractCommand {
         return message.join('\n');
     }
 
-    private getTeacherStats(teacher: string) {
+    private getTeacherStats(archive: Timetable, teacher: string) {
         const message: string[] = [];
 
-        const days = archive.iterateTeacherDays(teacher);
+        const days = archive.getTeacherDays(teacher);
 
         const total: {
             [lesson: string]: number

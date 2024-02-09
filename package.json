@@ -26,6 +26,7 @@
     "puregram": "^2.11.0",
     "status-code-enum": "^1.0.0",
     "systeminformation": "^5.17.12",
+    "throttled-queue": "^2.1.4",
     "viber-bot": "^1.0.18",
     "vk-io": "^4.8.3"
   },

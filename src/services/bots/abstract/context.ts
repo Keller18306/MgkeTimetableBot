@@ -1,3 +1,4 @@
+import { App } from '../../../app';
 import { ImageFile } from '../../image/builder';
 import { BotInput, InputResolvedValue } from '../input';
 import { KeyboardBuilder } from './keyboardBuilder';
@@ -21,9 +22,11 @@ export abstract class AbstractContext {
     public abstract delete(id: string): Promise<boolean>;
     public abstract isChatAdmin(): Promise<boolean>;
 
+    protected readonly app: App;
     public readonly _input: BotInput;
 
-    constructor(input: BotInput) {
+    constructor(app: App, input: BotInput) {
+        this.app = app;
         this._input = input;
     }
 

@@ -1,5 +1,5 @@
 import { defines } from "../../../../defines";
-import { raspCache } from "../../../../updater";
+import { raspCache } from "../../../parser";
 import { randArray } from "../../../../utils";
 import { AbstractCommand, CmdHandlerParams, MessageOptions } from "../../abstract";
 import { InputInitiator } from "../../input";

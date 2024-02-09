@@ -1,47 +1,20 @@
 import { AbstractBotEventListener, ProgressCallback } from ".";
-import { GroupDayEvent, TeacherDayEvent, Updater } from "../../../updater";
-import { raspCache, saveCache } from "../../../updater/raspCache";
+import { App } from "../../../app";
 import { DayIndex } from "../../../utils";
+import { GroupDayEvent, TeacherDayEvent } from "../../parser";
+import { raspCache, saveCache } from "../../parser/raspCache";
 import { ChatMode, Service } from "../abstract";
 
 export type ServiceProgressCallback = (data: { service: Service } & Parameters<ProgressCallback>[0]) => void;
 
 export class BotEventController {
-    private static _instance: BotEventController;
-
-    public static getInstance() {
-        if (!this._instance) {
-            this._instance = new BotEventController();
-        }
-
-        return this._instance;
-    }
-
-    public static async nextGroupDay(data: { index: number }) {
-        const { serviceList, runDeferredFunctions } = this.getInstance();
-
-        for (const service of serviceList) {
-            await service.nextGroupDay(data);
-        }
-
-        await runDeferredFunctions();
-    }
-
-    public static async cronTeacherDay(data: { index: number }) {
-        const { serviceList, runDeferredFunctions } = this.getInstance();
-
-        for (const service of serviceList) {
-            await service.cronTeacherDay(data);
-        }
-
-        await runDeferredFunctions();
-    }
-
     private serviceList: AbstractBotEventListener[] = [];
     private deferred: { [id: string]: () => any } = {};
 
-    private constructor() {
-        const ev = Updater.getInstance().events;
+    constructor(private app: App) { }
+
+    public run() {
+        const ev = this.app.getService('parser').events;
 
         ev.on('addGroupDay', this.addGroupDay.bind(this));
         ev.on('updateGroupDay', this.updateGroupDay.bind(this));
@@ -54,8 +27,24 @@ export class BotEventController {
         ev.on('error', this.sendError.bind(this));
     }
 
-    public registerService(service: AbstractBotEventListener) {
+    public registerListener(service: AbstractBotEventListener) {
         this.serviceList.push(service);
+    }
+
+    public async cronGroupDay(data: { index: number }) {
+        for (const service of this.serviceList) {
+            await service.cronGroupDay(data);
+        }
+
+        await this.runDeferredFunctions();
+    }
+
+    public async cronTeacherDay(data: { index: number }) {
+        for (const service of this.serviceList) {
+            await service.cronTeacherDay(data);
+        }
+
+        await this.runDeferredFunctions();
     }
 
     public async addGroupDay(data: GroupDayEvent) {

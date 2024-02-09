@@ -1,5 +1,6 @@
 import { APIError, getRandomId, VK } from "vk-io";
 import { config } from "../../../../config";
+import { App } from "../../../app";
 import { MessageOptions, Service } from "../abstract";
 import { AbstractBotEventListener } from "../events";
 import { VkChat, VkDb } from './chat';
@@ -8,12 +9,10 @@ export class VkEventListener extends AbstractBotEventListener<VkChat> {
     protected _tableName: string = 'vk_bot_chats';
     public readonly service: Service = 'vk';
 
-    public enabled: boolean = config.vk.bot.noticer;
-
     private vk: VK;
 
-    constructor(vk: VK) {
-        super(config.vk.bot.noticer)
+    constructor(app: App, vk: VK) {
+        super(app)
         this.vk = vk
     }
 

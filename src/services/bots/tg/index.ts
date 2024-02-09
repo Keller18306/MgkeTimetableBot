@@ -2,37 +2,43 @@ import { NextMiddleware } from 'middleware-io';
 import { APIError, CallbackQueryContext, ChatMemberContext, MessageContext, Telegram } from 'puregram';
 import StatusCode from 'status-code-enum';
 import { config } from '../../../../config';
-import { raspCache } from '../../../updater';
+import { App, AppService } from '../../../app';
 import { createScheduleFormatter } from '../../../utils';
 import { FromType, InputRequestKey } from '../../key';
+import { raspCache } from '../../parser';
 import { AbstractBot, AbstractCommand, AbstractCommandContext } from '../abstract';
-import { CommandController } from '../controller';
 import { Keyboard } from '../keyboard';
 import { TgBotAction } from './action';
 import { TgChat } from './chat';
 import { TgCallbackContext, TgCommandContext } from './context';
 import { TgEventListener } from './event';
 
-export class TgBot extends AbstractBot {
+export class TgBot extends AbstractBot implements AppService {
     public tg: Telegram;
 
-    constructor() {
-        super('tg');
+    constructor(app: App) {
+        super(app, 'tg');
 
         this.tg = new Telegram({
             token: config.telegram.token
         });
+    }
 
+    public register(): boolean {
+        return config.telegram.enabled;
+    }
+
+    public async run() {
         this.tg.updates.on('message', (context, next) => this.messageHandler(context, next))
         this.tg.updates.on('my_chat_member', (context, next) => this.myChatMember(context, next))
         this.tg.updates.on('callback_query', (context, next) => this.callbackHandler(context, next))
         //this.tg.updates.on('my_chat_member', (context, next) => this.inviteUser(context, next))
 
-        new TgEventListener(this.tg)
-    }
+        if (config.telegram.noticer) {
+            this.getBotService().events.registerListener(new TgEventListener(this.app, this.tg))
+        }
 
-    public async run() {
-        await CommandController.instance.init();
+        await this.getBotService().init();
 
         await this.tg.updates.startPolling().then(() => {
             console.log('[Telegram Bot] Start polling...')
@@ -46,13 +52,13 @@ export class TgBot extends AbstractBot {
     private async setBotCommands() {
         const cmd_promises: Promise<boolean>[] = []
         cmd_promises.push(this.tg.api.setMyCommands({
-            commands: CommandController.getBotCommands(),
+            commands: this.getBotService().getBotCommands(),
             scope: {
                 type: 'default'
             }
         }))
 
-        const adminCommands = CommandController.getBotCommands(true);
+        const adminCommands = this.getBotService().getBotCommands(true);
         for (const admin_id of config.telegram.admin_ids) {
             const promise = this.tg.api.setMyCommands({
                 commands: adminCommands,
@@ -76,7 +82,7 @@ export class TgBot extends AbstractBot {
         if (context.from?.isBot() || context.hasViaBot()) return next();
 
         const text = context.text;
-        const _context = new TgCommandContext(context, this.input, this.cache);
+        const _context = new TgCommandContext(context, this.app, this.input, this.cache);
         const chat = new TgChat(context.chatId);
         chat.updateChat(context.chat, context.from);
 
@@ -84,7 +90,7 @@ export class TgBot extends AbstractBot {
             chat.ref = context.startPayload || 'none';
         }
 
-        let cmd: AbstractCommand | null = CommandController.searchCommandByMessage(text, chat.scene);
+        let cmd: AbstractCommand | null = this.getBotService().searchCommandByMessage(text, chat.scene);
         if (!cmd && chat.accepted && this.input.has(String(context.chatId))) {
             return this.input.resolve(String(context.chatId), text, 'message');
         }
@@ -92,11 +98,11 @@ export class TgBot extends AbstractBot {
         this.handleMessage(cmd, {
             context: _context,
             chat: chat,
-            actions: new TgBotAction(context, chat, this.input, this.cache),
-            keyboard: new Keyboard(_context, chat),
+            actions: new TgBotAction(context, chat, this.app, this.input, this.cache),
+            keyboard: new Keyboard(this.app, chat, _context),
             service: 'tg',
             realContext: context,
-            scheduleFormatter: createScheduleFormatter('tg', raspCache, chat),
+            scheduleFormatter: createScheduleFormatter('tg', this.app, raspCache, chat),
             cache: this.cache
         });
     }
@@ -120,18 +126,18 @@ export class TgBot extends AbstractBot {
         const chat = new TgChat(context.from.id);
         chat.updateChat(context.message.chat, context.message.from);
 
-        const cb = CommandController.getCallbackByPayload(payload);
+        const cb = this.getBotService().getCallbackByPayload(payload);
         if (!cb) return;
 
-        const _context = new TgCallbackContext(context, this.input, this.cache);
+        const _context = new TgCallbackContext(context, this.app, this.input, this.cache);
 
         return this.handleCallback(cb, {
             service: 'tg',
             context: _context,
             realContext: context,
             chat: chat,
-            keyboard: new Keyboard(_context, chat),
-            scheduleFormatter: createScheduleFormatter('tg', raspCache, chat),
+            keyboard: new Keyboard(this.app, chat, _context),
+            scheduleFormatter: createScheduleFormatter('tg', this.app, raspCache, chat),
             cache: this.cache
         });
     }

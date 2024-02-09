@@ -59,7 +59,11 @@ export type ConfigScheme = {
             clientEmail: string,
             privateKey: string
         },
-        calendar_owners: string[]
+        calendar_owners: string[],
+        rateLimitter: {
+            maxRequestsPerInterval: number,
+            interval: number
+        }
     },
     accept: {
         room: boolean,

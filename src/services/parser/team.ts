@@ -1,5 +1,5 @@
+import { Team } from "../timetable/types";
 import { AbstractParser } from "./abstract";
-import { Team } from "./types";
 
 export default class TeamParser extends AbstractParser {
     protected team: Team = {}

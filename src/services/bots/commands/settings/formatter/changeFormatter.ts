@@ -1,3 +1,4 @@
+import { App } from "../../../../../app";
 import { SCHEDULE_FORMATTERS, escapeRegex } from "../../../../../utils";
 import { AbstractCommand, CmdHandlerParams } from "../../../abstract";
 
@@ -6,8 +7,8 @@ export default class extends AbstractCommand {
     public payload = null;
     public scene?: string | null = 'settings';
 
-    constructor() {
-        super();
+    constructor(app: App) {
+        super(app);
         
         const regexp: string[] = [];
 

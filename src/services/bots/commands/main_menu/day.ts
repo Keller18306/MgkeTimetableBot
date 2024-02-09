@@ -1,7 +1,7 @@
 import { TelegramBotCommand } from 'puregram/generated';
-import { raspCache } from '../../../../updater';
 import { getDayRasp, randArray } from "../../../../utils";
 import { ScheduleFormatter } from '../../../../utils/formatters/abstract';
+import { raspCache } from '../../../parser';
 import { AbstractAction, AbstractChat, AbstractCommand, AbstractCommandContext, CmdHandlerParams } from "../../abstract";
 
 export default class extends AbstractCommand {

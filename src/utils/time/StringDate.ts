@@ -25,6 +25,30 @@ export class StringDate {
         return new this(date);
     }
 
+    public static fromStringDateTime(strDate: string, strTime: string, utc: boolean = false) {
+        const date = new Date();
+
+        const dateParts = strDate.split('.').map((value: string): number => {
+            return Number(value);
+        }).slice(0, 3).reverse() as [number, number, number];
+
+        dateParts[1] -= 1; //js format
+
+        const [hours, min] = strTime.split(':', 2).map((value: string): number => {
+            return Number(value);
+        });
+
+        if (utc) {
+            date.setUTCFullYear(...dateParts);
+            date.setUTCHours(hours, min, 0, 0);
+        } else {
+            date.setFullYear(...dateParts);
+            date.setHours(hours, min, 0, 0);
+        }
+
+        return new this(date);
+    }
+
     public static fromDayIndex(dayIndex: number | DayIndex) {
         if (typeof dayIndex === 'number') {
             dayIndex = DayIndex.fromNumber(dayIndex);

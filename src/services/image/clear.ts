@@ -2,7 +2,7 @@ import { createHash } from "crypto";
 import { existsSync } from "fs";
 import { readdir, unlink } from "fs/promises";
 import path from "path";
-import { raspCache } from "../../updater";
+import { raspCache } from "../parser";
 import { cachePath } from "./builder";
 
 export async function clearOldImages(): Promise<void> {

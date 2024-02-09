@@ -58,7 +58,11 @@ export const config: ConfigScheme = {
             clientEmail: 'calendar@mgkct-timetable.iam.gserviceaccount.com',
             privateKey: '-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n'
         },
-        calendar_owners: []
+        calendar_owners: [],
+        rateLimitter: { // не более 600 запросов в минуту
+            maxRequestsPerInterval: 600,
+            interval: 60 * 1e3
+        }
     },
     accept: {
         room: false,

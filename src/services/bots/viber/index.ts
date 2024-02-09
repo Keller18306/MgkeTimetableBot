@@ -1,13 +1,12 @@
-import express, { Application } from 'express';
+import express from 'express';
 import { Bot, Events, ReceivedTextMessage, Response } from 'viber-bot';
 import { config } from '../../../../config';
+import { App, AppService } from '../../../app';
 import { defines } from '../../../defines';
-import { HttpServer } from '../../../http';
-import { raspCache } from '../../../updater';
+import { raspCache } from '../../parser';
 import { createScheduleFormatter } from '../../../utils';
 import { FromType, InputRequestKey } from '../../key/index';
 import { AbstractBot, AbstractCommand } from '../abstract';
-import { CommandController } from '../controller';
 import { Keyboard, StaticKeyboard } from '../keyboard';
 import { ViberAction } from './action';
 import { ViberChat } from './chat';
@@ -19,17 +18,14 @@ const REDIRECT_URL: string = VIBER_URL;
 const WEBHOOK_URL: string = VIBER_URL + '/webhook';
 const AVATAR_URL: string = VIBER_URL + '/avatar.png';
 
-export class ViberBot extends AbstractBot {
+export class ViberBot extends AbstractBot implements AppService {
     private bot: Bot;
     private domain?: string;
-    private app: Application;
-    private httpServer: HttpServer;
+    // private app: Application;
+    // private httpServer: HttpService;
 
-    constructor(app: express.Application, httpServer: HttpServer) {
-        super('viber');
-
-        this.app = app;
-        this.httpServer = httpServer;
+    constructor(app: App) {
+        super(app, 'viber');
 
         this.bot = new Bot({
             authToken: config.viber.token,
@@ -42,29 +38,39 @@ export class ViberBot extends AbstractBot {
                 Events.UNSUBSCRIBED
             ]
         });
+    }
 
+    public register(): boolean {
+        return config.viber.enabled;
+    }
+
+    public async run() {
         this.bot.on(Events.MESSAGE_RECEIVED, (message, response) => this.handleNewMessage(message, response));
         this.bot.on(Events.CONVERSATION_STARTED, (response, subscribed, context) => this.handleConversationStarted(response, subscribed, context));
         this.bot.on(Events.SUBSCRIBED, (response) => this.handleSubscribe(response));
         this.bot.on(Events.UNSUBSCRIBED, (userId) => this.handleUnsubscribe(userId));
-    }
 
-    public async run() {
-        await CommandController.instance.init();
+        const httpService = this.app.getService('http');
+        httpService.ignoreJsonParserUrls.push(VIBER_URL); //fix for viber
+        const server = httpService.getServer();
 
-        this.httpServer.ignoreJsonParserUrls.push(VIBER_URL); //fix for viber
-        this.app.use(WEBHOOK_URL, this.bot.middleware());
+        if (config.viber.noticer) {
+            this.getBotService().events.registerListener(new ViberEventListener(this.app, this.bot));
+        }
 
-        this.bot.getBotProfile().then((res) => {
+        await this.getBotService().init();
+
+        await this.bot.getBotProfile().then((res) => {
             this.domain = res.uri
             console.log(`[VIBER] Бот '${res.name.trim()}' авторизован. Сообщения отправляются от '${config.viber.name}'`)
-            this.app.use(REDIRECT_URL, (request, response) => this.redirect(request, response));
+            server.use(REDIRECT_URL, (request, response) => this.redirect(request, response));
         }, (err) => {
             console.error('[VIBER] Не удалось получить информацию о боте. Вероятно невалидный токен.', err)
-        })
-        this.setupWebhook()
+        });
 
-        new ViberEventListener(this.bot)
+        server.use(WEBHOOK_URL, this.bot.middleware());
+
+        await this.setupWebhook();
     }
 
     private async setupWebhook() {
@@ -79,7 +85,7 @@ export class ViberBot extends AbstractBot {
 
     private async handleNewMessage(message: ReceivedTextMessage, response: Response) {
         const chat = new ViberChat(response.userProfile.id)
-        const context = new ViberCommandContext(message, response, chat, this.input)
+        const context = new ViberCommandContext(message, response, this.app, chat, this.input)
 
         if (!context.payload && chat.accepted && this.input.has(context.peerId)) {
             return this.input.resolve(context.peerId, message.text, 'message');
@@ -87,9 +93,9 @@ export class ViberBot extends AbstractBot {
 
         let cmd: AbstractCommand | null = null;
         if (context.payload) {
-            cmd = CommandController.searchCommandByPayload(context.payload.action, chat.scene)
+            cmd = this.getBotService().searchCommandByPayload(context.payload.action, chat.scene)
         } else {
-            cmd = CommandController.searchCommandByMessage(message.text, chat.scene)
+            cmd = this.getBotService().searchCommandByMessage(message.text, chat.scene)
         }
 
         if (chat.needUpdateDeviceInfo()) {
@@ -105,16 +111,16 @@ export class ViberBot extends AbstractBot {
             realContext: { message, response },
             chat: chat,
             actions: new ViberAction(context, chat),
-            keyboard: new Keyboard(context, chat.resync()),
+            keyboard: new Keyboard(this.app, chat.resync(), context),
             service: 'viber',
-            scheduleFormatter: createScheduleFormatter('viber', raspCache, chat),
+            scheduleFormatter: createScheduleFormatter('viber', this.app, raspCache, chat),
             cache: this.cache
         });
     }
 
     private async handleConversationStarted(response: Response, subscribed: boolean, _context: string) {
         const chat = new ViberChat(response.userProfile.id)
-        const context = new ViberCommandContext(null, response, chat, this.input)
+        const context = new ViberCommandContext(null, response, this.app, chat, this.input)
 
         chat.resync()
 

@@ -1,4 +1,4 @@
-import { GroupDay, TeacherDay } from "../updater/parser/types";
+import { GroupDay, TeacherDay } from "../services/timetable/types";
 
 /**
  * @description Перезаписывает старые дни, новыми, сохраняя старые неизменённые

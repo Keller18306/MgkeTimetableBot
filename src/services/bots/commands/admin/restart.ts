@@ -1,6 +1,6 @@
 import { execSync } from "child_process";
 import { TelegramBotCommand } from "puregram/generated";
-import { saveCache } from "../../../../updater/raspCache";
+import { saveCache } from "../../../parser/raspCache";
 import { AbstractCommand, CmdHandlerParams } from "../../abstract";
 
 export default class extends AbstractCommand {

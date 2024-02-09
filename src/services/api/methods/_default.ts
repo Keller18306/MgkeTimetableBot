@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
+import { App } from '../../../app';
 
 export type HandlerParams = {
+    app: App,
     request: Request,
     response: Response
 }

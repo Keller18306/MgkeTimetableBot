@@ -1,5 +1,5 @@
-import { raspCache } from "../../../../updater";
 import { randArray } from "../../../../utils";
+import { raspCache } from "../../../parser";
 import { AbstractCommand, CmdHandlerParams } from "../../abstract";
 
 export default class extends AbstractCommand {

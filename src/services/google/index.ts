@@ -1,17 +1,35 @@
-import { Application, Request, Response } from 'express';
+import { Request, Response } from 'express';
 import expressAsyncHandler from 'express-async-handler';
 import StatusCode from 'status-code-enum';
 import { config } from '../../../config';
+import { App, AppService } from '../../app';
 import { GoogleUserApi } from './api';
+import { GoogleCalendar } from './calendar';
 import { GoogleUser } from './user';
 
-export class GoogleService {
-    constructor(app: Application) {
-        app.get(config.google.url, expressAsyncHandler(this.oauth.bind(this)));
-        
+export class GoogleService implements AppService {
+    private app: App;
+    public calendar: GoogleCalendar;
+
+    constructor(app: App) {
+        this.app = app;
+        this.calendar = new GoogleCalendar(app);
+    }
+
+    public register(): boolean {
+        return config.google.enabled;
+    }
+
+    public run() {
+        const server = this.app.getService('http').getServer();
+
+        server.get(config.google.url, expressAsyncHandler(this.oauth.bind(this)));
+
         if (config.dev) {
-            app.get('/google/link', this.link.bind(this));
+            server.get('/google/link', this.link.bind(this));
         }
+
+        this.calendar.run();
     }
 
     private async oauth(request: Request<null, null, null, Partial<{ code: string }>>, response: Response): Promise<void> {

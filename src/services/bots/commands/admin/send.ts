@@ -29,7 +29,7 @@ export default class extends AbstractCommand {
             await context.editOrSend(text);
         }, 1e3);
 
-        await BotEventController.getInstance().sendDistibution(message, (data) => {
+        await this.app.getService('bot').events.sendDistibution(message, (data) => {
             progress = data
         });
 

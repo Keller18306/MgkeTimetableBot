@@ -1,6 +1,8 @@
-import db from "../db";
-import { DayIndex, StringDate, WeekIndex } from "../utils";
-import { GroupDay, TeacherDay } from "./parser/types";
+import { AppService } from "../../app";
+import db from "../../db";
+import { DayIndex, StringDate, WeekIndex, addslashes } from "../../utils";
+import { loadCache } from "../parser/raspCache";
+import { GroupDay, TeacherDay } from "./types";
 
 export type ArchiveAppendDay = {
     type: 'group',
@@ -19,12 +21,24 @@ function dbEntryToDayObject(entry: any): any {
     };
 }
 
-export class Archive {
+export class Timetable implements AppService {
     private _dayIndexBounds: { min: number, max: number } | undefined;
     private _groups: string[] | undefined;
     private _teachers: string[] | undefined;
 
-    public cleanCache() {
+    constructor() {
+
+    }
+
+    public register(): boolean {
+        return true;
+    }
+
+    public run() {
+        loadCache();
+    }
+
+    public resetCache() {
         this._dayIndexBounds = undefined;
         this._groups = undefined;
         this._teachers = undefined;
@@ -112,26 +126,22 @@ export class Archive {
         return days.map(dbEntryToDayObject);
     }
 
-    public * iterateGroupDays(group: number | string) {
-        const entries = db.prepare('SELECT day, data FROM timetable_archive WHERE `group` = ?')
-            .iterate(group) as IterableIterator<any>;
+    public getGroupDays(group: number | string, fromDay?: number): GroupDay[] {
+        const days = db.prepare(
+            'SELECT day, data FROM timetable_archive WHERE `group` = ?' +
+            (fromDay ? ` AND day >= ${addslashes(fromDay)}` : '')
+        ).all(group) as any;
 
-        for (const entry of entries) {
-            const day: GroupDay = dbEntryToDayObject(entry)
-
-            yield day;
-        }
+        return days.map(dbEntryToDayObject);
     }
 
-    public * iterateTeacherDays(teacher: string) {
-        const entries = db.prepare('SELECT day,data FROM timetable_archive WHERE teacher = ?')
-            .iterate(teacher) as IterableIterator<any>;
+    public getTeacherDays(teacher: string, fromDay?: number): TeacherDay[] {
+        const days = db.prepare(
+            'SELECT day, data FROM timetable_archive WHERE teacher = ?' +
+            (fromDay ? ` AND day >= ${addslashes(fromDay)}` : '')
+        ).all(teacher) as any;
 
-        for (const entry of entries) {
-            const day: TeacherDay = dbEntryToDayObject(entry)
-
-            yield day;
-        }
+        return days.map(dbEntryToDayObject);
     }
 
     public appendDays(entries: ArchiveAppendDay[]) {
@@ -147,3 +157,6 @@ export class Archive {
         }
     }
 }
+
+export * from './types';
+

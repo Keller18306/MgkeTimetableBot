@@ -1,9 +1,7 @@
 import { TelegramBotCommand } from 'puregram/generated';
-import { Updater, raspCache } from '../../../../updater';
+import { raspCache } from '../../../parser';
 import { WeekIndex, randArray, removePastDays } from "../../../../utils";
-import { ScheduleFormatter } from '../../../../utils/formatters/abstract';
-import { AbstractAction, AbstractChat, AbstractCommand, AbstractCommandContext, CmdHandlerParams } from "../../abstract";
-import { Keyboard } from '../../keyboard';
+import { AbstractCommand, CmdHandlerParams } from "../../abstract";
 
 export default class extends AbstractCommand {
     public regexp = /^((!|\/)(get)?(rasp)?week|(📑\s)?(расписание\s)?на неделю)$/i
@@ -13,19 +11,21 @@ export default class extends AbstractCommand {
         description: 'Ваше расписание на неделю'
     };
 
-    async handler({ context, chat, actions, scheduleFormatter, keyboard }: CmdHandlerParams) {
+    async handler(params: CmdHandlerParams) {
+        const { context, chat, actions, scheduleFormatter, keyboard } = params;
+
         if (Object.keys(raspCache.groups.timetable).length == 0 &&
             Object.keys(raspCache.teachers.timetable).length == 0) {
             return context.send('Данные с сервера ещё не загружены, ожидайте...');
         }
 
-        if (chat.mode == 'student' || chat.mode == 'parent') return this.groupRasp(context, chat, actions, scheduleFormatter, keyboard);
-        if (chat.mode == 'teacher') return this.teacherRasp(context, chat, actions, scheduleFormatter, keyboard);
+        if (chat.mode == 'student' || chat.mode == 'parent') return this.groupRasp(params);
+        if (chat.mode == 'teacher') return this.teacherRasp(params);
 
         return context.send('Первоначальная настройка ещё не была произведена');
     }
 
-    private async groupRasp(context: AbstractCommandContext, chat: AbstractChat, actions: AbstractAction, scheduleFormatter: ScheduleFormatter, keyboard: Keyboard) {
+    private async groupRasp({ context, chat, actions, scheduleFormatter, keyboard }: CmdHandlerParams) {
         if (chat.group == null) {
             const randGroup = randArray(Object.keys(raspCache.groups.timetable));
 
@@ -43,7 +43,7 @@ export default class extends AbstractCommand {
         const weekIndex = WeekIndex.getRelevant();
         const weekRange = weekIndex.getWeekDayIndexRange();
 
-        let days = Updater.getInstance().archive.getGroupDaysByRange(weekRange, chat.group);
+        let days = this.app.getService('timetable').getGroupDaysByRange(weekRange, chat.group);
         if (chat.hidePastDays) {
             days = removePastDays(days);
         }
@@ -65,7 +65,7 @@ export default class extends AbstractCommand {
         });
     }
 
-    private async teacherRasp(context: AbstractCommandContext, chat: AbstractChat, actions: AbstractAction, scheduleFormatter: ScheduleFormatter, keyboard: Keyboard) {
+    private async teacherRasp({ context, chat, actions, scheduleFormatter, keyboard }: CmdHandlerParams) {
         if (chat.teacher == null) {
             const randTeacher = randArray(Object.keys(raspCache.teachers.timetable));
 
@@ -83,7 +83,7 @@ export default class extends AbstractCommand {
         const weekIndex = WeekIndex.getRelevant();
         const weekRange = weekIndex.getWeekDayIndexRange();
 
-        let days = Updater.getInstance().archive.getTeacherDaysByRange(weekRange, chat.teacher);
+        let days = this.app.getService('timetable').getTeacherDaysByRange(weekRange, chat.teacher);
         if (chat.hidePastDays) {
             days = removePastDays(days);
         }

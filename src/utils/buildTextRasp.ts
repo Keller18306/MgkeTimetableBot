@@ -1,8 +1,9 @@
 import { config } from '../../config';
+import { App } from '../app';
+import { RaspCache } from '../services/parser/raspCache';
 import { AbstractChat } from '../services/bots/abstract/chat';
 import { Service } from '../services/bots/abstract/command';
-import { GroupDay, TeacherDay } from '../updater/parser/types';
-import { RaspCache } from '../updater/raspCache';
+import { GroupDay, TeacherDay } from '../services/timetable/types';
 import { ScheduleFormatter } from './formatters/abstract';
 import { DefaultScheduleFormatter } from './formatters/default';
 import { LitolaxScheduleFormatter } from './formatters/litolax';
@@ -13,9 +14,9 @@ export const SCHEDULE_FORMATTERS = [
     DefaultScheduleFormatter, VisualScheduleFormatter, LitolaxScheduleFormatter
 ];
 
-export function createScheduleFormatter(service: Service, raspCache: RaspCache, chat: AbstractChat): ScheduleFormatter {
+export function createScheduleFormatter(service: Service, app: App, raspCache: RaspCache, chat: AbstractChat): ScheduleFormatter {
     if (!chat) {
-        return new DefaultScheduleFormatter(service, raspCache, chat);
+        return new DefaultScheduleFormatter(service, app, raspCache, chat);
     }
 
     if (chat.scheduleFormatter > SCHEDULE_FORMATTERS.length - 1) {
@@ -24,7 +25,7 @@ export function createScheduleFormatter(service: Service, raspCache: RaspCache, 
 
     const Formatter = SCHEDULE_FORMATTERS[chat.scheduleFormatter];
 
-    return new Formatter(service, raspCache, chat);
+    return new Formatter(service, app, raspCache, chat);
 }
 
 export function removePastDays<T extends GroupDay | TeacherDay>(days: T[], processAutoskip: boolean = true): T[] {

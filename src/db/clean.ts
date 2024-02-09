@@ -1,10 +1,10 @@
 import { CronJob } from 'cron';
 import db from '.';
-import { Updater } from '../updater';
+import { App } from '../app';
 import { DayIndex } from '../utils';
 import { vaccum } from './common';
 
-export function vanish() {
+export function vanish(app: App) {
     //clean storage larger then 30 days
     db.prepare('DELETE FROM storage WHERE time <= ?')
         .run(Math.ceil(Date.now() / 1e3) - (60 * 60 * 24 * 30));
@@ -17,10 +17,10 @@ export function vanish() {
 
     vaccum();
 
-    Updater.getInstance().archive.cleanCache();
+    app.getService('timetable').resetCache();
 }
 
-export function startVanishCronJob() {
+export function startVanishCronJob(app: App) {
     /**
         Seconds: 0-59
         Minutes: 0-59
@@ -29,7 +29,7 @@ export function startVanishCronJob() {
         Months: 0-11 (Jan-Dec)
         Day of Week: 0-6 (Sun-Sat)
     */
-    
+
     //every first day of month
-    new CronJob('0 0 0 1 * *', vanish, null, true).start();
+    new CronJob('0 0 0 1 * *', () => vanish(app), null, true).start();
 }

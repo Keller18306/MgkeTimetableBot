@@ -1,18 +1,18 @@
 import { readFileSync } from "fs"
 import got from "got"
 import { JSDOM } from "jsdom"
-import { config } from "../../config"
-import { TypedEventEmitter } from "../utils/events"
-import { ChatMode } from "../services/bots/abstract"
-import { clearOldImages } from "../services/image/clear"
-import { DayIndex, WeekIndex, mergeDays } from "../utils"
-import { Archive, ArchiveAppendDay } from "./archive"
-import { NextDayUpdater } from "./nextDay"
-import StudentParser from "./parser/group"
-import TeacherParser from "./parser/teacher"
-import TeamParser from "./parser/team"
-import { Group, GroupDay, Groups, Teacher, TeacherDay, Teachers, Team } from './parser/types'
+import { config } from "../../../config"
+import { App, AppService } from "../../app"
+import { DayIndex, WeekIndex, mergeDays } from "../../utils"
+import { TypedEventEmitter } from "../../utils/events"
+import { ChatMode } from "../bots/abstract"
+import { clearOldImages } from "../image/clear"
+import { ArchiveAppendDay } from "../timetable"
+import { Group, GroupDay, Groups, Teacher, TeacherDay, Teachers, Team } from '../timetable/types'
+import StudentParser from "./group"
 import { RaspEntryCache, TeamCache, loadCache, raspCache, saveCache } from './raspCache'
+import TeacherParser from "./teacher"
+import TeamParser from "./team"
 
 const MAX_LOG_LIMIT: number = 10;
 const LOG_COUNT_SEND: number = 3;
@@ -59,7 +59,7 @@ function onParser<T>(Parser: typeof StudentParser | typeof TeacherParser, onStud
 export type GroupDayEvent = { day: GroupDay, group: string };
 export type TeacherDayEvent = { day: TeacherDay, teacher: string };
 
-type UpdaterEvents = {
+type ParserEvents = {
     addGroupDay: [data: GroupDayEvent];
     updateGroupDay: [data: GroupDayEvent];
 
@@ -71,17 +71,8 @@ type UpdaterEvents = {
     error: [error: Error];
 }
 
-export class Updater {
-    private static instance?: Updater;
-
-    public static getInstance() {
-        if (!this.instance) this.instance = new Updater();
-
-        return this.instance
-    }
-
-    public archive: Archive;
-    public events: TypedEventEmitter<UpdaterEvents>;
+export class ParserService implements AppService {
+    public events: TypedEventEmitter<ParserEvents>;
 
     private logs: { date: Date, result: string | Error }[] = [];
     private delayPromise?: Delay;
@@ -89,9 +80,8 @@ export class Updater {
     private _forceParse: boolean = false;
     private _clearKeys: boolean = false;
 
-    constructor() {
-        this.archive = new Archive();
-        this.events = new TypedEventEmitter<UpdaterEvents>();
+    constructor(private app: App) {
+        this.events = new TypedEventEmitter<ParserEvents>();
     }
 
     public getLogs() {
@@ -112,12 +102,18 @@ export class Updater {
         return true;
     }
 
-    public start() {
-        loadCache()
+    public register(): boolean {
+        // todo rewrite
+        // return config.updater.enabled;
+        return true;
+    }
 
-        this.run()
+    public run() {
+        loadCache();
 
-        new NextDayUpdater().register()
+        if (config.updater.enabled) {
+            this.runLoop();
+        }
     }
 
     public lastSuccessUpdate(): number {
@@ -233,17 +229,17 @@ export class Updater {
         }
     }
 
-    private async run() {
+    private async runLoop() {
         while (true) {
-            await this.runParse();
+            await this.loop();
         }
     }
 
-    private async runParse() {
+    private async loop() {
         let error: boolean = false;
 
         try {
-            const ms = await this.update();
+            const ms = await this.runActionsWithTimeout();
 
             raspCache.successUpdate = true;
 
@@ -255,6 +251,8 @@ export class Updater {
             this.log(e)
         }
 
+        await saveCache();
+
         this._clearKeys = false;
         this._forceParse = false;
         this._cacheTeamCleared = false;
@@ -264,7 +262,7 @@ export class Updater {
         await this.delayPromise.promise;
     }
 
-    private async update() {
+    private async runActionsWithTimeout() {
         return new Promise<number>(async (resolve, reject) => {
             const timeout = setTimeout(() => {
                 reject(new Error('update timed out'))
@@ -274,7 +272,7 @@ export class Updater {
             try {
                 const startTime: number = Date.now();
 
-                const res = await this.parse();
+                const res = await this.runActions();
 
                 const updateTime: number = Date.now();
                 clearTimeout(timeout);
@@ -290,12 +288,11 @@ export class Updater {
                 return reject(e);
             }
 
-            await saveCache();
             resolve(ms);
         })
     }
 
-    private async parse(): Promise<boolean[]> {
+    private async runActions(): Promise<boolean[]> {
         const PARSER_ACTIONS = [
             this.parseTimetable.bind(
                 this, StudentParser, encodeURI(config.updater.endpoints.timetableGroup), raspCache.groups
@@ -417,12 +414,12 @@ export class Updater {
                 for (const day of changed) {
                     const dayIndex = DayIndex.fromStringDate(day.day);
 
-                    let eventName: keyof UpdaterEvents | undefined;
+                    let eventName: keyof ParserEvents | undefined;
 
                     if (dayIndex.isToday()) {
                         //расписание на сегодня изменено
 
-                        eventName = onParser<keyof UpdaterEvents>(Parser,
+                        eventName = onParser<keyof ParserEvents>(Parser,
                             'updateGroupDay',
                             'updateTeacherDay'
                         );
@@ -431,13 +428,13 @@ export class Updater {
 
                         if (currentEntry.lastNoticedDay === dayIndex.valueOf()) {
                             //уже расписание было отправлено ранее, а значит поступили новые правки
-                            eventName = onParser<keyof UpdaterEvents>(Parser,
+                            eventName = onParser<keyof ParserEvents>(Parser,
                                 'updateGroupDay',
                                 'updateTeacherDay'
                             );
                         } else {
                             //новое расписание на завтра
-                            eventName = onParser<keyof UpdaterEvents>(Parser,
+                            eventName = onParser<keyof ParserEvents>(Parser,
                                 'addGroupDay',
                                 'addTeacherDay'
                             );
@@ -506,7 +503,7 @@ export class Updater {
             }
         }
 
-        this.archive.appendDays(archiveDays);
+        this.app.getService('timetable').appendDays(archiveDays);
 
         // проверка на то, что добавлена новая неделя
         const maxWeekIndex = Math.max(...(Object.values(cache.timetable) as (Group | Teacher)[])

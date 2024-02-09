@@ -1,5 +1,5 @@
 --
--- Файл сгенерирован с помощью SQLiteStudio v3.4.4 в чт дек. 21 12:16:36 2023
+-- Файл сгенерирован с помощью SQLiteStudio v3.4.4 в сб февр. 10 01:45:26 2024
 --
 -- Использованная кодировка текста: System
 --
@@ -110,25 +110,13 @@ CREATE TABLE google_accounts (
 );
 
 
--- Таблица: google_calendars
-CREATE TABLE google_calendars (
-    id         INTEGER PRIMARY KEY AUTOINCREMENT,
-    type       STRING,
-    value      STRING,
-    calendarId STRING,
-    UNIQUE (
-        type,
-        value
-    )
-);
-
-
 -- Таблица: storage
 CREATE TABLE storage (
     storage STRING NOT NULL,
     key     STRING NOT NULL,
     value   STRING,
     time    INT,
+    meta    STRING,
     UNIQUE (
         storage,
         key

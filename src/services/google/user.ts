@@ -6,7 +6,6 @@ import { createGoogleAccount, getGoogleAccountByEmail } from '../../db/google';
 interface IAliceUserFields {
     id: string;
     email: string;
-
     refresh_token: string | null;
     access_token: string | null;
     access_token_expires: number | null;

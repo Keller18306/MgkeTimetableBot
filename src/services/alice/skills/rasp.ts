@@ -1,8 +1,8 @@
 import { IContext, Reply } from "@keller18306/yandex-dialogs-sdk";
-import { raspCache } from "../../../updater";
-import { GroupDay, TeacherDay } from "../../../updater/parser/types";
+import { raspCache } from "../../parser";
 import { StringDate, closestJaroWinkler, getDayRasp, getFullSubjectName } from "../../../utils";
 import { DefaultScheduleFormatter } from "../../../utils/formatters/default";
+import { GroupDay, TeacherDay } from "../../timetable/types";
 import { AliceSkill } from "../skill";
 import { AliceUser } from "../user";
 
@@ -111,7 +111,7 @@ export default class extends AliceSkill {
                 }
             }
 
-            tts.push(`${+i+1}-ая пара:`)
+            tts.push(`${+i + 1}-ая пара:`)
 
             if (!Array.isArray(lesson)) {
                 tts.push(getFullSubjectName(lesson.lesson))
@@ -119,7 +119,7 @@ export default class extends AliceSkill {
                 if (lesson.length === 1) {
                     const sub = lesson[0];
                     tts.push(`Только ${sub.subgroup}-я подгруппа ${getFullSubjectName(sub.lesson)}`)
-                 } else {
+                } else {
                     const isEqual = lesson.every(_ => _.lesson === lesson[0].lesson);
 
                     if (isEqual) {
@@ -130,7 +130,7 @@ export default class extends AliceSkill {
                         }
                     }
                 }
-                
+
             }
         }
 
@@ -141,7 +141,7 @@ export default class extends AliceSkill {
         const text: string[] = [];
         text.push(`Расписание на ${weekday}, ${day.day}${showGroup ? ` для ${group}-ей группы` : ''}:`);
 
-        const formatter = new DefaultScheduleFormatter('alice', raspCache);
+        const formatter = new DefaultScheduleFormatter('alice', this.app, raspCache);
         text.push(formatter.formatGroupLessons(day.lessons));
 
         return Reply.text(text.join('\n'), {
@@ -187,9 +187,9 @@ export default class extends AliceSkill {
 
             tts.push(`${+i + 1}-ая пара:`)
 
-            tts.push(`${lesson.group}-я группа `+getFullSubjectName(lesson.lesson))
+            tts.push(`${lesson.group}-я группа ` + getFullSubjectName(lesson.lesson))
         }
-        
+
         if (!day.lessons.length) {
             tts.push('Пар нет')
         }
@@ -197,7 +197,7 @@ export default class extends AliceSkill {
         const text: string[] = [];
         text.push(`Расписание на ${weekday}, ${day.day}${showTeacher ? ` для преподавателя "${teacher}"` : ''}:`);
 
-        const formatter = new DefaultScheduleFormatter('alice', raspCache);
+        const formatter = new DefaultScheduleFormatter('alice', this.app, raspCache);
         text.push(formatter.formatTeacherLessons(day.lessons));
 
         return Reply.text(text.join('\n'), {

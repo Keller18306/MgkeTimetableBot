@@ -1,8 +1,10 @@
 import { MessageContext as TgMessageContext } from 'puregram';
 import { TelegramBotCommand } from 'puregram/generated';
 import { ContextDefaultState, MessageContext as VkMessageContext } from 'vk-io';
-import { raspCache } from '../../../updater';
+import { App } from '../../../app';
+import { raspCache } from '../../parser';
 import { ScheduleFormatter } from '../../../utils/formatters/abstract';
+import { ServiceCache } from '../../cache';
 import { Keyboard, StaticKeyboard, withCancelButton } from '../keyboard';
 import { TgChat } from '../tg/chat';
 import { TgCommandContext } from '../tg/context';
@@ -11,7 +13,6 @@ import { ViberCommandContext, ViberContext } from '../viber/context';
 import { VkChat } from '../vk/chat';
 import { VkCommandContext } from '../vk/context';
 import { AbstractAction } from './action';
-import { FileCache } from './cache';
 import { AbstractChat } from './chat';
 import { AbstractCommandContext } from './context';
 import { KeyboardBuilder } from './keyboardBuilder';
@@ -26,7 +27,7 @@ export type CmdHandlerParams = {
     keyboard: Keyboard,
     service: Service,
     scheduleFormatter: ScheduleFormatter,
-    cache: FileCache
+    cache: ServiceCache
 } & ({
     service: 'vk',
     context: VkCommandContext,
@@ -67,6 +68,8 @@ export abstract class AbstractCommand {
     public scene?: string | null;
 
     public abstract handler(params: CmdHandlerParams): any | Promise<any>
+
+    constructor(protected app: App) { }
 
     public preHandle({ service, chat }: CmdHandlerParams) {
         if (!this.services.includes(service)) {

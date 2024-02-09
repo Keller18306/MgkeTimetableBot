@@ -1,8 +1,9 @@
 import { CallbackQueryContext, MediaInput, MediaSourceType, MessageContext, PhotoAttachment } from "puregram";
 import { config } from "../../../../config";
+import { App } from "../../../app";
 import { parsePayload } from "../../../utils";
 import { ImageFile } from "../../image/builder";
-import { AbstractCallbackContext, AbstractCommandContext, FileCache, MessageOptions } from "../abstract";
+import { AbstractCallbackContext, AbstractCommandContext, MessageOptions, ServiceCache } from "../abstract";
 import { BotInput } from "../input";
 import { StaticKeyboard } from "../keyboard";
 import { convertAbstractToTg } from "./keyboard";
@@ -16,10 +17,10 @@ export class TgCommandContext extends AbstractCommandContext {
     protected lastSentMessageId?: number;
 
     private context: MessageContext;
-    private cache: FileCache;
+    private cache: ServiceCache;
 
-    constructor(context: MessageContext, input: BotInput, cache: FileCache) {
-        super(input)
+    constructor(context: MessageContext, app: App, input: BotInput, cache: ServiceCache) {
+        super(app, input)
         this.context = context
         this.text = context.text || ''
 
@@ -151,10 +152,10 @@ export class TgCallbackContext extends AbstractCallbackContext {
     private context: CallbackQueryContext;
     private messageContext: MessageContext;
 
-    private cache: FileCache;
+    private cache: ServiceCache;
 
-    constructor(context: CallbackQueryContext, input: BotInput, cache: FileCache) {
-        super(input)
+    constructor(context: CallbackQueryContext, app: App, input: BotInput, cache: ServiceCache) {
+        super(app, input)
 
         this.context = context;
 

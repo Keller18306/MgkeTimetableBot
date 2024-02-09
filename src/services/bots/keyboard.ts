@@ -1,4 +1,4 @@
-import { Updater } from '../../updater';
+import { App } from '../../app';
 import { SCHEDULE_FORMATTERS, WeekIndex } from '../../utils';
 import { AbstractChat, AbstractContext, ButtonType, KeyboardBuilder, KeyboardColor } from './abstract';
 
@@ -11,13 +11,11 @@ function noYesColor(value: number | boolean) {
 }
 
 export class Keyboard {
-    private context?: AbstractContext;
-    private chat: AbstractChat;
-
-    constructor(context: AbstractContext | undefined, chat: AbstractChat) {
-        this.context = context;
-        this.chat = chat;
-    }
+    constructor(
+        private app: App,
+        private chat: AbstractChat,
+        private context?: AbstractContext
+    ) { }
 
     public get MainMenu(): KeyboardBuilder {
         const keyboard: KeyboardBuilder = new KeyboardBuilder('MainMenu');
@@ -295,7 +293,7 @@ export class Keyboard {
             type = type[0]; //first letter of type
         }
 
-        const { min, max } = Updater.getInstance().archive.getWeekIndexBounds();
+        const { min, max } = this.app.getService('timetable').getWeekIndexBounds();
 
         let newLine: boolean = false;
 

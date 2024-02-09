@@ -1,9 +1,7 @@
 import { TelegramBotCommand } from "puregram/generated";
-import { Updater, raspCache } from "../../../../updater";
+import { raspCache } from "../../../parser";
 import { formatSeconds, sort } from "../../../../utils";
 import { AbstractCommand, CmdHandlerParams } from "../../abstract";
-
-const archive = Updater.getInstance().archive;
 
 export default class extends AbstractCommand {
     public regexp = /^(!|\/)(get)?teachers$/i
@@ -14,7 +12,7 @@ export default class extends AbstractCommand {
     };
 
     async handler({ context }: CmdHandlerParams) {
-        const cacheTeachers = archive.getTeachers();
+        const cacheTeachers = this.app.getService('timetable').getTeachers();
         const teachers = sort(cacheTeachers).map(this.formatTeacher.bind(this, true));
 
         return context.send([

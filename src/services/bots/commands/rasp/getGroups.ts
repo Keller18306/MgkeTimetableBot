@@ -1,9 +1,7 @@
 import { TelegramBotCommand } from "puregram/generated";
-import { Updater, raspCache } from "../../../../updater";
+import { raspCache } from "../../../parser";
 import { formatSeconds } from "../../../../utils";
 import { AbstractCommand, CmdHandlerParams } from "../../abstract";
-
-const archive = Updater.getInstance().archive;
 
 export default class extends AbstractCommand {
     public regexp = /^(!|\/)(get)?groups$/i
@@ -14,12 +12,14 @@ export default class extends AbstractCommand {
     };
 
     async handler({ context }: CmdHandlerParams) {
+        const archive = this.app.getService('timetable');
+
         return context.send([
             '__ Группы в кэше __\n',
             archive.getGroups().join(', '),
 
             `\nЗагружено: ${formatSeconds(Math.ceil((Date.now() - raspCache.groups.update) / 1e3))} назад`,
             `Изменено: ${formatSeconds(Math.ceil((Date.now() - raspCache.groups.changed) / 1e3))} назад`
-        ].join('\n'))
+        ].join('\n'));
     }
 }

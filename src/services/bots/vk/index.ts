@@ -1,36 +1,42 @@
 import { NextMiddleware } from 'middleware-io';
 import { ContextDefaultState, MessageContext, MessageEventContext, MessageSubscriptionContext, VK } from 'vk-io';
 import { config } from '../../../../config';
+import { App, AppService } from '../../../app';
 import { defines } from '../../../defines';
-import { raspCache } from '../../../updater';
+import { raspCache } from '../../parser';
 import { createScheduleFormatter } from '../../../utils';
 import { FromType, InputRequestKey } from '../../key';
 import { AbstractBot, AbstractCommand } from '../abstract';
-import { CommandController } from '../controller';
 import { Keyboard } from '../keyboard';
 import { VkBotAction } from './action';
 import { VkChat } from './chat';
 import { VkCallbackContext, VkCommandContext } from './context';
 import { VkEventListener } from './event';
 
-export class VkBot extends AbstractBot {
+export class VkBot extends AbstractBot implements AppService {
     public vk: VK;
 
-    constructor() {
-        super('vk');
+    constructor(app: App) {
+        super(app, 'vk');
 
         this.vk = new VK({
             pollingGroupId: config.vk.bot.id,
             token: config.vk.bot.access_token
         });
+    }
 
+    public register(): boolean {
+        return config.vk.bot.enabled;
+    }
+
+    public async run() {
         this.vk.updates.on('message_new', (context, next) => this.messageHandler(context, next))
         this.vk.updates.on('message_event', (context, next) => this.eventHandler(context, next))
         this.vk.updates.on('chat_invite_user', (context, next) => this.inviteUser(context, next))
         this.vk.updates.on('message_allow', (context, next) => this.setAllowSendMess(context, next, true))
         this.vk.updates.on('message_deny', (context, next) => this.setAllowSendMess(context, next, false))
 
-        this.vk.api.groups.setLongPollSettings({
+        await this.vk.api.groups.setLongPollSettings({
             group_id: config.vk.bot.id,
             enabled: true,
 
@@ -47,12 +53,12 @@ export class VkBot extends AbstractBot {
             console.log('[VK Bot] Settings set up')
         });
 
-        new VkEventListener(this.vk);
-    }
+        if (config.vk.bot.noticer) {
+            this.getBotService().events.registerListener(new VkEventListener(this.app, this.vk));
+        }        
 
-    public async run() {
-        await CommandController.instance.init();
-        
+        await this.getBotService().init();
+
         await this.vk.updates.startPolling().then(() => {
             console.log('[VK Bot] Start polling...')
         }).catch(err => {
@@ -83,7 +89,7 @@ export class VkBot extends AbstractBot {
         if (context.isFromGroup) return next();
 
         const { text, selfMention } = this.parseMessage(context.text);
-        const _context = new VkCommandContext(this.vk, context, this.input, this.cache, text);
+        const _context = new VkCommandContext(this.vk, context, this.app, this.input, this.cache, text);
         const chat = new VkChat(context.peerId);
 
         if (chat.ref === null) {
@@ -92,11 +98,11 @@ export class VkBot extends AbstractBot {
 
         let cmd: AbstractCommand | null = null;
         if (context.messagePayload) {
-            cmd = CommandController.searchCommandByPayload(context.messagePayload, chat.scene);
+            cmd = this.getBotService().searchCommandByPayload(context.messagePayload, chat.scene);
         }
 
         if (!cmd) {
-            cmd = CommandController.searchCommandByMessage(text, chat.scene);
+            cmd = this.getBotService().searchCommandByMessage(text, chat.scene);
         }
 
         if (!cmd && chat.accepted && this.input.has(String(context.peerId))) {
@@ -107,10 +113,10 @@ export class VkBot extends AbstractBot {
             service: 'vk',
             context: _context,
             chat: chat,
-            actions: new VkBotAction(this.vk, context, chat, this.input, this.cache),
-            keyboard: new Keyboard(_context, chat.resync()),
+            actions: new VkBotAction(this.vk, context, chat, this.app, this.input, this.cache),
+            keyboard: new Keyboard(this.app, chat.resync(), _context),
             realContext: context,
-            scheduleFormatter: createScheduleFormatter('vk', raspCache, chat),
+            scheduleFormatter: createScheduleFormatter('vk', this.app, raspCache, chat),
             cache: this.cache
         }, {
             selfMention: selfMention
@@ -136,18 +142,18 @@ export class VkBot extends AbstractBot {
 
         const chat = new VkChat(context.peerId);
 
-        const cb = CommandController.getCallbackByPayload(payload);
+        const cb = this.getBotService().getCallbackByPayload(payload);
         if (!cb) return;
 
-        const _context = new VkCallbackContext(this.vk, context, this.input, this.cache);
+        const _context = new VkCallbackContext(this.vk, context, this.app, this.input, this.cache);
 
         return this.handleCallback(cb, {
             service: 'vk',
             context: _context,
             realContext: context,
             chat: chat,
-            keyboard: new Keyboard(_context, chat),
-            scheduleFormatter: createScheduleFormatter('vk', raspCache, chat),
+            keyboard: new Keyboard(this.app, chat, _context),
+            scheduleFormatter: createScheduleFormatter('vk', this.app, raspCache, chat),
             cache: this.cache
         });
     }
@@ -157,8 +163,8 @@ export class VkBot extends AbstractBot {
 
         const chat = new VkChat(context.peerId);
 
-        const _context = new VkCommandContext(this.vk, context, this.input, this.cache);
-        const keyboard = new Keyboard(_context, chat.resync());
+        const _context = new VkCommandContext(this.vk, context, this.app, this.input, this.cache);
+        const keyboard = new Keyboard(this.app, chat.resync(), _context);
 
         return _context.send(defines['vk.message.about'], {
             keyboard: keyboard.MainMenu,

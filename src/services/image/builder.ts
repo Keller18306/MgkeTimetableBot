@@ -5,8 +5,8 @@ import { existsSync, mkdirSync } from "fs";
 import { readFile, writeFile } from "fs/promises";
 import path from "path";
 import { config } from "../../../config";
-import { GroupDay, GroupLessonExplain, TeacherDay } from "../../updater/parser/types";
 import { StringDate } from "../../utils";
+import { GroupDay, GroupLessonExplain, TeacherDay } from "../timetable/types";
 
 const groupColumns: IColumn[] = [
     {
@@ -74,11 +74,11 @@ export type ImageFile = {
 export class ImageBuilder {
     public static readonly CACHE_PATH: string = cachePath;
 
-    private static promises: {
+    private promises: {
         [id: string]: Promise<ImageFile>
     } = {};
 
-    public static async getGroupImage(group: string | number, days: GroupDay[]): Promise<ImageFile> {
+    public async getGroupImage(group: string | number, days: GroupDay[]): Promise<ImageFile> {
         const id: string = createHash('sha256').update(JSON.stringify({ group, days })).digest('base64url');
         if (this.promises[id] !== undefined) {
             return this.promises[id];
@@ -99,7 +99,7 @@ export class ImageBuilder {
             return {
                 id: id,
                 data: async () => {
-                    const data = await new this().buildGroupImage(group, days);
+                    const data = await this.buildGroupImage(group, days);
                     await writeFile(filePath, data);
 
                     return data;
@@ -114,7 +114,7 @@ export class ImageBuilder {
         return process;
     }
 
-    public static async getTeacherImage(teacher: string, days: TeacherDay[]): Promise<ImageFile> {
+    public async getTeacherImage(teacher: string, days: TeacherDay[]): Promise<ImageFile> {
         const id: string = createHash('sha256').update(JSON.stringify({ teacher, days })).digest('base64url');
         if (this.promises[id] !== undefined) {
             return this.promises[id];
@@ -135,7 +135,7 @@ export class ImageBuilder {
             return {
                 id: id,
                 data: async () => {
-                    const data = await new this().buildTeacherImage(teacher, days);
+                    const data = await this.buildTeacherImage(teacher, days);
                     await writeFile(filePath, data);
 
                     return data;

@@ -1,5 +1,4 @@
 import { TelegramBotCommand } from 'puregram/generated';
-import { Updater } from '../../../../updater';
 import { AbstractCommand, CmdHandlerParams } from "../../abstract";
 
 export default class extends AbstractCommand {
@@ -14,7 +13,7 @@ export default class extends AbstractCommand {
     async handler({ context }: CmdHandlerParams) {
         const clearKeys: boolean = context.text?.replace(this.regexp, '').trim() === 'true';
 
-        Updater.getInstance().forceParse(clearKeys);
+        this.app.getService('parser').forceParse(clearKeys);
 
         return context.send('Запущено');
     }

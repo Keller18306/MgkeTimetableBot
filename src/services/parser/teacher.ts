@@ -1,6 +1,6 @@
 import { getShortSubjectName } from '../../utils';
+import { Teacher, TeacherDay, TeacherLesson, Teachers } from '../timetable/types/teacher';
 import { AbstractParser } from './abstract';
-import { Teacher, TeacherDay, TeacherLesson, Teachers } from './types/teacher';
 
 export default class TeacherParser extends AbstractParser {
     protected teachers: Teachers = {}

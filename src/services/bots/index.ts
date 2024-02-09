@@ -3,8 +3,11 @@ import { existsSync, readdirSync, statSync } from "fs";
 import path from "path";
 import { TelegramBotCommand } from "puregram/generated";
 import { config } from "../../../config";
+import { App, AppService } from "../../app";
 import { parsePayload } from "../../utils";
 import { AbstractCallback, AbstractCommand } from "./abstract";
+import { BotEventController } from "./events/controller";
+import { BotCron } from "./cron";
 
 const cmdRootPath = path.join(__dirname, 'commands');
 const cbRootPath = path.join(__dirname, 'callbacks');
@@ -15,29 +18,45 @@ type LoadedInstance<T> = {
     instance: T
 }
 
-export class CommandController {
-    private static _instance?: CommandController;
+export class BotService implements AppService {
+    public commands: {
+        [id: string]: LoadedInstance<AbstractCommand>
+    } = {};
+    
+    public callbacks: {
+        [id: string]: LoadedInstance<AbstractCallback>
+    } = {};
 
-    public static get instance(): CommandController {
-        if (!this._instance) {
-            this._instance = new CommandController();
-        }
+    public events: BotEventController;
+    public cron: BotCron;
+    private _init: Promise<void> | undefined;
 
-        return this._instance;
+    constructor(private app: App) {
+        this.events = new BotEventController(app);
+        this.cron = new BotCron(app);
     }
 
-    public static getCommandById(id: string): AbstractCommand {
-        const cmd = this.instance.commands[id];
+    public register(): boolean {
+        return true;
+    }
+
+    public run() {
+        this.events.run();
+        this.cron.run();
+    }
+
+    public getCommandById(id: string): AbstractCommand {
+        const cmd = this.commands[id];
 
         if (!cmd) throw new Error(`Command with id '${id}' not found`);
 
         return cmd.instance;
     }
 
-    public static searchCommandByMessage(message?: string, scene?: string | null): AbstractCommand | null {
+    public searchCommandByMessage(message?: string, scene?: string | null): AbstractCommand | null {
         if (!message) return null
 
-        const cmds = this.instance.commands;
+        const cmds = this.commands;
 
         for (const id in cmds) {
             const cmd = cmds[id].instance;
@@ -54,12 +73,12 @@ export class CommandController {
         return null;
     }
 
-    public static searchCommandByPayload(payload?: string, scene?: string | null): AbstractCommand | null {
+    public searchCommandByPayload(payload?: string, scene?: string | null): AbstractCommand | null {
         const parsed = parsePayload(payload);
         if (!payload || !parsed) return null;
 
         const { action } = parsed;
-        const cmds = this.instance.commands;
+        const cmds = this.commands;
 
         for (const id in cmds) {
             const cmd = cmds[id].instance;
@@ -72,21 +91,21 @@ export class CommandController {
         return null;
     }
 
-    public static getCallbackById(id: string): AbstractCallback {
-        const cb = this.instance.callbacks[id];
+    public getCallbackById(id: string): AbstractCallback {
+        const cb = this.callbacks[id];
 
         if (!cb) throw new Error(`Command with id '${id}' not found`);
 
         return cb.instance;
     }
 
-    public static getCallbackByPayload(payload?: string): AbstractCallback | null {
+    public getCallbackByPayload(payload?: string): AbstractCallback | null {
         const parsed = parsePayload(payload);
         if (!payload || !parsed) return null;
 
         const { action } = parsed;
 
-        const cbs = this.instance.callbacks;
+        const cbs = this.callbacks;
 
         for (const id in cbs) {
             const cb = cbs[id].instance;
@@ -99,8 +118,8 @@ export class CommandController {
         return null;
     }
 
-    public static getBotCommands(showAdminCommands: boolean = false): TelegramBotCommand[] {
-        return Object.values(this.instance.commands).reduce<TelegramBotCommand[]>((commands, { instance }) => {
+    public getBotCommands(showAdminCommands: boolean = false): TelegramBotCommand[] {
+        return Object.values(this.commands).reduce<TelegramBotCommand[]>((commands, { instance }) => {
             const tgCommand = instance.tgCommand;
 
             if (tgCommand && (!instance.adminOnly || showAdminCommands)) {
@@ -114,25 +133,6 @@ export class CommandController {
 
             return commands;
         }, [])
-    }
-
-    public static async reloadCommandById(id: string) {
-        return this.instance.reloadCommandById(id);
-    }
-
-    public commands: {
-        [id: string]: LoadedInstance<AbstractCommand>
-    } = {};
-
-    public callbacks: {
-        [id: string]: LoadedInstance<AbstractCallback>
-    } = {};
-
-    private _init: Promise<void> | undefined;
-
-    constructor() {
-        if (CommandController._instance) throw new Error('CommandController is singleton');
-        CommandController._instance = this;
     }
 
     public init() {
@@ -206,7 +206,7 @@ export class CommandController {
         const { default: cmdClass } = await import(filePath);
         if (cmdClass == undefined) return;
 
-        const cmd = new cmdClass();
+        const cmd = new cmdClass(this.app);
         if (!(cmd instanceof classType)) {
             throw new Error(`incorrect command class: ${filePath}`);
         }

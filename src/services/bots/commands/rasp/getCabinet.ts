@@ -1,7 +1,7 @@
 import { TelegramBotCommand } from "puregram/generated";
-import { raspCache } from "../../../../updater";
-import { TeacherLessonExplain } from "../../../../updater/parser/types";
+import { raspCache } from "../../../parser";
 import { StringDate } from "../../../../utils";
+import { TeacherLessonExplain } from "../../../timetable/types";
 import { AbstractCommand, CmdHandlerParams } from "../../abstract";
 
 export default class extends AbstractCommand {

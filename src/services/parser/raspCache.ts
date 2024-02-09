@@ -1,6 +1,6 @@
-import { existsSync, readFileSync, unlinkSync } from 'fs'
-import { mkdir, writeFile } from 'fs/promises'
-import { Groups, Teachers, Team } from './parser/types'
+import { existsSync, readFileSync, unlinkSync } from 'fs';
+import { mkdir, writeFile } from 'fs/promises';
+import { Groups, Teachers, Team } from '../timetable';
 
 export type RaspEntryCache<T = Groups | Teachers> = {
     timetable: T,

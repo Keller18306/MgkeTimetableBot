@@ -1,4 +1,4 @@
-import { Updater, raspCache } from "../../../updater";
+import { raspCache } from "../../parser";
 import { WeekIndex, removePastDays } from "../../../utils";
 import { AbstractCallback, CbHandlerParams } from "../abstract";
 
@@ -32,7 +32,7 @@ export default class extends AbstractCallback {
         const relevantWeekIndex: number = WeekIndex.getRelevant().valueOf();
         const weekBounds = WeekIndex.fromWeekIndexNumber(weekIndex).getWeekDayIndexRange();
 
-        let days = Updater.getInstance().archive.getGroupDaysByRange(weekBounds, value);
+        let days = this.app.getService('timetable').getGroupDaysByRange(weekBounds, value);
         if (weekIndex === relevantWeekIndex && hidePastDays) {
             days = removePastDays(days);
         }
@@ -53,7 +53,7 @@ export default class extends AbstractCallback {
         const relevantWeekIndex: number = WeekIndex.getRelevant().valueOf();
         const weekBounds = WeekIndex.fromWeekIndexNumber(weekIndex).getWeekDayIndexRange();
 
-        let days = Updater.getInstance().archive.getTeacherDaysByRange(weekBounds, value);
+        let days = this.app.getService('timetable').getTeacherDaysByRange(weekBounds, value);
         if (weekIndex === relevantWeekIndex && hidePastDays) {
             days = removePastDays(days);
         }

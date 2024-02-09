@@ -1,9 +1,9 @@
+import { App } from "../../app";
 import { hints } from "../../defines";
 import { AbstractChat } from "../../services/bots/abstract/chat";
 import { Service } from "../../services/bots/abstract/command";
-import { Updater } from "../../updater";
-import { GroupDay, GroupLesson, GroupLessonExplain, Groups, TeacherDay, TeacherLesson, TeacherLessonExplain, Teachers } from "../../updater/parser/types";
-import { RaspCache, RaspEntryCache } from "../../updater/raspCache";
+import { RaspCache, RaspEntryCache } from "../../services/parser/raspCache";
+import { GroupDay, GroupLesson, GroupLessonExplain, Groups, TeacherDay, TeacherLesson, TeacherLessonExplain, Teachers } from "../../services/timetable/types";
 import { randArray } from "../rand";
 import { DayIndex, StringDate, formatSeconds } from "../time";
 
@@ -42,6 +42,7 @@ export abstract class ScheduleFormatter {
 
     constructor(
         private service: Service,
+        private app: App,
         protected raspCache: RaspCache,
         protected chat?: AbstractChat
     ) { }
@@ -227,7 +228,7 @@ export abstract class ScheduleFormatter {
             text.push(`Информация была загружена ${formatSeconds(Math.ceil((Date.now() - rasp.update) / 1e3))} назад`)
         }
 
-        if (Updater.getInstance().isHasErrors()) {
+        if (this.app.getService('parser').isHasErrors()) {
             text.push('⚠️ В последний раз при получении расписания с сайта произошла ошибка. Есть вероятность, что расписание не актуальное. Если проблема не исчезнет - сообщите разработчику.')
         } else if (this.chat && this.chat.showHints) {
             text.push(`💬 Подсказка: ${randArray(hints)}`)

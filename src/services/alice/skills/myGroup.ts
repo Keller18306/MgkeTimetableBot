@@ -1,5 +1,5 @@
 import { IContext, Reply } from "@keller18306/yandex-dialogs-sdk";
-import { raspCache } from "../../../updater";
+import { raspCache } from "../../parser";
 import { AliceSkill } from "../skill";
 import { AliceUser } from "../user";
 

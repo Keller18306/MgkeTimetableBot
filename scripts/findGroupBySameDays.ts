@@ -1,5 +1,5 @@
 import db from '../src/db';
-import { GroupLesson, GroupLessonExplain } from '../src/updater/parser/types';
+import { GroupLesson, GroupLessonExplain } from '../src/services/timetable/types';
 import { DayIndex } from '../src/utils';
 
 const days: string[] = [

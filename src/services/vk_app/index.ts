@@ -1,26 +1,39 @@
-import { Application, Request, Response } from 'express';
+import { Request, Response } from 'express';
 import { readdirSync } from 'fs';
 import path from 'path';
 import { StatusCode } from 'status-code-enum';
 import { config } from '../../../config';
+import { App, AppService } from '../../app';
 import VKAppDefaultMethod, { HandlerParams } from './methods/_default';
 import { VKAppUser } from './user';
 
-export class VKApp {
+export class VKApp implements AppService {
+    private app: App;
     private loaded: {
         [method: string]: {
             [method: string]: VKAppDefaultMethod
         }
     } = {};
 
-    constructor(app: Application) {
-        this.loadMethods()
-        app.use(`${config.vk.app.url}/:method`,
+    constructor(app: App) {
+        this.app = app;
+    }
+
+    public register(): boolean {
+        return config.vk.app.enabled;
+    }
+
+    public run() {
+        const server = this.app.getService('http').getServer();
+
+        this.loadMethods();
+
+        server.use(`${config.vk.app.url}/:method`,
             (request, response) => this.handler(request, response)
         )
     }
 
-    loadMethods() {
+    private loadMethods() {
         const methodsPath = path.join(__dirname, 'methods')
 
         const files = readdirSync(methodsPath)

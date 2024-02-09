@@ -1,7 +1,7 @@
 import { TelegramBotCommand } from "puregram/generated";
-import { raspCache } from "../../../../updater";
+import { raspCache } from "../../../parser";
 import { randArray } from "../../../../utils";
-import { ImageBuilder, ImageFile } from "../../../image/builder";
+import { ImageFile } from "../../../image/builder";
 import { AbstractCommand, CmdHandlerParams } from "../../abstract";
 
 export default class extends AbstractCommand {
@@ -52,7 +52,7 @@ export default class extends AbstractCommand {
 
         chat.appendTeacherSearchHistory(teacher);
         const teacherRasp = raspCache.teachers.timetable[teacher];
-        const image: ImageFile = await ImageBuilder.getTeacherImage(teacher, teacherRasp.days);
+        const image: ImageFile = await this.app.getService('image').builder.getTeacherImage(teacher, teacherRasp.days);
 
         return context.sendPhoto(image);
     }

@@ -1,20 +1,30 @@
 import express, { Application, NextFunction, Request, Response } from 'express';
 import { config } from '../config';
+import { AppService } from './app';
 import { getIp, getParams, replaceWithValueLength } from './utils';
 
 type ErrorWithStatus = Error & Partial<{ status: number; statusCode: number, code: any, type: any }>;
 
-export class HttpServer {
-    public app: Application;
+export class HttpService implements AppService {
+    private http: Application;
 
-    private handlers: any[] = [];
     public ignoreJsonParserUrls: string[] = [];
 
     constructor() {
-        this.app = express();
+        this.http = express();
+    }
 
-        this.app.use(this.errorHandler.bind(this));
-        this.app.use(express.static('./public/'));
+    public getServer() {
+        return this.http;
+    }
+
+    public register(): boolean {
+        return config.http.enabled;
+    }
+
+    public run() {
+        this.http.use(this.errorHandler.bind(this));
+        this.http.use(express.static('./public/'));
 
         if (config.dev) {
             this.logRoutes();
@@ -22,22 +32,14 @@ export class HttpServer {
 
         this.setupOriginHeaders();
         this.setupJsonBodyParser();
-    }
 
-    public run() {
-        this.app.listen(config.http.port, () => {
+        this.http.listen(config.http.port, () => {
             console.log(`[HTTP] Server started on port ${config.http.port}`);
         });
     }
 
-    public register<T extends new (app: Application, httpServer: HttpServer) => any>(classHandler: T): InstanceType<T> {
-        const handler = new classHandler(this.app, this);
-        this.handlers.push(handler);
-        return handler;
-    }
-
     private setupOriginHeaders() {
-        this.app.use((req, res, next) => {
+        this.http.use((req, res, next) => {
             res.header('Access-Control-Allow-Origin', '*');
             res.header('Access-Control-Allow-Methods', 'DELETE, POST, GET, OPTIONS')
             res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
@@ -45,7 +47,7 @@ export class HttpServer {
             next();
         });
 
-        this.app.use((req, res, next) => {
+        this.http.use((req, res, next) => {
             if (req.method.toUpperCase() !== 'OPTIONS') return next();
 
             res.send()
@@ -53,7 +55,7 @@ export class HttpServer {
     }
 
     private setupJsonBodyParser() {
-        this.app.use((req, res, next) => {
+        this.http.use((req, res, next) => {
             for (const url of this.ignoreJsonParserUrls) {
                 if (req.path.startsWith(url)) {
                     return next();
@@ -65,7 +67,7 @@ export class HttpServer {
     }
 
     private logRoutes() {
-        this.app.use((req, res, next) => {
+        this.http.use((req, res, next) => {
             console.log(getIp(req), req.path, replaceWithValueLength(getParams(req)));
             next();
         })

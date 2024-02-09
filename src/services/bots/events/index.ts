@@ -1,13 +1,13 @@
 import { config } from "../../../../config";
+import { App } from "../../../app";
 import { getDistributionChats, getGroupsChats, getGroupsNoticeNextWeekChats, getNoticeErrorsChats, getTeachersChats, getTeachersNoticeNextWeekChats } from "../../../db";
-import { GroupDayEvent, TeacherDayEvent } from "../../../updater";
-import { GroupDay, TeacherDay } from "../../../updater/parser/types";
-import { raspCache, saveCache } from "../../../updater/raspCache";
+import { GroupDayEvent, TeacherDayEvent } from "../../parser";
+import { raspCache, saveCache } from "../../parser/raspCache";
 import { DayIndex, StringDate, WeekIndex, createScheduleFormatter, getFutureDays, prepareError } from "../../../utils";
+import { GroupDay, TeacherDay } from "../../timetable/types";
 import { MessageOptions } from "../abstract";
 import { AbstractChat, ChatMode, DbChat } from "../abstract/chat";
 import { Service } from "../abstract/command";
-import { BotEventController } from "./controller";
 
 function getDayPhrase(day: string, nextDayPhrase: string = 'день'): string {
     if (WeekIndex.fromStringDate(day).isFutureWeek()) {
@@ -35,18 +35,15 @@ export type ProgressCallback = (data: {
 export abstract class AbstractBotEventListener<T extends AbstractChat = AbstractChat> {
     protected abstract _tableName: string;
     public readonly abstract service: Service;
-    private eventController: BotEventController;
 
-    constructor(enabled: boolean) {
-        this.eventController = BotEventController.getInstance();
-
-        if (enabled) {
-            this.eventController.registerService(this);
-        }
-    }
+    constructor(protected app: App) { }
 
     protected abstract createChat(chat: DbChat): T;
     protected abstract sendMessage(chat: T, message: string, options?: MessageOptions): Promise<any>;
+
+    protected getBotEventControlller() {
+        return this.app.getService('bot').events;
+    }
 
     protected async sendMessages(chats: T | T[], message: string, options?: MessageOptions, cb?: ProgressCallback): Promise<void> {
         if (!Array.isArray(chats)) {
@@ -86,7 +83,7 @@ export abstract class AbstractBotEventListener<T extends AbstractChat = Abstract
         return chats;
     }
 
-    public async nextGroupDay({ index }: { index: number }) {
+    public async cronGroupDay({ index }: { index: number }) {
         const groups: string[] = Object.entries(raspCache.groups.timetable).map(([group, { days }]): [string, GroupDay | undefined] => {
             const todayDay = days.find((day) => {
                 return DayIndex.fromStringDate(day.day).isToday();
@@ -134,7 +131,7 @@ export abstract class AbstractBotEventListener<T extends AbstractChat = Abstract
                 continue;
             }
 
-            this, this.eventController.deferFunction(`updateLastGroupNoticedDay_${group}`, async () => {
+            this.getBotEventControlller().deferFunction(`updateLastGroupNoticedDay_${group}`, async () => {
                 groupEntry.lastNoticedDay = dayIndex;
                 await saveCache();
             })
@@ -142,7 +139,7 @@ export abstract class AbstractBotEventListener<T extends AbstractChat = Abstract
             const phrase: string = getDayPhrase(day.day, 'следующий день');
 
             for (const chat of chats) {
-                const formatter = createScheduleFormatter(this.service, raspCache, chat);
+                const formatter = createScheduleFormatter(this.service, this.app, raspCache, chat);
 
                 const message: string = [
                     `📢 Расписание на ${phrase}\n`,
@@ -164,7 +161,7 @@ export abstract class AbstractBotEventListener<T extends AbstractChat = Abstract
         const phrase: string = getDayPhrase(day.day, 'следующий день');
 
         for (const chat of chats) {
-            const formatter = createScheduleFormatter(this.service, raspCache, chat);
+            const formatter = createScheduleFormatter(this.service, this.app, raspCache, chat);
 
             const message: string = [
                 `📢 Расписание на ${phrase}\n`,
@@ -185,7 +182,7 @@ export abstract class AbstractBotEventListener<T extends AbstractChat = Abstract
         const phrase: string = getDayPhrase(day.day);
 
         for (const chat of chats) {
-            const formatter = createScheduleFormatter(this.service, raspCache, chat);
+            const formatter = createScheduleFormatter(this.service, this.app, raspCache, chat);
 
             const message: string = [
                 `🆕 Изменено расписание ${phrase}\n`,
@@ -247,7 +244,7 @@ export abstract class AbstractBotEventListener<T extends AbstractChat = Abstract
                 continue;
             }
 
-            this, this.eventController.deferFunction(`updateLastTeacherNoticedDay_${teacher}`, async () => {
+            this.getBotEventControlller().deferFunction(`updateLastTeacherNoticedDay_${teacher}`, async () => {
                 teacherEntry.lastNoticedDay = dayIndex;
                 await saveCache();
             })
@@ -255,7 +252,7 @@ export abstract class AbstractBotEventListener<T extends AbstractChat = Abstract
             const phrase: string = getDayPhrase(day.day, 'следующий день');
 
             for (const chat of chats) {
-                const formatter = createScheduleFormatter(this.service, raspCache, chat);
+                const formatter = createScheduleFormatter(this.service, this.app, raspCache, chat);
 
                 const message: string = [
                     `📢 Расписание на ${phrase}\n`,
@@ -277,7 +274,7 @@ export abstract class AbstractBotEventListener<T extends AbstractChat = Abstract
         const phrase: string = getDayPhrase(day.day, 'следующий день');
 
         for (const chat of chats) {
-            const formatter = createScheduleFormatter(this.service, raspCache, chat);
+            const formatter = createScheduleFormatter(this.service, this.app, raspCache, chat);
 
             const message: string = [
                 `📢 Расписание на ${phrase}\n`,
@@ -298,7 +295,7 @@ export abstract class AbstractBotEventListener<T extends AbstractChat = Abstract
         const phrase: string = getDayPhrase(day.day);
 
         for (const chat of chats) {
-            const formatter = createScheduleFormatter(this.service, raspCache, chat);
+            const formatter = createScheduleFormatter(this.service, this.app, raspCache, chat);
 
             const message: string = [
                 `🆕 Изменено расписание ${phrase}\n`,

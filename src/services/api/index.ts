@@ -1,11 +1,13 @@
-import { Application, Request, Response } from 'express';
+import { Request, Response } from 'express';
 import { readdirSync } from 'fs';
 import path from 'path';
 import { StatusCode } from 'status-code-enum';
+import { config } from '../../../config';
+import { App, AppService } from '../../app';
 import { Key } from './key';
 import ApiDefaultMethod, { HandlerParams } from './methods/_default';
 
-export class Api {
+export class Api implements AppService {
     private loaded: {
         [method: string]: {
             [method: string]: ApiDefaultMethod
@@ -21,9 +23,22 @@ export class Api {
         }
     } = {}
 
-    constructor(app: Application) {
-        this.loadMethods()
-        app.use('/api/:method',
+    private app: App;
+
+    constructor(app: App) {
+        this.app = app;
+    }
+
+    public register(): boolean {
+        return config.api.enabled;
+    }
+
+    public run() {
+        const server = this.app.getService('http').getServer();
+
+        this.loadMethods();
+
+        server.use(`${config.api.url}/:method`,
             (request, response) => this.handler(request, response)
         )
     }
@@ -65,7 +80,7 @@ export class Api {
         const reqId = `${time}-${Math.random()}`
 
         this.requests[id][reqId] = {
-            time: time, 
+            time: time,
             timeout: setTimeout(() => {
                 delete this.requests[id][reqId]
 
@@ -107,6 +122,8 @@ export class Api {
     }
 
     private async handler(request: Request<{ method: string; }>, response: Response) {
+        const app = this.app;
+
         const time = Date.now()
         if (request.method.toUpperCase() === 'POST' && request.headers['content-type']?.split(';')[0] !== 'application/json')
             return this.badRequest(request, response)
@@ -122,21 +139,21 @@ export class Api {
             token = token.split(' ')[1]
         }
         if (!token) {
-            return this.notAuthorized({ request, response })
+            return this.notAuthorized({ app, request, response })
         }
 
         const key = new Key(token);
-        if (!key.isValid()) return this.notAuthorized({ request, response });
+        if (!key.isValid()) return this.notAuthorized({ app, request, response });
 
         if (!this.checkLimit(key)) {
-            return this.tooManyRequests({ request, response })
+            return this.tooManyRequests({ app, request, response })
         }
 
         this.applyRequest(key, time);
 
         (async () => {
             try {
-                let message = _class.handler({ request, response })
+                let message = _class.handler({ app, request, response })
 
                 if (message === undefined) return;
 

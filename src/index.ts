@@ -1,54 +1,35 @@
-import { config } from "../config";
-import { startVanishCronJob } from "./db";
-import { HttpServer } from "./http";
+import { App } from "./app";
+import { startVanishCronJob as setupVanishCron } from "./db";
+import { HttpService } from "./http";
 import { AliceApp } from "./services/alice";
 import { Api } from "./services/api";
+import { BotService } from "./services/bots";
 import { TgBot } from "./services/bots/tg";
 import { ViberBot } from './services/bots/viber';
 import { VkBot } from './services/bots/vk';
 import { GoogleService } from "./services/google";
 import { ImageService } from "./services/image";
+import { ParserService } from './services/parser';
+import { Timetable } from "./services/timetable";
 import { VKApp } from './services/vk_app';
-import { Updater } from './updater';
 
-const http = new HttpServer();
+const app = new App();
 
-if (config.vk.bot.enabled) {
-    new VkBot().run();
-}
+app.registerService('timetable', Timetable);
+app.registerService('parser', ParserService);
+app.registerService('bot', BotService);
+app.registerService('vk', VkBot);
+app.registerService('http', HttpService);
+app.registerService('image', ImageService);
+app.registerService('vkApp', VKApp);
+app.registerService('tg', TgBot);
+app.registerService('viber', ViberBot);
+app.registerService('api', Api);
+app.registerService('alice', AliceApp);
+app.registerService('google', GoogleService);
 
-if (config.http.enabled) {
-    http.run()
+app.runServices().then(() => {
+    console.log('[CORE]', 'Loaded services:', app.getServiceList().join(', '))
+});
 
-    http.register(ImageService);
-}
-
-if (config.vk.app.enabled) {
-    http.register(VKApp);
-}
-
-if (config.telegram.enabled) {
-    new TgBot().run();
-}
-
-if (config.viber.enabled) { 
-    http.register(ViberBot).run();
-}
-
-if (config.api.enabled) {
-    http.register(Api);
-}
-
-if (config.alice.enabled) {
-    http.register(AliceApp);
-}
-
-if (config.updater.enabled) {
-    Updater.getInstance().start()
-}
-
-if (config.google.enabled) {
-    http.register(GoogleService);
-}
-
-startVanishCronJob();
+setupVanishCron(app);

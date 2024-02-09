@@ -1,6 +1,6 @@
 import { TelegramBotCommand } from 'puregram/generated';
+import { BotService } from '../..';
 import { AbstractCommand, CmdHandlerParams } from "../../abstract";
-import { CommandController } from '../../controller';
 
 export default class extends AbstractCommand {
     public regexp = /^(!|\/)reloadCmd/i
@@ -16,7 +16,7 @@ export default class extends AbstractCommand {
         if (!id) return context.send('id команды не введён');
 
         try {
-            await CommandController.reloadCommandById(id);
+            await this.app.getService('bot').reloadCommandById(id);
         } catch (e) {
             console.log(e);
             return context.send('Во время перезагрузки команды произошла ошибка');

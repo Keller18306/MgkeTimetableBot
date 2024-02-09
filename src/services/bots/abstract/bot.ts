@@ -1,14 +1,15 @@
 import { format } from "util";
 import { config } from "../../../../config";
 import { defines } from "../../../defines";
+import { ServiceCache } from "../../cache";
 import { InputRequestKey, RequestKey } from "../../key";
 import { BotInput, InputCancel } from "../input";
 import { StaticKeyboard } from "../keyboard";
-import { FileCache } from "./cache";
 import { AbstractCallback, CbHandlerParams } from "./callback";
 import { AbstractChat } from "./chat";
 import { AbstractCommand, CmdHandlerParams, Service } from "./command";
 import { AbstractCallbackContext, AbstractCommandContext } from "./context";
+import { App, AppService } from "../../../app";
 
 export type HandleMessageOptions = {
     /** Есть ли упоминание бота в сообщении (для ВК) */
@@ -19,18 +20,23 @@ export type HandleMessageOptions = {
 }
 
 export abstract class AbstractBot {
-    public abstract run(): void
     protected abstract _getAcceptKeyParams(context: AbstractCommandContext): InputRequestKey;
     
     protected readonly acceptTool: RequestKey = new RequestKey(config.encrypt_key);
     protected readonly input: BotInput = new BotInput();
-    protected readonly cache: FileCache;
+    protected readonly cache: ServiceCache;
+    protected readonly app: App;
 
     public service: Service;
 
-    constructor(service: Service) {
+    constructor(app: App, service: Service) {
+        this.app = app;
         this.service = service;
-        this.cache = new FileCache(this.service);
+        this.cache = new ServiceCache(this.service);
+    }
+
+    protected getBotService() {
+        return this.app.getService('bot');
     }
 
     protected async handleMessage(cmd: AbstractCommand | null, handlerParams: CmdHandlerParams, options: HandleMessageOptions = {}) {
