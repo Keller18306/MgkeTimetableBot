@@ -75,7 +75,13 @@ export class GoogleCalendar {
     public async teacherDay({ teacher, day }: TeacherDayEvent) {
         const calendarId = await this.getCalendarId('teacher', teacher);
 
+        if (config.dev) {
+            console.log(`[GoogleCalendar:teacher:${teacher}]`, `Sync ${day.day}`, calendarId);
+        }
+
         await this.clearDay(calendarId, day);
+
+        const promises: Promise<any>[] = [];
 
         for (const i in day.lessons) {
             const lesson = day.lessons[i];
@@ -84,7 +90,7 @@ export class GoogleCalendar {
             const { title, description, location } = this.getTeacherLessonInfo(lesson);
             const [from, to] = this.getLessonTimeBounds(day, +i);
 
-            const response = await this.api.createEvent({
+            const response = this.api.createEvent({
                 calendarId: calendarId,
                 title: title,
                 start: from,
@@ -93,8 +99,16 @@ export class GoogleCalendar {
                 location: location
             });
 
-            console.log('CREATED', +i + 1, title, response.id)
+            promises.push(response);
+
+            if (config.dev) {
+                response.then((response) => {
+                    console.log(`[GoogleCalendar:teacher:${teacher}]`, `EventCreated`, +i + 1, title, response.id)
+                })
+            }
         }
+
+        await Promise.all(promises);
     }
 
     public async resyncGroup(group: string, forceFullResync: boolean = false) {
@@ -127,7 +141,7 @@ export class GoogleCalendar {
             }
         }
 
-        const days = this.getTimetable().getTeacherDays(teacher);
+        const days = this.getTimetable().getTeacherDays(teacher, fromDay);
 
         for (const day of days) {
             await this.teacherDay({ teacher, day });
@@ -192,8 +206,9 @@ export class GoogleCalendar {
             owner = 'Преподаватель';
         }
 
-        console.log('Creating... calendar', type, value);
+        console.log('Creating calendar:', key);
         const id = await this.api.createCalendar(`Расписание занятий (${owner} - ${value})`);
+        console.log('Created', key, id);
 
         this.cache.add(key, id);
 

@@ -1,6 +1,7 @@
 import { Credentials, OAuth2Client } from 'google-auth-library';
 import { google } from 'googleapis';
 import { config } from '../../../../config';
+import { serialize } from '../../../utils';
 import { GoogleCalendarApi } from './calendar';
 
 export class GoogleUserApi {
@@ -21,8 +22,8 @@ export class GoogleUserApi {
     }
 
     public static getAuthUrl(state?: any): string {
-        if (state && typeof state === 'object') {
-            state = JSON.stringify(state);
+        if (state) {
+            state = serialize(state);
         }
 
         return this.createAuth().generateAuthUrl({

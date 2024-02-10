@@ -10,6 +10,7 @@ export * from './http';
 export * from './natural';
 export * from './rand';
 export * from './regexp';
+export * from './serialize';
 export * from './sort';
 export * from './subjects';
 export * from './time';

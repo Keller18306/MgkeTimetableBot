@@ -14,6 +14,7 @@
     "@keller18306/yandex-dialogs-sdk": "^1.0.2",
     "better-sqlite3": "^8.2.0",
     "canvas": "^2.11.2",
+    "cbor-x": "^1.5.8",
     "chokidar": "^3.5.3",
     "cron": "^2.3.0",
     "express": "^4.18.2",
@@ -28,7 +29,9 @@
     "systeminformation": "^5.17.12",
     "throttled-queue": "^2.1.4",
     "viber-bot": "^1.0.18",
-    "vk-io": "^4.8.3"
+    "vk-io": "^4.8.3",
+    "zod": "^3.22.4",
+    "zod-validation-error": "^3.0.0"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.3",

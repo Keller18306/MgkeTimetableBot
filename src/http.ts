@@ -23,16 +23,17 @@ export class HttpService implements AppService {
     }
 
     public run() {
-        this.http.use(this.errorHandler.bind(this));
         this.http.use(express.static('./public/'));
-
+        
         if (config.dev) {
             this.logRoutes();
         }
-
+        
         this.setupOriginHeaders();
         this.setupJsonBodyParser();
-
+        
+        this.http.use(this.errorHandler.bind(this));
+        
         this.http.listen(config.http.port, () => {
             console.log(`[HTTP] Server started on port ${config.http.port}`);
         });
