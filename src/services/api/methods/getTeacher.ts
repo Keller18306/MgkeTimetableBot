@@ -1,5 +1,5 @@
-import StatusCode from "status-code-enum";
-import { StringDate } from "../../../utils";
+import { z } from "zod";
+import { StringDate, getParams } from "../../../utils";
 import { raspCache } from "../../parser";
 import VKAppDefaultMethod, { HandlerParams } from "./_default";
 
@@ -8,17 +8,13 @@ export default class VkAppAuthMethod extends VKAppDefaultMethod {
     public method: string = 'getTeacher';
 
     handler({ request, response }: HandlerParams) {
-        const body = request.body
+        const { teacher } = z.object({
+            teacher: z.string({
+                required_error: 'Не указан преподаватель'
+            })
+        }).parse(getParams(request));
 
-        if (body.teacher == null) {
-            response.status(StatusCode.ClientErrorBadRequest).send({
-                error: 'Не указан преподаватель'
-            });
-
-            return;
-        }
-
-        const days = raspCache.teachers.timetable[body.teacher]?.days.map(day => {
+        const days = raspCache.teachers.timetable[teacher]?.days.map(day => {
             return Object.assign({}, {
                 weekday: StringDate.fromStringDate(day.day).getWeekdayName()
             }, day);

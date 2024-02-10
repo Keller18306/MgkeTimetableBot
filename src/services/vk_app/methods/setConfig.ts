@@ -1,3 +1,4 @@
+import { z } from "zod";
 import db from "../../../db";
 import VKAppDefaultMethod, { HandlerParams } from "./_default";
 
@@ -9,21 +10,20 @@ export default class VkAppSetConfigMethod extends VKAppDefaultMethod {
     handler({ user, request, response }: HandlerParams) {
         const cfg = user.get();
 
-        const body = request.body;
-        const group = body.group;
-        const teacher = body.teacher;
-        const firstPage = body.firstPage;
-        const theme_id = body.theme_id;
+        const result = z.object({
+            group: z.string().max(255).nullable(),
+            teacher: z.string().max(255).nullable(),
+            firstPage: z.string().max(16).nullable(),
+            theme_id: z.number().max(3).int()
+        }).safeParse(request.body);
 
-        if ((typeof group !== 'number' && typeof group !== 'string') && group !== null) return false;
-        if (typeof teacher !== 'string' && teacher !== null) return false;
-        if (typeof firstPage !== 'string' && firstPage !== null) return false;
-        if (typeof theme_id !== 'number') return false;
+        if (!result.success) {
+            return false;
+        }
 
-        if (teacher !== null && String(group).length > 255) return false;
-        if (teacher !== null && String(teacher).length > 255) return false;
-        if (theme_id > 3) return false;
-        if (firstPage !== null && String(firstPage).length > 16) return false;
+        const {
+            group, teacher, theme_id, firstPage
+        } = result.data;
 
         db.prepare([
             'UPDATE `vk_app_users` SET',

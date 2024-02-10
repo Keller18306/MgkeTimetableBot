@@ -2,6 +2,8 @@ import { Request, Response } from 'express';
 import { readdirSync } from 'fs';
 import path from 'path';
 import { StatusCode } from 'status-code-enum';
+import { ZodError } from 'zod';
+import { fromZodError } from 'zod-validation-error';
 import { config } from '../../../config';
 import { App, AppService } from '../../app';
 import { Key } from './key';
@@ -161,6 +163,12 @@ export class Api implements AppService {
                     response: message
                 })
             } catch (e) {
+                if (e instanceof ZodError) {
+                    return response.status(StatusCode.ClientErrorBadRequest).send({
+                        error: fromZodError(e).toString()
+                    });
+                }
+
                 response.status(StatusCode.ServerErrorInternal).send('server error')
                 console.error(e)
             }

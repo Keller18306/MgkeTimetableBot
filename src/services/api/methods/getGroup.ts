@@ -1,5 +1,5 @@
-import StatusCode from "status-code-enum";
-import { StringDate } from "../../../utils";
+import { z } from "zod";
+import { StringDate, getParams } from "../../../utils";
 import { raspCache } from "../../parser";
 import VKAppDefaultMethod, { HandlerParams } from "./_default";
 
@@ -8,17 +8,18 @@ export default class VkAppAuthMethod extends VKAppDefaultMethod {
     public method: string = 'getGroup';
 
     handler({ request, response }: HandlerParams) {
-        const body = request.body
+        const { group } = z.object({
+            group: z.union([
+                z.string({
+                    required_error: 'Не указана группа'
+                }),
+                z.number({
+                    required_error: 'Не указана группа'
+                }).int().pipe(z.coerce.string())
+            ])
+        }).parse(getParams(request));
 
-        if (body.group == null) {
-            response.status(StatusCode.ClientErrorBadRequest).send({
-                error: 'Не указана группа'
-            });
-
-            return;
-        }
-
-        const days = raspCache.groups.timetable[body.group]?.days.map(day => {
+        const days = raspCache.groups.timetable[group]?.days.map(day => {
             return Object.assign({}, {
                 weekday: StringDate.fromStringDate(day.day).getWeekdayName()
             }, day);
