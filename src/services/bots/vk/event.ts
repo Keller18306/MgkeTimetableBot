@@ -20,7 +20,7 @@ export class VkEventListener extends AbstractBotEventListener<VkChat> {
         return new VkChat(chat);
     }
 
-    protected async sendMessage(chat: VkChat, message: string, options: MessageOptions = {}) {
+    public async sendMessage(chat: VkChat, message: string, options: MessageOptions = {}) {
         return this.vk.api.messages.send({
             peer_id: chat.peerId,
             message,

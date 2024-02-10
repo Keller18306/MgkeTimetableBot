@@ -22,7 +22,7 @@ export class ViberEventListener extends AbstractBotEventListener<ViberChat> {
         return new ViberChat(chat);
     }
 
-    protected async sendMessage(chat: ViberChat, message: string, options: MessageOptions = {}) {
+    public async sendMessage(chat: ViberChat, message: string, options: MessageOptions = {}) {
         const keyboard = new Keyboard(this.app, chat)
 
         return this.bot.sendMessage({ id: chat.peerId }, [

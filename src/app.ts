@@ -14,10 +14,9 @@ import { VKApp } from './services/vk_app';
 type ServiceConstuctor<S extends Record<string, AppService>> = new (app: App) => AppService;
 export interface AppService {
     run(): Promise<any> | any;
-    register(): boolean;
 }
 
-type Services = {
+const services = {
     http: HttpService,
     timetable: Timetable,
     bot: BotService,
@@ -30,20 +29,33 @@ type Services = {
     alice: AliceApp,
     parser: ParserService,
     google: GoogleService
-}
+} as const;
+
+type Services = typeof services;
+export type ServiceName = keyof Services;
 
 export class App {
-    private services: Map<keyof Services, AppService> = new Map();
+    private services: Map<ServiceName, AppService> = new Map();
+    private init: boolean = false;
 
-    public registerService<T extends ServiceConstuctor<Services>>(service: keyof Services, classHandler: T): void {
-        const handler = new classHandler(this);
-
-        if (handler.register()) {
-            this.services.set(service, handler);
+    constructor(initialServices: ServiceName[] = []) {
+        for (const service of initialServices) {
+            this.registerService(service);
         }
     }
 
-    public getService<TServiceName extends keyof Services & string, TService = Services[TServiceName]>(service: TServiceName): TService {
+    public registerService(service: ServiceName): void {
+        const classHandler = services[service];
+        const handler = new classHandler(this);
+
+        this.services.set(service, handler);
+
+        if (this.init) {
+            handler.run();
+        }
+    }
+
+    public getService<TServiceName extends ServiceName & string, TService = InstanceType<Services[TServiceName]>>(service: TServiceName): TService {
         const serviceInstance = this.services.get(service);
 
         if (!serviceInstance) {
@@ -53,12 +65,14 @@ export class App {
         return serviceInstance as TService;
     }
 
-    public isServiceRegistered(service: keyof Services): boolean {
+    public isServiceRegistered(service: ServiceName): boolean {
         return this.services.has(service);
     }
 
     public async runServices(): Promise<void> {
         const promises: Promise<any>[] = [];
+
+        this.init = true;
 
         for (const [serviceId, service] of this.services) {
             promises.push(service.run());

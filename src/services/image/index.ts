@@ -15,10 +15,6 @@ export class ImageService implements AppService {
         this.builder = new ImageBuilder();
     }
 
-    public register(): boolean {
-        return true;
-    }
-
     public run() {
         if (this.app.isServiceRegistered('http')) {
             const server = this.app.getService('http').getServer();

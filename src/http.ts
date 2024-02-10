@@ -18,10 +18,6 @@ export class HttpService implements AppService {
         return this.http;
     }
 
-    public register(): boolean {
-        return config.http.enabled;
-    }
-
     public run() {
         this.http.use(express.static('./public/'));
         

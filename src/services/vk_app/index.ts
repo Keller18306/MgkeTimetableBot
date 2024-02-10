@@ -19,10 +19,6 @@ export class VKApp implements AppService {
         this.app = app;
     }
 
-    public register(): boolean {
-        return config.vk.app.enabled;
-    }
-
     public run() {
         const server = this.app.getService('http').getServer();
 

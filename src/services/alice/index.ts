@@ -23,10 +23,6 @@ export class AliceApp implements AppService {
         // scene.
     }
 
-    public register(): boolean {
-        return config.alice.enabled;
-    }
-
     public run() {
         this.controller.loadSkills();
 

@@ -36,10 +36,6 @@ export class BotService implements AppService {
         this.cron = new BotCron(app);
     }
 
-    public register(): boolean {
-        return true;
-    }
-
     public run() {
         this.events.run();
         this.cron.run();

@@ -1,9 +1,9 @@
 import { config } from "../../../../config";
 import { App } from "../../../app";
 import { getDistributionChats, getGroupsChats, getGroupsNoticeNextWeekChats, getNoticeErrorsChats, getTeachersChats, getTeachersNoticeNextWeekChats } from "../../../db";
+import { DayIndex, StringDate, WeekIndex, createScheduleFormatter, getFutureDays, prepareError } from "../../../utils";
 import { GroupDayEvent, TeacherDayEvent } from "../../parser";
 import { raspCache, saveCache } from "../../parser/raspCache";
-import { DayIndex, StringDate, WeekIndex, createScheduleFormatter, getFutureDays, prepareError } from "../../../utils";
 import { GroupDay, TeacherDay } from "../../timetable/types";
 import { MessageOptions } from "../abstract";
 import { AbstractChat, ChatMode, DbChat } from "../abstract/chat";
@@ -39,7 +39,7 @@ export abstract class AbstractBotEventListener<T extends AbstractChat = Abstract
     constructor(protected app: App) { }
 
     protected abstract createChat(chat: DbChat): T;
-    protected abstract sendMessage(chat: T, message: string, options?: MessageOptions): Promise<any>;
+    public abstract sendMessage(chat: T, message: string, options?: MessageOptions): Promise<any>;
 
     protected getBotEventControlller() {
         return this.app.getService('bot').events;
@@ -93,7 +93,7 @@ export abstract class AbstractBotEventListener<T extends AbstractChat = Abstract
         }).filter(([, day]): boolean => {
             if (!day) return false;
 
-            return (day.lessons.length === index + 1) || (day.lessons.length === 0 && index + 1 === config.updater.lessonIndexIfEmpty);
+            return (day.lessons.length === index + 1) || (day.lessons.length === 0 && index + 1 === config.parser.lessonIndexIfEmpty);
         }).map(([group]): string => {
             return group;
         });
@@ -206,7 +206,7 @@ export abstract class AbstractBotEventListener<T extends AbstractChat = Abstract
         }).filter(([, day]): boolean => {
             if (!day) return false;
 
-            return (day.lessons.length === index + 1) || (day.lessons.length === 0 && index + 1 === config.updater.lessonIndexIfEmpty);
+            return (day.lessons.length === index + 1) || (day.lessons.length === 0 && index + 1 === config.parser.lessonIndexIfEmpty);
         }).map(([teacher]): string => {
             return teacher;
         });

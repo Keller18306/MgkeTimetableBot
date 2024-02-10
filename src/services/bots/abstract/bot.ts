@@ -4,6 +4,7 @@ import { App } from "../../../app";
 import { defines } from "../../../defines";
 import { InputRequestKey, RequestKey } from "../../key";
 import { ServiceStorage } from "../../storage";
+import { AbstractBotEventListener } from "../events";
 import { BotInput, InputCancel } from "../input";
 import { StaticKeyboard } from "../keyboard";
 import { AbstractCallback, CbHandlerParams } from "./callback";
@@ -21,6 +22,8 @@ export type HandleMessageOptions = {
 
 export abstract class AbstractBot {
     protected abstract _getAcceptKeyParams(context: AbstractCommandContext): InputRequestKey;
+    public abstract getChat(peerId: number | string): AbstractChat;
+    public abstract event: AbstractBotEventListener;
     
     protected readonly acceptTool: RequestKey = new RequestKey(config.encrypt_key);
     protected readonly input: BotInput = new BotInput();

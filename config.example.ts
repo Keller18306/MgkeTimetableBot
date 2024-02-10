@@ -2,20 +2,18 @@ import { ConfigScheme } from "./config.scheme";
 
 export const config: ConfigScheme = {
     dev: true,
+    services: ['http', 'api', 'timetable', 'parser'],
     http: {
-        enabled: true,
         servername: 'localhost',
         port: 8081
     },
     vk: {
         app: {
-            enabled: false,
             id: 8071219,
             secret: '',
             url: '/vk'
         },
         bot: {
-            enabled: false,
             id: 193708347,
             access_token: '',
             noticer: true
@@ -23,7 +21,6 @@ export const config: ConfigScheme = {
         admin_ids: [290331922]
     },
     viber: {
-        enabled: false,
         name: 'Бот',
         token: '',
         url: '/viber',
@@ -31,23 +28,15 @@ export const config: ConfigScheme = {
         noticer: true
     },
     telegram: {
-        enabled: false,
         token: '',
         admin_ids: [804594266],
         noticer: true
     },
-    apk: {
-        enabled: false
-    },
     api: {
-        enabled: true,
         url: '/api'
     },
-    alice: {
-        enabled: false
-    },
+    alice: {},
     google: {
-        enabled: false,
         redirectDomain: 'https://mgke.keller.by',
         url: '/google/oauth',
         oauth: {
@@ -69,7 +58,7 @@ export const config: ConfigScheme = {
         private: true,
         app: true
     },
-    updater: {
+    parser: {
         enabled: true,
         syncMode: false, // Режим парсинга. false - параллельный (все запросы выполняются одновременно, пирсит быстрее, больше нагружает систему), true - последовательный (все запросы выполняются по очереди, парсит медленнее, меньше нагружает систему)
         localMode: false, // Используется только во время разработки (парсер не делает запросы к сайту, а читает json файл)

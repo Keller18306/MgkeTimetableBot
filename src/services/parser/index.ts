@@ -102,16 +102,10 @@ export class ParserService implements AppService {
         return true;
     }
 
-    public register(): boolean {
-        // todo rewrite
-        // return config.updater.enabled;
-        return true;
-    }
-
     public run() {
         loadCache();
 
-        if (config.updater.enabled) {
+        if (config.parser.enabled) {
             this.runLoop();
         }
     }
@@ -150,10 +144,10 @@ export class ParserService implements AppService {
     }
 
     private getDelayTime(error: boolean = false): Delay {
-        if (error) return createDelayPromise(config.updater.update_interval.error * 1e3)
+        if (error) return createDelayPromise(config.parser.update_interval.error * 1e3)
 
         // во время локального тестирования - 3 секунды
-        if (config.updater.localMode) {
+        if (config.parser.localMode) {
             return createDelayPromise(3e3);
         }
 
@@ -161,17 +155,17 @@ export class ParserService implements AppService {
         const hour = date.getHours()
 
         //в воскресенье не нужно часто
-        if (date.getDay() !== 0 && config.updater.activity[0] <= hour && hour <= config.updater.activity[1]) {
-            return createDelayPromise(config.updater.update_interval.activity * 1e3)
+        if (date.getDay() !== 0 && config.parser.activity[0] <= hour && hour <= config.parser.activity[1]) {
+            return createDelayPromise(config.parser.update_interval.activity * 1e3)
         }
 
         //фикс для убирания задержки во время активности
-        const startHour = (config.updater.activity[0] - Math.ceil(config.updater.update_interval.default / (1 * 60 * 60)))
-        if (hour >= startHour && hour <= config.updater.activity[0]) {
-            const endTime = new Date(date.getTime() + config.updater.update_interval.default * 1e3)
+        const startHour = (config.parser.activity[0] - Math.ceil(config.parser.update_interval.default / (1 * 60 * 60)))
+        if (hour >= startHour && hour <= config.parser.activity[0]) {
+            const endTime = new Date(date.getTime() + config.parser.update_interval.default * 1e3)
 
-            if (endTime.getHours() >= config.updater.activity[0]) {
-                endTime.setHours(config.updater.activity[0])
+            if (endTime.getHours() >= config.parser.activity[0]) {
+                endTime.setHours(config.parser.activity[0])
                 endTime.setMinutes(0)
                 endTime.setSeconds(0)
                 endTime.setMilliseconds(0)
@@ -182,7 +176,7 @@ export class ParserService implements AppService {
             }
         }
 
-        return createDelayPromise(config.updater.update_interval.default * 1e3)
+        return createDelayPromise(config.parser.update_interval.default * 1e3)
     }
 
     private log(log: string | Error) {
@@ -295,21 +289,21 @@ export class ParserService implements AppService {
     private async runActions(): Promise<boolean[]> {
         const PARSER_ACTIONS = [
             this.parseTimetable.bind(
-                this, StudentParser, encodeURI(config.updater.endpoints.timetableGroup), raspCache.groups
+                this, StudentParser, encodeURI(config.parser.endpoints.timetableGroup), raspCache.groups
             ),
 
             this.parseTimetable.bind(
-                this, TeacherParser, encodeURI(config.updater.endpoints.timetableTeacher), raspCache.teachers
+                this, TeacherParser, encodeURI(config.parser.endpoints.timetableTeacher), raspCache.teachers
             )
         ];
 
         //парсим страницы реже
         if (
-            this._forceParse || this._clearKeys || config.updater.localMode || !raspCache.team.update ||
-            Date.now() - raspCache.team.update >= config.updater.update_interval.teams * 1e3
+            this._forceParse || this._clearKeys || config.parser.localMode || !raspCache.team.update ||
+            Date.now() - raspCache.team.update >= config.parser.update_interval.teams * 1e3
         ) {
-            for (const i in config.updater.endpoints.team) {
-                const url = config.updater.endpoints.team[i];
+            for (const i in config.parser.endpoints.team) {
+                const url = config.parser.endpoints.team[i];
 
                 const action = this.parseTeam.bind(
                     this, Number(i), encodeURI(url), raspCache.team
@@ -324,7 +318,7 @@ export class ParserService implements AppService {
             const result: Promise<boolean> = action();
             promises.push(result)
 
-            if (config.updater.syncMode) {
+            if (config.parser.syncMode) {
                 await result;
             }
         }
@@ -334,7 +328,7 @@ export class ParserService implements AppService {
 
     private async parseTimetable(Parser: typeof TeacherParser | typeof StudentParser, url: string, cache: RaspEntryCache<Teachers | Groups>) {
         let data: Teachers | Groups;
-        if (config.updater.localMode) {
+        if (config.parser.localMode) {
             const fileName: string = onParser<string>(Parser, 'groups', 'teachers');
             const file: any = JSON.parse(readFileSync(`./cache/rasp/${fileName}.json`, 'utf8'));
 
@@ -345,7 +339,7 @@ export class ParserService implements AppService {
             const parser = new Parser(jsdom.window);
             const hash = parser.getContentHash();
 
-            if (!config.updater.ignoreHash && !this._forceParse && hash === cache.hash) {
+            if (!config.parser.ignoreHash && !this._forceParse && hash === cache.hash) {
                 cache.update = Date.now();
                 return true;
             } else if (hash !== cache.hash) {
@@ -531,7 +525,7 @@ export class ParserService implements AppService {
     private _cacheTeamCleared: boolean = false; //костыль, чтобы два раза не чистилось
     private async parseTeam(pageIndex: number, url: string, cache: TeamCache): Promise<boolean> {
         let data: Team;
-        if (config.updater.localMode) {
+        if (config.parser.localMode) {
             const file: any = JSON.parse(readFileSync(`./cache/rasp/team.json`, 'utf8'));
 
             data = file.team;
@@ -541,7 +535,7 @@ export class ParserService implements AppService {
             const parser = new TeamParser(jsdom.window);
             const hash = parser.getContentHash();
 
-            if (!config.updater.ignoreHash && !this._forceParse && hash === cache.hash[pageIndex]) {
+            if (!config.parser.ignoreHash && !this._forceParse && hash === cache.hash[pageIndex]) {
                 cache.update = Date.now();
                 return true;
             } else if (hash !== cache.hash[pageIndex]) {
@@ -584,7 +578,7 @@ export class ParserService implements AppService {
     private async getJSDOM(url: string): Promise<JSDOM> {
         // let agent: Agents | undefined;
 
-        if (config.updater.proxy) {
+        if (config.parser.proxy) {
             //TODO PROXY AGENT
         }
 

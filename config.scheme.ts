@@ -1,22 +1,22 @@
+import { ServiceName } from "./src/app";
+
 type DayCall = [[string, string], [string, string]];
 type DayCallShort = [string, string];
 
 export type ConfigScheme = {
     dev: boolean,
+    services: ServiceName[],
     http: {
-        enabled: boolean,
         servername: string,
         port: number
     },
     vk: {
         app: {
-            enabled: boolean,
             id: number,
             secret: string,
             url: string
         },
         bot: {
-            enabled: boolean,
             id: number,
             access_token: string,
             noticer: boolean
@@ -24,31 +24,23 @@ export type ConfigScheme = {
         admin_ids: number[],
     },
     telegram: {
-        enabled: boolean,
         token: string,
         admin_ids: number[],
         noticer: boolean
     },
     viber: {
-        enabled: boolean,
         name: string,
         token: string,
         url: string,
         admin_ids: string[],
         noticer: boolean
     },
-    apk: {
-        enabled: boolean
-    },
+    // apk: {},
     api: {
-        url: string,
-        enabled: boolean
+        url: string
     },
-    alice: {
-        enabled: boolean
-    },
+    alice: {},
     google: {
-        enabled: boolean,
         redirectDomain: string,
         url: string,
         oauth: {
@@ -70,7 +62,7 @@ export type ConfigScheme = {
         private: boolean,
         app: boolean
     },
-    updater: {
+    parser: {
         enabled: boolean,
         syncMode: boolean,
         localMode: boolean,

@@ -30,10 +30,6 @@ export class Timetable implements AppService {
 
     }
 
-    public register(): boolean {
-        return true;
-    }
-
     public run() {
         loadCache();
     }

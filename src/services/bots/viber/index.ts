@@ -3,10 +3,11 @@ import { Bot, Events, ReceivedTextMessage, Response } from 'viber-bot';
 import { config } from '../../../../config';
 import { App, AppService } from '../../../app';
 import { defines } from '../../../defines';
-import { raspCache } from '../../parser';
 import { createScheduleFormatter } from '../../../utils';
 import { FromType, InputRequestKey } from '../../key/index';
+import { raspCache } from '../../parser';
 import { AbstractBot, AbstractCommand } from '../abstract';
+import { AbstractBotEventListener } from '../events';
 import { Keyboard, StaticKeyboard } from '../keyboard';
 import { ViberAction } from './action';
 import { ViberChat } from './chat';
@@ -19,6 +20,8 @@ const WEBHOOK_URL: string = VIBER_URL + '/webhook';
 const AVATAR_URL: string = VIBER_URL + '/avatar.png';
 
 export class ViberBot extends AbstractBot implements AppService {
+    public event: AbstractBotEventListener;
+
     private bot: Bot;
     private domain?: string;
     // private app: Application;
@@ -38,10 +41,8 @@ export class ViberBot extends AbstractBot implements AppService {
                 Events.UNSUBSCRIBED
             ]
         });
-    }
 
-    public register(): boolean {
-        return config.viber.enabled;
+        this.event = new ViberEventListener(this.app, this.bot);
     }
 
     public async run() {
@@ -55,7 +56,7 @@ export class ViberBot extends AbstractBot implements AppService {
         const server = httpService.getServer();
 
         if (config.viber.noticer) {
-            this.getBotService().events.registerListener(new ViberEventListener(this.app, this.bot));
+            this.getBotService().events.registerListener(this.event);
         }
 
         await this.getBotService().init();
@@ -72,6 +73,10 @@ export class ViberBot extends AbstractBot implements AppService {
 
         await this.setupWebhook();
     }
+    
+    public getChat(peerId: string): ViberChat {
+        return new ViberChat(peerId);
+    }
 
     private async setupWebhook() {
         const URL = `https://${config.http.servername}${WEBHOOK_URL}`
@@ -84,7 +89,7 @@ export class ViberBot extends AbstractBot implements AppService {
     }
 
     private async handleNewMessage(message: ReceivedTextMessage, response: Response) {
-        const chat = new ViberChat(response.userProfile.id)
+        const chat = this.getChat(response.userProfile.id)
         const context = new ViberCommandContext(message, response, this.app, chat, this.input)
 
         if (!context.payload && chat.accepted && this.input.has(context.peerId)) {
@@ -119,7 +124,7 @@ export class ViberBot extends AbstractBot implements AppService {
     }
 
     private async handleConversationStarted(response: Response, subscribed: boolean, _context: string) {
-        const chat = new ViberChat(response.userProfile.id)
+        const chat = this.getChat(response.userProfile.id)
         const context = new ViberCommandContext(null, response, this.app, chat, this.input)
 
         chat.resync()
@@ -136,7 +141,7 @@ export class ViberBot extends AbstractBot implements AppService {
     }
 
     private async handleSubscribe(response: Response) {
-        const chat = new ViberChat(response.userProfile.id)
+        const chat = this.getChat(response.userProfile.id)
 
         chat.resync()
 
@@ -144,7 +149,7 @@ export class ViberBot extends AbstractBot implements AppService {
     }
 
     private async handleUnsubscribe(userId: string) {
-        const chat = new ViberChat(userId)
+        const chat = this.getChat(userId)
 
         chat.resync()
 

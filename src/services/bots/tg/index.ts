@@ -7,6 +7,7 @@ import { createScheduleFormatter } from '../../../utils';
 import { FromType, InputRequestKey } from '../../key';
 import { raspCache } from '../../parser';
 import { AbstractBot, AbstractCommand, AbstractCommandContext } from '../abstract';
+import { AbstractBotEventListener } from '../events';
 import { Keyboard } from '../keyboard';
 import { TgBotAction } from './action';
 import { TgChat } from './chat';
@@ -15,6 +16,7 @@ import { TgEventListener } from './event';
 
 export class TgBot extends AbstractBot implements AppService {
     public tg: Telegram;
+    public event: AbstractBotEventListener;
 
     constructor(app: App) {
         super(app, 'tg');
@@ -22,10 +24,8 @@ export class TgBot extends AbstractBot implements AppService {
         this.tg = new Telegram({
             token: config.telegram.token
         });
-    }
 
-    public register(): boolean {
-        return config.telegram.enabled;
+        this.event = new TgEventListener(this.app, this.tg);
     }
 
     public async run() {
@@ -35,7 +35,7 @@ export class TgBot extends AbstractBot implements AppService {
         //this.tg.updates.on('my_chat_member', (context, next) => this.inviteUser(context, next))
 
         if (config.telegram.noticer) {
-            this.getBotService().events.registerListener(new TgEventListener(this.app, this.tg))
+            this.getBotService().events.registerListener(this.event);
         }
 
         await this.getBotService().init();
@@ -47,6 +47,10 @@ export class TgBot extends AbstractBot implements AppService {
         })
 
         this.setBotCommands()
+    }
+    
+    public getChat(peerId: number): TgChat {
+        return new TgChat(peerId);
     }
 
     private async setBotCommands() {
@@ -83,7 +87,7 @@ export class TgBot extends AbstractBot implements AppService {
 
         const text = context.text;
         const _context = new TgCommandContext(context, this.app, this.input, this.cache);
-        const chat = new TgChat(context.chatId);
+        const chat = this.getChat(context.chatId);
         chat.updateChat(context.chat, context.from);
 
         if (chat.ref === null) {
@@ -123,7 +127,7 @@ export class TgBot extends AbstractBot implements AppService {
             return;
         }
 
-        const chat = new TgChat(context.from.id);
+        const chat = this.getChat(context.from.id);
         chat.updateChat(context.message.chat, context.message.from);
 
         const cb = this.getBotService().getCallbackByPayload(payload);
@@ -152,7 +156,7 @@ export class TgBot extends AbstractBot implements AppService {
     }
 
     private myChatMember(context: ChatMemberContext, next: NextMiddleware) {
-        const chat = new TgChat(context.chatId);
+        const chat = this.getChat(context.chatId);
 
         if (context.newChatMember.status === 'kicked') {
             chat.allowSendMess = false
@@ -168,7 +172,7 @@ export class TgBot extends AbstractBot implements AppService {
         console.log(context)
         //if (context) return next();
 
-        /*const chat = new TgChat(context.peerId)
+        /*const chat = this.getChat(context.peerId)
 
         const adv_context: AdvancedContext = {
             hasMention: false,

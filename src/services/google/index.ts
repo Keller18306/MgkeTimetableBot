@@ -6,6 +6,7 @@ import { fromZodError } from 'zod-validation-error';
 import { config } from '../../../config';
 import { App, AppService } from '../../app';
 import { unserialize } from '../../utils';
+import { AbstractBot, AbstractChat } from '../bots/abstract';
 import { GoogleUserApi } from './api';
 import { GoogleCalendar } from './calendar';
 import { GoogleUser } from './user';
@@ -17,10 +18,6 @@ export class GoogleService implements AppService {
     constructor(app: App) {
         this.app = app;
         this.calendar = new GoogleCalendar(app);
-    }
-
-    public register(): boolean {
-        return config.google.enabled;
     }
 
     public run() {
@@ -96,7 +93,19 @@ export class GoogleService implements AppService {
             return;
         }
 
-        response.send('TODO PROVIDE TO SERVICES');
+        const service = this.app.getService(state.service);
+        if (service instanceof AbstractBot) {
+            const chat: AbstractChat = service.getChat(state.peerId);
+
+            chat.google_email = info.email;
+            service.event.sendMessage(chat, 'Test');
+            
+            response.send('Service connected');
+                
+            return;
+        }
+
+        response.send('Unsupported service');
     }
 
     private link(request: Request, response: Response) {

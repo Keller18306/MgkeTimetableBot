@@ -30,6 +30,9 @@ export type DbChat = {
     /** Выбранное имя для преподавателя */
     teacher: string | null;
 
+    /** Почта привязанного гугл аккаунта */
+    google_email: string | null;
+
     /** Показывать ли кнопку "О боте" */
     showAbout: boolean;
 

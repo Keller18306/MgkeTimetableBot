@@ -31,10 +31,6 @@ export class Api implements AppService {
         this.app = app;
     }
 
-    public register(): boolean {
-        return config.api.enabled;
-    }
-
     public run() {
         const server = this.app.getService('http').getServer();
 
