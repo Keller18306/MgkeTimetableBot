@@ -1,4 +1,5 @@
 import { config } from "../../../../../config";
+import { AppServiceName } from "../../../../app";
 import db from "../../../../db";
 import { KeyData } from "../../../api/key";
 import { ApiKey } from "../../../key";
@@ -10,6 +11,7 @@ export default class extends AbstractCommand {
     public regexp = /^(!|\/)createApi(Key|Token)/i
     public payload = null;
     public adminOnly: boolean = true;
+    public requireServices: AppServiceName[] = ['api'];
 
     handler({ context }: CmdHandlerParams) {
         const args = context.text.split(' ');

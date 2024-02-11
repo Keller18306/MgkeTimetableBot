@@ -32,19 +32,19 @@ const services = {
 } as const;
 
 type Services = typeof services;
-export type ServiceName = keyof Services;
+export type AppServiceName = keyof Services;
 
 export class App {
-    private services: Map<ServiceName, AppService> = new Map();
+    private services: Map<AppServiceName, AppService> = new Map();
     private init: boolean = false;
 
-    constructor(initialServices: ServiceName[] = []) {
+    constructor(initialServices: AppServiceName[] = []) {
         for (const service of initialServices) {
             this.registerService(service);
         }
     }
 
-    public registerService(service: ServiceName): void {
+    public registerService(service: AppServiceName): void {
         const classHandler = services[service];
         const handler = new classHandler(this);
 
@@ -55,7 +55,7 @@ export class App {
         }
     }
 
-    public getService<TServiceName extends ServiceName & string, TService = InstanceType<Services[TServiceName]>>(service: TServiceName): TService {
+    public getService<TServiceName extends AppServiceName & string, TService = InstanceType<Services[TServiceName]>>(service: TServiceName): TService {
         const serviceInstance = this.services.get(service);
 
         if (!serviceInstance) {
@@ -65,7 +65,7 @@ export class App {
         return serviceInstance as TService;
     }
 
-    public isServiceRegistered(service: ServiceName): boolean {
+    public isServiceRegistered(service: AppServiceName): boolean {
         return this.services.has(service);
     }
 

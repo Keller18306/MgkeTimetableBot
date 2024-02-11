@@ -1,16 +1,18 @@
 import { TelegramBotCommand } from "puregram/generated";
 import { StringDate, prepareError } from "../../../../utils";
 import { AbstractCommand, CmdHandlerParams } from "../../abstract";
+import { AppServiceName } from "../../../../app";
 
 export default class extends AbstractCommand {
-    public regexp = /^(!|\/)(get)?updaterLogs/i
+    public regexp = /^(!|\/)(get)?(updater|parser)Logs/i
     public payload = null;
     public tgCommand: TelegramBotCommand = {
-        command: 'updaterLogs',
+        command: 'parserLogs',
         description: 'Логи последних обновлений парсера'
     };
 
     public adminOnly: boolean = true;
+    public requireServices: AppServiceName[] = ['parser'];
 
     handler({ context }: CmdHandlerParams) {
         let logs = this.app.getService('parser').getLogs();

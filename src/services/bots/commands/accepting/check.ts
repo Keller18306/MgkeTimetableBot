@@ -1,5 +1,6 @@
 import { format } from "util";
 import { config } from "../../../../../config";
+import { AppServiceName } from "../../../../app";
 import { defines } from "../../../../defines";
 import { FromType, RequestKey } from "../../../key";
 import { AbstractCommand, CmdHandlerParams, Service } from "../../abstract";
@@ -14,6 +15,7 @@ export default class extends AbstractCommand {
     public payload = null;
 
     public services: Service[] = ['vk'];
+    public requireServices: AppServiceName[] = ['vk', 'vkApp'];
 
     handler({ context, chat, keyboard, service }: CmdHandlerParams) {
         if (service != 'vk') throw new Error('is not vk')

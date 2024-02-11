@@ -1,7 +1,7 @@
 import { MessageContext as TgMessageContext } from 'puregram';
 import { TelegramBotCommand } from 'puregram/generated';
 import { ContextDefaultState, MessageContext as VkMessageContext } from 'vk-io';
-import { App } from '../../../app';
+import { App, AppServiceName } from '../../../app';
 import { ScheduleFormatter } from '../../../utils/formatters/abstract';
 import { raspCache } from '../../parser';
 import { ServiceStorage } from '../../storage';
@@ -46,15 +46,41 @@ export type CmdHandlerParams = {
 })
 
 export abstract class AbstractCommand {
+    /**
+    * Уникальный идентификатор команды, устанавливается во время загрузки команд
+    **/
     public id?: string;
+
+    /**
+    * Должен ли быть чат подверждённым, чтобы использовать эту команду
+    **/
     public acceptRequired: boolean = true;
+
+    /**
+    * Доступна ли эта команда только для админов?
+    **/
     public adminOnly: boolean = false;
+
+    /**
+    * Базовая команда и её описания для регистрации её в списке команд в помощи (и для списка телеги)
+    **/
     public tgCommand: TelegramBotCommand | null = null;
 
-    public services: Service[] = [
-        'vk', 'viber', 'tg'
-    ];
+    /**
+    * Список сервисов ботов, в которых команда будет работать
+    * (если undefined, во всех серисах)
+    **/
+    public services?: Service[];
 
+    /**
+    * Список сервисов, необходимые для работы команды
+    * (если undefined, команда регистрируется всегда, если же указанный сервис не загружен, то и команда не будет загружена)
+    **/
+    public requireServices?: AppServiceName[];
+
+    /**
+    * Регулярное выражение для команды, по котрому она будет вызываться
+    **/
     public abstract regexp: RegExp | null;
     public abstract payload: string | null;
 
@@ -72,7 +98,7 @@ export abstract class AbstractCommand {
     constructor(protected app: App) { }
 
     public preHandle({ service, chat }: CmdHandlerParams) {
-        if (!this.services.includes(service)) {
+        if (this.services && !this.services.includes(service)) {
             return false;
         }
 

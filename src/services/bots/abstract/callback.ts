@@ -1,6 +1,6 @@
 import { CallbackQueryContext as TgRealCallbackContext } from 'puregram'
 import { ContextDefaultState, MessageEventContext } from 'vk-io'
-import { App } from '../../../app'
+import { App, AppServiceName } from '../../../app'
 import { ScheduleFormatter } from "../../../utils/formatters/abstract"
 import { ServiceStorage } from '../../storage'
 import { Keyboard } from "../keyboard"
@@ -33,13 +33,32 @@ export type CbHandlerParams = {
 })
 
 export abstract class AbstractCallback {
+    /**
+    * Уникальный идентификатор калбэка, устанавливается во время загрузки калбэков
+    **/
     public id?: string;
 
+    /**
+    * Доступна ли этот калбэк только для админов?
+    **/
     public adminOnly: boolean = false;
+
+    /**
+    * Должен ли быть чат подверждённым, чтобы использовать этот калбэк
+    **/
     public acceptRequired: boolean = true;
-    public services: Service[] = [
-        'vk', 'tg'
-    ];
+
+    /**
+    * Список сервисов ботов, в которых команда будет работать
+    * (если undefined, во всех серисах)
+    **/
+    public services?: Service[];
+
+    /**
+    * Список сервисов, необходимые для работы команды
+    * (если undefined, команда регистрируется всегда, если же указанный сервис не загружен, то и команда не будет загружена)
+    **/
+    public requireServices?: AppServiceName[];
 
     public abstract action: string;
 
@@ -48,7 +67,7 @@ export abstract class AbstractCallback {
     constructor(protected app: App) { }
 
     public preHandle({ service, chat }: CbHandlerParams) {
-        if (!this.services.includes(service)) {
+        if (this.services && !this.services.includes(service)) {
             return false;
         }
 

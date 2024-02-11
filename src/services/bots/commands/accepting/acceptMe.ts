@@ -1,4 +1,5 @@
 import { config } from "../../../../../config";
+import { AppServiceName } from "../../../../app";
 import db from "../../../../db";
 import { FromType, RequestKey } from "../../../key";
 import { UserData } from '../../../vk_app/user';
@@ -11,6 +12,7 @@ export default class extends AbstractCommand {
     public payload = null;
 
     public services: Service[] = ['vk'];
+    public requireServices: AppServiceName[] = ['vk', 'vkApp'];
 
     handler({ context, chat, service }: CmdHandlerParams) {
         if (service != 'vk') throw new Error('Service is not vk')

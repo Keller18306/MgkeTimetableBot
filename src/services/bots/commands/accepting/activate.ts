@@ -1,10 +1,14 @@
-import { AbstractCommand, CmdHandlerParams } from "../../abstract";
+import { AppServiceName } from "../../../../app";
+import { AbstractCommand, CmdHandlerParams, Service as BotService } from "../../abstract";
 
 //const activateTool = new ActivateKey(config.encrypt_key)
 
 export default class extends AbstractCommand {
     public regexp = /^(!|\/)activate/i
     public payload = null;
+
+    public services: BotService[] = ['vk'];
+    public requireServices: AppServiceName[] = ['vk', 'vkApp'];
 
     handler({ context }: CmdHandlerParams) {
         /*let id: string | undefined | number = context.text?.replace(this.regexp, '').trim()

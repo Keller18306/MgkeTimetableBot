@@ -1,4 +1,5 @@
 import { config } from "../../../../config";
+import { AppServiceName } from "../../../app";
 import db from "../../../db";
 import { StringDate } from "../../../utils";
 import { KeyData } from "../../api/key";
@@ -10,6 +11,7 @@ const keyTool = new ApiKey(config.encrypt_key);
 export default class extends AbstractCommand {
     public regexp = /^(!|\/)api(_new)?$/i
     public payload = null;
+    public requireServices: AppServiceName[] = ['api'];
 
     handler({ context, service }: CmdHandlerParams) {
         if (context.isChat) return context.send('Команда недоступна в беседах');

@@ -1,3 +1,4 @@
+import { AppServiceName } from "../../../../app";
 import db from "../../../../db";
 import { AbstractCommand, CmdHandlerParams, Service } from "../../abstract";
 
@@ -8,6 +9,7 @@ export default class extends AbstractCommand {
     public adminOnly: boolean = true;
 
     public services: Service[] = ['vk'];
+    public requireServices: AppServiceName[] = ['vk', 'vkApp'];
 
     handler({ context }: CmdHandlerParams) {
         let id: string | undefined | number = context.text?.replace(this.regexp, '').trim()

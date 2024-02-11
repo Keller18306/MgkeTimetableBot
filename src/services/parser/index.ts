@@ -81,6 +81,8 @@ export class ParserService implements AppService {
     private _clearKeys: boolean = false;
 
     constructor(private app: App) {
+        loadCache();
+
         this.events = new TypedEventEmitter<ParserEvents>();
     }
 
@@ -103,8 +105,6 @@ export class ParserService implements AppService {
     }
 
     public run() {
-        loadCache();
-
         if (config.parser.enabled) {
             this.runLoop();
         }
@@ -137,7 +137,7 @@ export class ParserService implements AppService {
         return errorsCount === need;
     }
 
-    public forceParse(clearKeys: boolean = false) {
+    public forceLoopParse(clearKeys: boolean = false) {
         this._forceParse = true;
         this._clearKeys = clearKeys;
         this.delayPromise?.resolve();
@@ -225,11 +225,14 @@ export class ParserService implements AppService {
 
     private async runLoop() {
         while (true) {
-            await this.loop();
+            const { error } = await this.parse();
+
+            this.delayPromise = this.getDelayTime(error);
+            await this.delayPromise.promise;
         }
     }
 
-    private async loop() {
+    public async parse() {
         let error: boolean = false;
 
         try {
@@ -252,8 +255,7 @@ export class ParserService implements AppService {
         this._cacheTeamCleared = false;
         this.removeOldLogs();
 
-        this.delayPromise = this.getDelayTime(error);
-        await this.delayPromise.promise;
+        return { error }
     }
 
     private async runActionsWithTimeout() {

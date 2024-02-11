@@ -210,9 +210,13 @@ export class BotService implements AppService {
         const id = this.pathToId(rootPath, filePath);
         cmd.id = id;
 
-        // if (config.dev) {
-        //     this.initCommandWatcher(value);
-        // }
+        if (cmd.requireServices) {
+            for (const service of cmd.requireServices) {
+                if (!this.app.isServiceRegistered(service)) {
+                    return;
+                }
+            }
+        }
 
         if (cmd instanceof AbstractCommand) {
             this.commands[id] = {

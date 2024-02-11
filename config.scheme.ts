@@ -1,11 +1,11 @@
-import { ServiceName } from "./src/app";
+import { AppServiceName } from "./src/app";
 
 type DayCall = [[string, string], [string, string]];
 type DayCallShort = [string, string];
 
 export type ConfigScheme = {
     dev: boolean,
-    services: ServiceName[],
+    services: AppServiceName[],
     http: {
         servername: string,
         port: number
