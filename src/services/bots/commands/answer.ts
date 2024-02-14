@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { AbstractCommand, CmdHandlerParams } from "../abstract";
 
 export default class extends AbstractCommand {
@@ -6,8 +7,9 @@ export default class extends AbstractCommand {
     public acceptRequired: boolean = true;
 
     handler({ context }: CmdHandlerParams) {
-        const answer: string = context.payload.answer;
-        if (!answer) return;
+        const { answer } = z.object({
+            answer: z.coerce.string()
+        }).parse(context.payload);
 
         const input = context._input;
 

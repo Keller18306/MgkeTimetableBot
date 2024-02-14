@@ -4,10 +4,10 @@ import path from "path";
 import { TelegramBotCommand } from "puregram/generated";
 import { config } from "../../../config";
 import { App, AppService } from "../../app";
-import { parsePayload } from "../../utils";
+import { ParsedPayload } from "../../utils";
 import { AbstractCallback, AbstractCommand } from "./abstract";
-import { BotEventController } from "./events/controller";
 import { BotCron } from "./cron";
+import { BotEventController } from "./events/controller";
 
 const cmdRootPath = path.join(__dirname, 'commands');
 const cbRootPath = path.join(__dirname, 'callbacks');
@@ -69,17 +69,15 @@ export class BotService implements AppService {
         return null;
     }
 
-    public searchCommandByPayload(payload?: string, scene?: string | null): AbstractCommand | null {
-        const parsed = parsePayload(payload);
-        if (!payload || !parsed) return null;
+    public searchCommandByPayload(payload?: ParsedPayload, scene?: string | null): AbstractCommand | null {
+        if (!payload) return null;
 
-        const { action } = parsed;
         const cmds = this.commands;
 
         for (const id in cmds) {
             const cmd = cmds[id].instance;
 
-            if (cmd.payload == null || cmd.payload != action) continue;
+            if (cmd.payload == null || cmd.payload != payload.action) continue;
 
             return cmd;
         }
@@ -95,18 +93,15 @@ export class BotService implements AppService {
         return cb.instance;
     }
 
-    public getCallbackByPayload(payload?: string): AbstractCallback | null {
-        const parsed = parsePayload(payload);
-        if (!payload || !parsed) return null;
-
-        const { action } = parsed;
+    public getCallbackByPayload(payload?: ParsedPayload): AbstractCallback | null {
+        if (!payload) return null;
 
         const cbs = this.callbacks;
-
+        
         for (const id in cbs) {
             const cb = cbs[id].instance;
 
-            if (cb.action != action) continue;
+            if (cb.action != payload.action) continue;
 
             return cb;
         }

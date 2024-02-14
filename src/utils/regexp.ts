@@ -2,14 +2,15 @@ export function escapeRegex(string: string): string {
     return string.replace(/[/\-\\^$*+?.()|[\]{}]/g, '\\$&');
 }
 
-export function parsePayload(data?: string): { action: string, data?: any } | false {
+export type ParsedPayload = { action: string, data?: any };
+export function parsePayload(data?: string): ParsedPayload | undefined {
     if (!data) { 
-        return false;
+        return;
     }
 
     const parsed = data.match(/(.*?)(\[.*\]|\{.*\}|$)/);
     if (!parsed) {
-        return false;
+        return;
     }
 
     return {

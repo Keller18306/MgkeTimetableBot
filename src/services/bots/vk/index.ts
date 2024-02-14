@@ -6,7 +6,7 @@ import { defines } from '../../../defines';
 import { createScheduleFormatter } from '../../../utils';
 import { FromType, InputRequestKey } from '../../key';
 import { raspCache } from '../../parser';
-import { AbstractBot, AbstractCommand } from '../abstract';
+import { AbstractBot } from '../abstract';
 import { AbstractBotEventListener } from '../events';
 import { Keyboard } from '../keyboard';
 import { VkBotAction } from './action';
@@ -71,8 +71,8 @@ export class VkBot extends AbstractBot implements AppService {
     }
 
     private parseMessage(text?: string) {
-        const hasMention = /\[(?:club|public)(\d+?)\|[\s\S]+?\],?\s([\s\S]*)/m.test(text || '')
-        let [, parsedMentionId, mentionMessage] = text?.match(/\[(?:club|public)(\d+?)\|[\s\S]+?\],?\s([\s\S]*)/m) || []
+        const hasMention = /\[(?:club|public)(\d+?)\|[\s\S]+?\],?\s([\s\S]*)/m.test(text || '');
+        let [, parsedMentionId, mentionMessage] = text?.match(/\[(?:club|public)(\d+?)\|[\s\S]+?\],?\s([\s\S]*)/m) || [];
 
         let mentionId: number = 0
         if (hasMention && !isNaN(+parsedMentionId)) {
@@ -90,41 +90,28 @@ export class VkBot extends AbstractBot implements AppService {
     }
 
     private messageHandler(context: MessageContext<ContextDefaultState>, next: NextMiddleware) {
-        if (context.isFromGroup) return next();
+        if (context.isFromGroup) return;
 
         const { text, selfMention } = this.parseMessage(context.text);
-        const _context = new VkCommandContext(this.vk, context, this.app, this.input, this.cache, text);
+        const _context = new VkCommandContext(this, context, text);
         const chat = this.getChat(context.peerId);
 
         if (chat.ref === null) {
             chat.ref = context.referralValue?.slice(0, 255) || 'none';
         }
 
-        let cmd: AbstractCommand | null = null;
-        if (context.messagePayload) {
-            cmd = this.getBotService().searchCommandByPayload(context.messagePayload, chat.scene);
-        }
-
-        if (!cmd) {
-            cmd = this.getBotService().searchCommandByMessage(text, chat.scene);
-        }
-
-        if (!cmd && chat.accepted && this.input.has(String(context.peerId))) {
-            return this.input.resolve(String(context.peerId), text, 'message');
-        }
-
-        this.handleMessage(cmd, {
+        this.handleMessage({
             service: 'vk',
             context: _context,
             chat: chat,
-            actions: new VkBotAction(this.vk, context, chat, this.app, this.input, this.cache),
+            actions: new VkBotAction(this, context, chat),
             keyboard: new Keyboard(this.app, chat.resync(), _context),
             realContext: context,
             scheduleFormatter: createScheduleFormatter('vk', this.app, raspCache, chat),
             cache: this.cache
         }, {
             selfMention: selfMention
-        })
+        });
     }
 
     protected _getAcceptKeyParams(context: VkCommandContext): InputRequestKey {
@@ -137,21 +124,12 @@ export class VkBot extends AbstractBot implements AppService {
     }
 
     private eventHandler(context: MessageEventContext<ContextDefaultState>, next: NextMiddleware) {
-        if (!context.eventPayload) return next();
-
-        let payload: string | undefined = context.eventPayload;
-        if (!payload || typeof payload !== 'string') {
-            return;
-        }
+        if (!context.eventPayload) return;
 
         const chat = this.getChat(context.peerId);
+        const _context = new VkCallbackContext(this, context);
 
-        const cb = this.getBotService().getCallbackByPayload(payload);
-        if (!cb) return;
-
-        const _context = new VkCallbackContext(this.vk, context, this.app, this.input, this.cache);
-
-        return this.handleCallback(cb, {
+        return this.handleCallback({
             service: 'vk',
             context: _context,
             realContext: context,
@@ -167,7 +145,7 @@ export class VkBot extends AbstractBot implements AppService {
 
         const chat = this.getChat(context.peerId);
 
-        const _context = new VkCommandContext(this.vk, context, this.app, this.input, this.cache);
+        const _context = new VkCommandContext(this, context);
         const keyboard = new Keyboard(this.app, chat.resync(), _context);
 
         return _context.send(defines['vk.message.about'], {

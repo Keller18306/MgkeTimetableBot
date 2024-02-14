@@ -37,7 +37,7 @@ export function convertAbstractToViber(aKeyboard?: KeyboardBuilder): Keyboard | 
             } else if (button.payload) {
                 data = {
                     ActionType: 'reply',
-                    ActionBody: 'payload:' + JSON.stringify(button.payload),
+                    ActionBody: `payload:${button.payload}`,
                     Text: button.text
                 }
             } else {

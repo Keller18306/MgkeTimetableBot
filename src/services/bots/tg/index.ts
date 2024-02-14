@@ -83,10 +83,9 @@ export class TgBot extends AbstractBot implements AppService {
     }
 
     private messageHandler(context: MessageContext, next: NextMiddleware) {
-        if (context.from?.isBot() || context.hasViaBot()) return next();
+        if (context.from?.isBot() || context.hasViaBot()) return;
 
-        const text = context.text;
-        const _context = new TgCommandContext(context, this.app, this.input, this.cache);
+        const _context = new TgCommandContext(this, context);
         const chat = this.getChat(context.chatId);
         chat.updateChat(context.chat, context.from);
 
@@ -94,15 +93,10 @@ export class TgBot extends AbstractBot implements AppService {
             chat.ref = context.startPayload || 'none';
         }
 
-        let cmd: AbstractCommand | null = this.getBotService().searchCommandByMessage(text, chat.scene);
-        if (!cmd && chat.accepted && this.input.has(String(context.chatId))) {
-            return this.input.resolve(String(context.chatId), text, 'message');
-        }
-
-        this.handleMessage(cmd, {
+        this.handleMessage({
             context: _context,
             chat: chat,
-            actions: new TgBotAction(context, chat, this.app, this.input, this.cache),
+            actions: new TgBotAction(this, context, chat),
             keyboard: new Keyboard(this.app, chat, _context),
             service: 'tg',
             realContext: context,
@@ -120,22 +114,15 @@ export class TgBot extends AbstractBot implements AppService {
     }
 
     private async callbackHandler(context: CallbackQueryContext, next: NextMiddleware) {
-        if (context.from?.isBot()) return next();
-
-        let payload: string | undefined = context.data;
-        if (!payload || !context.message) {
-            return;
-        }
+        if (context.from?.isBot()) return;
+        if (!context.data || !context.message) return;
 
         const chat = this.getChat(context.from.id);
+        const _context = new TgCallbackContext(this, context);
+        
         chat.updateChat(context.message.chat, context.message.from);
 
-        const cb = this.getBotService().getCallbackByPayload(payload);
-        if (!cb) return;
-
-        const _context = new TgCallbackContext(context, this.app, this.input, this.cache);
-
-        return this.handleCallback(cb, {
+        return this.handleCallback({
             service: 'tg',
             context: _context,
             realContext: context,

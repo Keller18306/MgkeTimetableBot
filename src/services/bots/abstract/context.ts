@@ -1,6 +1,9 @@
 import { App } from '../../../app';
+import { ParsedPayload } from '../../../utils';
 import { ImageFile } from '../../image/builder';
+import { ServiceStorage } from '../../storage';
 import { BotInput, InputResolvedValue } from '../input';
+import { AbstractBot } from './bot';
 import { KeyboardBuilder } from './keyboardBuilder';
 
 export type MessageOptions = {
@@ -14,20 +17,31 @@ export type MessageOptions = {
 export abstract class AbstractContext {
     public abstract peerId: number | string;
     public abstract userId: number | string;
+    public abstract messageId?: any;
+    public abstract parsedPayload?: ParsedPayload;
+
+    public get payload(): undefined | any {
+        if (!this.parsedPayload) return;
+
+        return this.parsedPayload.data;
+    }
 
     public abstract get isChat(): boolean;
 
     public abstract send(text: string, options?: MessageOptions): Promise<string>;
     public abstract sendPhoto(image: ImageFile, options?: MessageOptions): Promise<string>;
-    public abstract delete(id: string): Promise<boolean>;
+    public abstract editOrSend(text: string, options?: MessageOptions): Promise<boolean>;
+    public abstract delete(id?: string): Promise<boolean>;
     public abstract isChatAdmin(): Promise<boolean>;
 
-    protected readonly app: App;
     public readonly _input: BotInput;
+    protected readonly app: App;
+    protected readonly cache: ServiceStorage;
 
-    constructor(app: App, input: BotInput) {
-        this.app = app;
-        this._input = input;
+    constructor(bot: AbstractBot) {
+        this._input = bot.input;
+        this.app = bot.app;
+        this.cache = bot.cache;
     }
 
     public async input(text: string, options?: MessageOptions | undefined): Promise<InputResolvedValue> {
@@ -49,17 +63,8 @@ export abstract class AbstractContext {
 
 export abstract class AbstractCommandContext extends AbstractContext {
     public abstract text: string
-    public abstract payload?: { [key: string]: any };
-
-    protected abstract lastSentMessageId?: string | number;
-
-    public abstract editOrSend(text: string, options?: MessageOptions): Promise<boolean>;
 }
 
 export abstract class AbstractCallbackContext extends AbstractContext {
-    public abstract messageId: any;
-    public abstract payload: any;
     public abstract answer(text: string): Promise<boolean>;
-    public abstract delete(id?: string): Promise<boolean>;
-    public abstract edit(text: string, options?: MessageOptions): Promise<boolean>;
 }

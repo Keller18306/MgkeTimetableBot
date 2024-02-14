@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { AbstractCallback, CbHandlerParams } from "../abstract";
 
 export default class extends AbstractCallback {
@@ -5,8 +6,9 @@ export default class extends AbstractCallback {
     public acceptRequired: boolean = true;
 
     async handler({ context }: CbHandlerParams) {
-        const answer: string = context.payload.answer;
-        if (!answer) return;
+        const { answer } = z.object({
+            answer: z.coerce.string()
+        }).parse(context.payload);
 
         await context.answer(`Выбрано: "${answer}"`).catch(() => { });
 

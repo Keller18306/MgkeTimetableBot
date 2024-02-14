@@ -1,34 +1,27 @@
 import { CallbackQueryContext, MediaInput, MediaSourceType, MessageContext, PhotoAttachment } from "puregram";
+import { TgBot } from ".";
 import { config } from "../../../../config";
-import { App } from "../../../app";
-import { parsePayload } from "../../../utils";
+import { ParsedPayload, parsePayload } from "../../../utils";
 import { ImageFile } from "../../image/builder";
-import { AbstractCallbackContext, AbstractCommandContext, MessageOptions, ServiceStorage } from "../abstract";
-import { BotInput } from "../input";
+import { AbstractCallbackContext, AbstractCommandContext, MessageOptions } from "../abstract";
 import { StaticKeyboard } from "../keyboard";
 import { convertAbstractToTg } from "./keyboard";
 
 export class TgCommandContext extends AbstractCommandContext {
     public text: string;
-    public payload = undefined;
+    public parsedPayload: undefined;
     public peerId: number;
     public userId: number;
 
-    protected lastSentMessageId?: number;
+    public messageId?: number;
 
     private context: MessageContext;
-    private cache: ServiceStorage;
 
-    constructor(context: MessageContext, app: App, input: BotInput, cache: ServiceStorage) {
-        super(app, input)
-        this.context = context
-        this.text = context.text || ''
+    constructor(bot: TgBot, context: MessageContext) {
+        super(bot);
 
-        this.cache = cache;
-
-        /*if (typeof context.messagePayload === 'object' && context.messagePayload.action != null) {
-            this.payload = context.messagePayload
-        }*/
+        this.context = context;
+        this.text = context.text || '';
 
         this.peerId = context.chat.id;
         this.userId = context.from?.id || 0;
@@ -59,13 +52,13 @@ export class TgCommandContext extends AbstractCommandContext {
             reply_markup: convertAbstractToTg(options.keyboard)
         });
 
-        this.lastSentMessageId = result.id;
+        this.messageId = result.id;
 
         return result.id.toString();
     }
 
     public async editOrSend(text: string, options: MessageOptions = {}): Promise<boolean> {
-        if (!this.lastSentMessageId) {
+        if (!this.messageId) {
             const result = await this.send(text, options);
 
             return Boolean(result);
@@ -80,8 +73,8 @@ export class TgCommandContext extends AbstractCommandContext {
         }
 
         const result = await this.context.editMessageText(text, {
-            message_id: this.lastSentMessageId,
-            
+            message_id: this.messageId,
+
             ...(!options.disableHtmlParser ? {
                 parse_mode: 'HTML',
             } : {}),
@@ -131,9 +124,13 @@ export class TgCommandContext extends AbstractCommandContext {
         return result.id.toString();
     }
 
-    public async delete(id: string): Promise<boolean> {
+    public async delete(id?: string): Promise<boolean> {
+        if (!id && !this.messageId) {
+            throw new Error('the are no message to delete');
+        }
+
         return this.context.delete({
-            message_id: Number(id)
+            message_id: id ? Number(id) : this.messageId
         })
     }
 
@@ -144,18 +141,16 @@ export class TgCommandContext extends AbstractCommandContext {
 }
 
 export class TgCallbackContext extends AbstractCallbackContext {
-    public messageId: any;
-    public payload: any;
     public peerId: number;
     public userId: number;
+    public messageId: number;
+    public parsedPayload?: ParsedPayload;
 
     private context: CallbackQueryContext;
     private messageContext: MessageContext;
 
-    private cache: ServiceStorage;
-
-    constructor(context: CallbackQueryContext, app: App, input: BotInput, cache: ServiceStorage) {
-        super(app, input)
+    constructor(bot: TgBot, context: CallbackQueryContext) {
+        super(bot);
 
         this.context = context;
 
@@ -166,19 +161,10 @@ export class TgCallbackContext extends AbstractCallbackContext {
         this.messageContext = context.message;
         this.messageId = context.message.id;
 
-        this.cache = cache;
-
-        /*if (typeof context.messagePayload === 'object' && context.messagePayload.action != null) {
-            this.payload = context.messagePayload
-        }*/
-
         this.peerId = context.message!.chat.id;
         this.userId = context.from.id;
 
-        const json = parsePayload(context.data);
-        if (json) {
-            this.payload = json.data;
-        }
+        this.parsedPayload = parsePayload(context.data);
     }
 
     get isChat(): boolean {
@@ -215,7 +201,7 @@ export class TgCallbackContext extends AbstractCallbackContext {
         return result.id.toString();
     }
 
-    public async edit(text: string, options: MessageOptions = {}) {
+    public async editOrSend(text: string, options: MessageOptions = {}) {
         await this.messageContext.editMessageText(text, {
             ...(!options.disableHtmlParser ? {
                 parse_mode: 'HTML',
@@ -270,6 +256,6 @@ export class TgCallbackContext extends AbstractCallbackContext {
 
     public async isChatAdmin(): Promise<boolean> {
         return false;
-        //TO DO
+        // TODO
     }
 }

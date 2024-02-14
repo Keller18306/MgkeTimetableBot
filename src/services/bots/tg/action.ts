@@ -1,7 +1,6 @@
 import { MessageContext } from "puregram";
-import { App } from "../../../app";
-import { AbstractAction, AbstractCommandContext, ServiceStorage } from "../abstract";
-import { BotInput } from "../input";
+import { TgBot } from ".";
+import { AbstractAction, AbstractCommandContext } from "../abstract";
 import { TgChat } from "./chat";
 import { TgCommandContext } from "./context";
 
@@ -10,11 +9,11 @@ export class TgBotAction extends AbstractAction {
     protected chat: TgChat;
     protected _context: AbstractCommandContext;
 
-    constructor(context: MessageContext, chat: TgChat, app: App, input: BotInput, cache: ServiceStorage) {
+    constructor(bot: TgBot, context: MessageContext, chat: TgChat) {
         super();
         this.context = context;
         this.chat = chat;
-        this._context = new TgCommandContext(context, app, input, cache);
+        this._context = new TgCommandContext(bot, context);
     }
 
     async deleteLastMsg() {

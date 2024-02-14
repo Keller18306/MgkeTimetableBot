@@ -1,16 +1,23 @@
-import { raspCache } from "../../parser";
+import { z } from "zod";
+import { AppServiceName } from "../../../app";
 import { WeekIndex } from "../../../utils";
 import { ImageFile } from "../../image/builder";
+import { raspCache } from "../../parser";
 import { AbstractCallback, CbHandlerParams } from "../abstract";
 
 export default class extends AbstractCallback {
     public action: string = 'image';
+    public requireServices: AppServiceName[] = ['image'];
 
     async handler({ context }: CbHandlerParams) {
-        const [type, value] = context.payload;
-        if (!type || !value) return;
+        const [type, value, weekIndex] = z.tuple([
+            z.enum(['g', 'group', 't', 'teacher']),
+            z.coerce.string(),
+            z.number().int().default(() => {
+                return WeekIndex.getRelevant().valueOf();
+            })
+        ]).parse(context.payload);
 
-        const weekIndex: number = context.payload[2] || WeekIndex.getRelevant().valueOf();
         const weekBounds = WeekIndex.fromWeekIndexNumber(weekIndex).getWeekDayIndexRange();
         const archive = this.app.getService('timetable');
 

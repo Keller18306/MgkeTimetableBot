@@ -1,41 +1,36 @@
 import { ContextDefaultState, MessageContext, MessageEventContext, VK, getRandomId } from "vk-io";
+import { VkBot } from ".";
 import { config } from "../../../../config";
-import { App } from "../../../app";
-import { parsePayload } from "../../../utils";
+import { ParsedPayload, parsePayload } from "../../../utils";
 import { ImageFile } from "../../image/builder";
-import { AbstractCallbackContext, AbstractCommandContext, MessageOptions, ServiceStorage } from "../abstract";
-import { BotInput } from "../input";
+import { AbstractCallbackContext, AbstractCommandContext, MessageOptions } from "../abstract";
 import { convertAbstractToVK } from "./keyboard";
 
 export class VkCommandContext extends AbstractCommandContext {
     public text: string;
-    public payload?: any;
+    public parsedPayload?: ParsedPayload;
     public peerId: number;
     public userId: number;
 
-    protected lastSentMessageId?: number;
+    public messageId?: number;
 
     private context: MessageContext<ContextDefaultState>;
     private vk: VK;
-    private cache: ServiceStorage;
 
     private _isAdmin: boolean | undefined;
 
-    constructor(vk: VK, context: MessageContext<ContextDefaultState>, app: App, input: BotInput, cache: ServiceStorage, text?: string) {
-        super(app, input);
+    constructor(bot: VkBot, context: MessageContext<ContextDefaultState>, text?: string) {
+        super(bot);
 
-        this.vk = vk;
+        this.vk = bot.vk;
         this.context = context;
         this.text = text || context.text || '';
-        this.cache = cache;
 
         this.peerId = context.peerId;
         this.userId = context.senderId;
+        this.messageId = context.conversationMessageId;
 
-        const json = parsePayload(context.messagePayload);
-        if (json) {
-            this.payload = json.data;
-        }
+        this.parsedPayload = parsePayload(context.messagePayload);
     }
 
     get isChat(): boolean {
@@ -52,13 +47,13 @@ export class VkCommandContext extends AbstractCommandContext {
             keyboard: convertAbstractToVK(options.keyboard)
         });
 
-        this.lastSentMessageId = res.id;
+        this.messageId = res.id;
 
         return res.id.toString();
     }
 
     public async editOrSend(text: string, options: MessageOptions = {}): Promise<boolean> {
-        if (!this.lastSentMessageId) {
+        if (!this.messageId) {
             const result = await this.send(text, options);
 
             return Boolean(result);
@@ -68,7 +63,7 @@ export class VkCommandContext extends AbstractCommandContext {
         if (typeof reply_to === 'string') reply_to = Number(reply_to);
 
         const res = await this.vk.api.messages.edit({
-            message_id: this.lastSentMessageId,
+            message_id: this.messageId,
             peer_id: this.peerId,
             message: text,
             disable_mentions: options.disable_mentions,
@@ -132,32 +127,27 @@ export class VkCommandContext extends AbstractCommandContext {
 }
 
 export class VkCallbackContext extends AbstractCallbackContext {
-    public messageId: any;
-    public payload: any;
     public peerId: number;
     public userId: number;
+    public messageId: number;
+    public parsedPayload?: ParsedPayload;
 
     private context: MessageEventContext<ContextDefaultState>;
     private vk: VK;
-    private cache: ServiceStorage;
 
     private _isAdmin: boolean | undefined;
 
-    constructor(vk: VK, context: MessageEventContext<ContextDefaultState>, app: App, input: BotInput, cache: ServiceStorage, text?: string) {
-        super(app, input);
+    constructor(bot: VkBot, context: MessageEventContext<ContextDefaultState>) {
+        super(bot);
 
-        this.vk = vk;
-        this.messageId = context.conversationMessageId;
+        this.vk = bot.vk;
         this.context = context;
-        this.cache = cache;
 
         this.peerId = context.peerId;
         this.userId = context.senderId;
+        this.messageId = context.conversationMessageId;
 
-        const json = parsePayload(context.eventPayload);
-        if (json) {
-            this.payload = json.data;
-        }
+        this.parsedPayload = parsePayload(context.eventPayload);
     }
 
     get isChat(): boolean {
@@ -195,12 +185,12 @@ export class VkCallbackContext extends AbstractCallbackContext {
         return res.toString();
     }
 
-    public async edit(text: string, options: MessageOptions = {}): Promise<boolean> {
+    public async editOrSend(text: string, options: MessageOptions = {}): Promise<boolean> {
         let reply_to: number | string | undefined = options.reply_to;
         if (typeof reply_to === 'string') reply_to = Number(reply_to);
 
         const res = await this.vk.api.messages.edit({
-            conversation_message_id: this.messageId,
+            conversation_message_id: this.context.conversationMessageId,
             peer_id: this.peerId,
             message: text,
             disable_mentions: options.disable_mentions,

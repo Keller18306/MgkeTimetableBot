@@ -24,11 +24,11 @@ export abstract class AbstractBot {
     protected abstract _getAcceptKeyParams(context: AbstractCommandContext): InputRequestKey;
     public abstract getChat(peerId: number | string): AbstractChat;
     public abstract event: AbstractBotEventListener;
-    
+
     protected readonly acceptTool: RequestKey = new RequestKey(config.encrypt_key);
-    protected readonly input: BotInput = new BotInput();
-    protected readonly cache: ServiceStorage;
-    protected readonly app: App;
+    public readonly input: BotInput = new BotInput();
+    public readonly cache: ServiceStorage;
+    public readonly app: App;
 
     public service: BotServiceName;
 
@@ -42,7 +42,25 @@ export abstract class AbstractBot {
         return this.app.getService('bot');
     }
 
-    protected async handleMessage(cmd: AbstractCommand | null, handlerParams: CmdHandlerParams, options: HandleMessageOptions = {}) {
+    private getCommand(context: AbstractCommandContext, chat: AbstractChat): AbstractCommand | null {
+        let cmd: AbstractCommand | null = null;
+
+        if (context.parsedPayload) {
+            cmd = this.getBotService().searchCommandByPayload(context.parsedPayload, chat.scene);
+        }
+
+        if (!cmd) {
+            cmd = this.getBotService().searchCommandByMessage(context.text, chat.scene);
+        }
+
+        return cmd;
+    }
+
+    private getCallback(context: AbstractCallbackContext): AbstractCallback | null {
+        return this.getBotService().getCallbackByPayload(context.parsedPayload);
+    }
+
+    protected async handleMessage(handlerParams: CmdHandlerParams, options: HandleMessageOptions = {}) {
         const { chat, context, keyboard } = handlerParams;
         const { selfMention } = Object.assign({}, {
             selfMention: true
@@ -50,30 +68,35 @@ export abstract class AbstractBot {
 
         try {
             if (!chat.allowSendMess) {
-                chat.allowSendMess = true
+                chat.allowSendMess = true;
             }
 
             if (chat.accepted && !chat.eula) {
                 chat.eula = true;
-
+                
                 context.send(defines.eula).catch(() => { });
             }
-        
+            
             if (chat.accepted && chat.needUpdateButtons) {
                 chat.needUpdateButtons = false;
                 chat.scene = null;
-
+                
                 context.send('Клавиатура была принудительно пересоздана (обновлена)', {
                     keyboard: keyboard.MainMenu
                 }).catch(() => { });
             }
-
+            
+            const cmd = this.getCommand(context, chat);
             if (!cmd) {
                 if (selfMention || !context.isChat) {
                     if (chat.accepted) {
-                        return this.notFound(chat, context, keyboard.MainMenu, selfMention)
+                        if (this.input.has(String(context.peerId))) {
+                            return this.input.resolve(String(context.peerId), context.text, 'message');
+                        }
+
+                        return this.notFound(chat, context, keyboard.MainMenu, selfMention);
                     } else {
-                        return this.notAccepted(context)
+                        return this.notAccepted(context);
                     }
                 }
 
@@ -83,7 +106,7 @@ export abstract class AbstractBot {
             if (cmd.acceptRequired && !chat.accepted) {
                 if (context.isChat && !selfMention) return;
 
-                return this.notAccepted(context)
+                return this.notAccepted(context);
             }
 
             chat.lastMsgTime = Date.now();
@@ -93,24 +116,24 @@ export abstract class AbstractBot {
                     return this.notFound(chat, context, keyboard.MainMenu, selfMention);
                 }
 
-                await cmd.handler(handlerParams)
+                await cmd.handler(handlerParams);
             } catch (err: any) {
                 if (err instanceof InputCancel) return;
                 console.error(cmd.id, context.peerId, err);
 
-                this.handleMessageError(cmd, context, err)
+                this.handleMessageError(cmd, context, err);
             }
         } catch (err: any) {
             console.error('sys send error', context.peerId, err);
         }
     }
 
-    protected async handleCallback(cb: AbstractCallback | null, handlerParams: CbHandlerParams) {
+    protected async handleCallback(handlerParams: CbHandlerParams) {
         const { chat, context } = handlerParams;
-        
+
         try {
             if (!chat.allowSendMess) {
-                chat.allowSendMess = true
+                chat.allowSendMess = true;
             }
 
             if (chat.accepted && !chat.eula) {
@@ -118,6 +141,7 @@ export abstract class AbstractBot {
                 context.send(defines.eula).catch(() => { });
             }
 
+            const cb = this.getCallback(context);
             if (!cb) {
                 return;
             }
@@ -147,7 +171,12 @@ export abstract class AbstractBot {
 
     protected handleMessageError(cmd: AbstractCommand | AbstractCallback, context: AbstractCommandContext | AbstractCallbackContext, err: Error) {
         const name = (cmd as any).__proto__.__proto__.constructor.name.replace(/^Abstract/, '').toLowerCase();
-        context.send(`Произошла ошибка во время выполнения ${name}#${cmd.id}: ${err.toString()}`).catch(() => { })
+
+        if (context instanceof AbstractCallbackContext) {
+            context.answer('Произошла ошибка').catch(() => { })
+        }
+
+        context.send(`🚫 Произошла ошибка во время выполнения ${name}#${cmd.id}: ${err.toString()}`).catch(() => { })
     }
 
     protected notFound(chat: AbstractChat, context: AbstractCommandContext, keyboard: any, selfMention: boolean = true) {

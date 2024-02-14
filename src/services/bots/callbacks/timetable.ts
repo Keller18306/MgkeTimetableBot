@@ -1,5 +1,6 @@
-import { raspCache } from "../../parser";
+import { z } from "zod";
 import { WeekIndex, removePastDays } from "../../../utils";
+import { raspCache } from "../../parser";
 import { AbstractCallback, CbHandlerParams } from "../abstract";
 
 export default class extends AbstractCallback {
@@ -8,26 +9,30 @@ export default class extends AbstractCallback {
     handler(params: CbHandlerParams) {
         const { context, chat }: CbHandlerParams = params;
 
-        const type: string = context.payload[0];
-        const value: string | number = context.payload[1];
-        const weekIndex: number = context.payload[2] || WeekIndex.getRelevant().valueOf();
-        const hidePastDays: boolean = context.payload[3] !== undefined ? context.payload[3] : chat.hidePastDays;
-        const showHeader: boolean = Boolean(context.payload[4]);
+        const [type, value, weekIndex, hidePastDays, showHeader] = z.tuple([
+            z.enum(['g', 'group', 't', 'teacher']),
+            z.coerce.string(),
+            z.number().int().default(() => {
+                return WeekIndex.getRelevant().valueOf();
+            }),
+            z.boolean().default(chat.hidePastDays),
+            z.boolean().default(true)
+        ]).parse(context.payload);
 
         if (['g', 'group'].includes(type)) {
             return this.groupRasp(params, value, weekIndex, hidePastDays, showHeader);
         }
 
         if (['t', 'teacher'].includes(type)) {
-            return this.teacherRasp(params, String(value), weekIndex, hidePastDays, showHeader);
+            return this.teacherRasp(params, value, weekIndex, hidePastDays, showHeader);
         }
 
-        return context.edit('unknown type');
+        return context.editOrSend('unknown type');
     }
 
     private async groupRasp({ context, scheduleFormatter, keyboard }: CbHandlerParams, value: string | number, weekIndex: number, hidePastDays: boolean, showHeader: boolean) {
         const group = raspCache.groups.timetable[value];
-        if (group === undefined) return context.edit('Данной учебной группы не существует');
+        if (group === undefined) return context.editOrSend('Данной учебной группы не существует');
 
         const relevantWeekIndex: number = WeekIndex.getRelevant().valueOf();
         const weekBounds = WeekIndex.fromWeekIndexNumber(weekIndex).getWeekDayIndexRange();
@@ -41,14 +46,14 @@ export default class extends AbstractCallback {
             showHeader, days
         });
 
-        return context.edit(message, {
+        return context.editOrSend(message, {
             keyboard: keyboard.WeekControl('group', value, weekIndex, hidePastDays, showHeader)
         });
     }
 
     private async teacherRasp({ context, scheduleFormatter, keyboard }: CbHandlerParams, value: string, weekIndex: number, hidePastDays: boolean, showHeader: boolean) {
         const teacher = raspCache.teachers.timetable[value];
-        if (teacher === undefined) return context.edit('Данного преподавателя не существует');
+        if (teacher === undefined) return context.editOrSend('Данного преподавателя не существует');
 
         const relevantWeekIndex: number = WeekIndex.getRelevant().valueOf();
         const weekBounds = WeekIndex.fromWeekIndexNumber(weekIndex).getWeekDayIndexRange();
@@ -62,7 +67,7 @@ export default class extends AbstractCallback {
             showHeader, days
         });
 
-        return context.edit(message, {
+        return context.editOrSend(message, {
             keyboard: keyboard.WeekControl('teacher', value, weekIndex, hidePastDays, showHeader)
         });
     }
