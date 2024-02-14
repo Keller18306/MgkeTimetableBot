@@ -21,6 +21,9 @@
             "./src/@types/viber-bot"
         ]
     },
+    "ts-node": {
+        "files": true
+    },
     "exclude": [
         "build",
         "node_modules",
