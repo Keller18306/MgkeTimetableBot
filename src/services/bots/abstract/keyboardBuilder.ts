@@ -10,11 +10,17 @@ export type KeyboardButton = {
     text: string,
     payload?: any,
     color?: KeyboardColor
-}
+} & ({
+    type?: ButtonType.Text | ButtonType.Callback,
+} | {
+    type: ButtonType.Url,
+    url: string
+})
 
 export enum ButtonType {
     Text,
-    Callback
+    Callback,
+    Url
 }
 
 export class KeyboardBuilder {

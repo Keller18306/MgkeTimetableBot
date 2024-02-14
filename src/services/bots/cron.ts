@@ -2,6 +2,7 @@ import { CronJob } from "cron";
 import { config } from "../../../config";
 import { BotEventController } from "./events/controller";
 import { App } from "../../app";
+import { CronDay } from "./events";
 
 export class BotCron {
     private list: CronJob[] = [];
@@ -9,21 +10,27 @@ export class BotCron {
     constructor(private app: App) { }
 
     public run() {
-        Object.entries(config.timetable.weekdays).forEach(([index, times]) => {
-            this.register(Number(index), times, '1-5')
+        Object.entries(config.timetable.weekdays).forEach(([index, times], i, array) => {
+            this.register({
+                index: Number(index),
+                latest: array.length === i + 1
+            }, times, '1-5')
         })
 
-        Object.entries(config.timetable.saturday).forEach(([index, times]) => {
-            this.register(Number(index), times, '6')
+        Object.entries(config.timetable.saturday).forEach(([index, times], i, array) => {
+            this.register({
+                index: Number(index),
+                latest: array.length === i + 1
+            }, times, '6')
         })
     }
 
-    public async execute(index: number) {
+    public async execute(data: CronDay) {
         const events = this.app.getService('bot').events;
 
         return Promise.all([
-            events.cronGroupDay({ index }),
-            events.cronTeacherDay({ index })
+            events.cronGroupDay(data),
+            events.cronTeacherDay(data)
         ]);
     }
 
@@ -35,7 +42,7 @@ export class BotCron {
         this.list = []
     }
 
-    private register(index: number, times: [[string, string], [string, string]], weekRange: string) {
+    private register(data: CronDay, times: [[string, string], [string, string]], weekRange: string) {
         const time: string = times[1][1];
         const [hour, min] = time.split(':', 2);
 
@@ -47,7 +54,7 @@ export class BotCron {
             Months: 0-11 (Jan-Dec)
             Day of Week: 0-6 (Sun-Sat)
         */
-        const job = new CronJob(`0 ${min} ${hour} * * ${weekRange}`, this.execute.bind(this, index), null, true);
+        const job = new CronJob(`0 ${min} ${hour} * * ${weekRange}`, this.execute.bind(this, data), null, true);
         job.start();
 
         this.list.push(job);

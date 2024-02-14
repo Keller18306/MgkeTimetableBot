@@ -16,7 +16,7 @@ export default class extends AbstractCommand {
                     return context.send('index is not a number');
                 }
 
-                await this.app.getService('bot').cron.execute(index - 1);
+                await this.app.getService('bot').cron.execute({ index: index - 1 });
 
                 return context.send('ok');
             default:

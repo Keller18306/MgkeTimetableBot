@@ -1,11 +1,11 @@
-import { AbstractBotEventListener, ProgressCallback } from ".";
+import { AbstractBotEventListener, CronDay, ProgressCallback } from ".";
 import { App } from "../../../app";
 import { DayIndex } from "../../../utils";
 import { GroupDayEvent, TeacherDayEvent } from "../../parser";
 import { raspCache, saveCache } from "../../parser/raspCache";
-import { ChatMode, Service } from "../abstract";
+import { BotServiceName, ChatMode } from "../abstract";
 
-export type ServiceProgressCallback = (data: { service: Service } & Parameters<ProgressCallback>[0]) => void;
+export type ServiceProgressCallback = (data: { service: BotServiceName } & Parameters<ProgressCallback>[0]) => void;
 
 export class BotEventController {
     private serviceList: AbstractBotEventListener[] = [];
@@ -31,7 +31,7 @@ export class BotEventController {
         this.serviceList.push(service);
     }
 
-    public async cronGroupDay(data: { index: number }) {
+    public async cronGroupDay(data: CronDay) {
         for (const service of this.serviceList) {
             await service.cronGroupDay(data);
         }
@@ -39,7 +39,7 @@ export class BotEventController {
         await this.runDeferredFunctions();
     }
 
-    public async cronTeacherDay(data: { index: number }) {
+    public async cronTeacherDay(data: CronDay) {
         for (const service of this.serviceList) {
             await service.cronTeacherDay(data);
         }

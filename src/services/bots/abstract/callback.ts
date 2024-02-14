@@ -9,7 +9,7 @@ import { TgCallbackContext } from '../tg/context'
 import { VkChat } from "../vk/chat"
 import { VkCallbackContext } from '../vk/context'
 import { AbstractChat } from "./chat"
-import { Service } from "./command"
+import { BotServiceName } from "./command"
 import { AbstractCallbackContext } from './context'
 
 export type CbHandlerParams = {
@@ -17,7 +17,7 @@ export type CbHandlerParams = {
     realContext: any,
     chat: AbstractChat,
     keyboard: Keyboard,
-    service: Service,
+    service: BotServiceName,
     scheduleFormatter: ScheduleFormatter,
     cache: ServiceStorage
 } & ({
@@ -52,7 +52,7 @@ export abstract class AbstractCallback {
     * Список сервисов ботов, в которых команда будет работать
     * (если undefined, во всех серисах)
     **/
-    public services?: Service[];
+    public services?: BotServiceName[];
 
     /**
     * Список сервисов, необходимые для работы команды

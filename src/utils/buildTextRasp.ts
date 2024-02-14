@@ -1,8 +1,8 @@
 import { config } from '../../config';
 import { App } from '../app';
-import { RaspCache } from '../services/parser/raspCache';
 import { AbstractChat } from '../services/bots/abstract/chat';
-import { Service } from '../services/bots/abstract/command';
+import { BotServiceName } from '../services/bots/abstract/command';
+import { RaspCache } from '../services/parser/raspCache';
 import { GroupDay, TeacherDay } from '../services/timetable/types';
 import { ScheduleFormatter } from './formatters/abstract';
 import { DefaultScheduleFormatter } from './formatters/default';
@@ -14,7 +14,7 @@ export const SCHEDULE_FORMATTERS = [
     DefaultScheduleFormatter, VisualScheduleFormatter, LitolaxScheduleFormatter
 ];
 
-export function createScheduleFormatter(service: Service, app: App, raspCache: RaspCache, chat: AbstractChat): ScheduleFormatter {
+export function createScheduleFormatter(service: BotServiceName, app: App, raspCache: RaspCache, chat: AbstractChat): ScheduleFormatter {
     if (!chat) {
         return new DefaultScheduleFormatter(service, app, raspCache, chat);
     }

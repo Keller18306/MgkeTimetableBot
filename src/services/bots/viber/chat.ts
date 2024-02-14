@@ -1,6 +1,6 @@
 import { config } from "../../../../config";
 import db from "../../../db";
-import { AbstractChat, DbChat, Service } from "../abstract";
+import { AbstractChat, BotServiceName, DbChat } from "../abstract";
 import { Theme } from "./keyboardBuilder";
 
 export type ViberDb = DbChat & {
@@ -29,7 +29,7 @@ class ViberChat extends AbstractChat {
     public peerId: string;
 
     public db_table: string = 'viber_bot_chats';
-    public readonly service: Service = 'viber';
+    public readonly service: BotServiceName = 'viber';
     protected columns: string[] = [
         'theme', 'lastUpdateDI', 'name', 'device_os', 'device_type', 'viber_version'
     ];

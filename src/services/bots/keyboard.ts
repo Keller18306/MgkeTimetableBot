@@ -17,6 +17,10 @@ export class Keyboard {
         private context?: AbstractContext
     ) { }
 
+    public getKeyboardBuilder(keyboardName: string, inline?: boolean): KeyboardBuilder {
+        return new KeyboardBuilder(keyboardName, inline);
+    }
+
     public get MainMenu(): KeyboardBuilder {
         const keyboard: KeyboardBuilder = new KeyboardBuilder('MainMenu');
 

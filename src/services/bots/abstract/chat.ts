@@ -1,4 +1,4 @@
-import { Service } from ".";
+import { BotServiceName } from ".";
 import { config } from "../../../../config";
 import { addNewBotUser, getBotUser, getChatLessonAliases, updateChatOptionsKeyByPeerId, updateKeyInTableByPeerId } from "../../../db";
 import { arrayUnique } from "../../../utils";
@@ -114,7 +114,7 @@ const SEARCH_HISTORY_LENGTH: number = 3;
 abstract class AbstractChat {
     public abstract peerId: number | string;
 
-    public abstract readonly service: Service;
+    public abstract readonly service: BotServiceName;
     public abstract db_table: string;
     protected _cache: { [key: string]: any } = {};
     protected _aliasesCache?: { [key: string]: any } = undefined;

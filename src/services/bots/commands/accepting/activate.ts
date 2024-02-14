@@ -1,5 +1,5 @@
 import { AppServiceName } from "../../../../app";
-import { AbstractCommand, CmdHandlerParams, Service as BotService } from "../../abstract";
+import { AbstractCommand, BotServiceName as BotService, CmdHandlerParams } from "../../abstract";
 
 //const activateTool = new ActivateKey(config.encrypt_key)
 

@@ -1,10 +1,10 @@
-import { AbstractCommand, CmdHandlerParams, Service } from "../../abstract";
+import { AbstractCommand, BotServiceName, CmdHandlerParams } from "../../abstract";
 
 export default class extends AbstractCommand {
     public regexp = /^(!|\/)deleteUserMsg$/i
     public payload = null;
 
-    public services: Service[] = ['vk']
+    public services: BotServiceName[] = ['vk']
 
     async handler({ context, chat, keyboard }: CmdHandlerParams) {
         if (!chat.deleteUserMsg && !context.isChat) return context.send('Это недоступно в ЛС бота')

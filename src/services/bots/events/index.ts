@@ -7,7 +7,7 @@ import { raspCache, saveCache } from "../../parser/raspCache";
 import { GroupDay, TeacherDay } from "../../timetable/types";
 import { MessageOptions } from "../abstract";
 import { AbstractChat, ChatMode, DbChat } from "../abstract/chat";
-import { Service } from "../abstract/command";
+import { BotServiceName } from "../abstract/command";
 
 function getDayPhrase(day: string, nextDayPhrase: string = 'день'): string {
     if (WeekIndex.fromStringDate(day).isFutureWeek()) {
@@ -32,9 +32,14 @@ export type ProgressCallback = (data: {
     count: number
 }) => void
 
+export type CronDay = {
+    index: number,
+    latest?: boolean
+}
+
 export abstract class AbstractBotEventListener<T extends AbstractChat = AbstractChat> {
     protected abstract _tableName: string;
-    public readonly abstract service: Service;
+    public readonly abstract service: BotServiceName;
 
     constructor(protected app: App) { }
 
@@ -83,20 +88,22 @@ export abstract class AbstractBotEventListener<T extends AbstractChat = Abstract
         return chats;
     }
 
-    public async cronGroupDay({ index }: { index: number }) {
-        const groups: string[] = Object.entries(raspCache.groups.timetable).map(([group, { days }]): [string, GroupDay | undefined] => {
-            const todayDay = days.find((day) => {
-                return DayIndex.fromStringDate(day.day).isToday();
+    public async cronGroupDay({ index, latest }: CronDay) {
+        const groups: string[] = Object.entries(raspCache.groups.timetable)
+            .map(([group, { days }]): [string, GroupDay | undefined] => {
+                const todayDay = days.find((day) => {
+                    return DayIndex.fromStringDate(day.day).isToday();
+                });
+
+                return [group, todayDay];
+            }).filter(([, day]): boolean => {
+                if (!day) return false;
+
+                return (latest ? (day.lessons.length >= index + 1) : (day.lessons.length === index + 1)) ||
+                    (day.lessons.length === 0 && index + 1 === config.parser.lessonIndexIfEmpty);
+            }).map(([group]): string => {
+                return group;
             });
-
-            return [group, todayDay];
-        }).filter(([, day]): boolean => {
-            if (!day) return false;
-
-            return (day.lessons.length === index + 1) || (day.lessons.length === 0 && index + 1 === config.parser.lessonIndexIfEmpty);
-        }).map(([group]): string => {
-            return group;
-        });
 
         const chats: T[] = this.getGroupsChats(groups);
         if (chats.length === 0) return;
@@ -196,20 +203,22 @@ export abstract class AbstractBotEventListener<T extends AbstractChat = Abstract
         }
     }
 
-    public async cronTeacherDay({ index }: { index: number }) {
-        const teachers: string[] = Object.entries(raspCache.teachers.timetable).map(([teacher, { days }]): [string, TeacherDay | undefined] => {
-            const todayDay = days.find((day) => {
-                return DayIndex.fromStringDate(day.day).isToday();
+    public async cronTeacherDay({ index, latest }: CronDay) {
+        const teachers: string[] = Object.entries(raspCache.teachers.timetable)
+            .map(([teacher, { days }]): [string, TeacherDay | undefined] => {
+                const todayDay = days.find((day) => {
+                    return DayIndex.fromStringDate(day.day).isToday();
+                });
+
+                return [teacher, todayDay];
+            }).filter(([, day]): boolean => {
+                if (!day) return false;
+
+                return (latest ? (day.lessons.length >= index + 1) : (day.lessons.length === index + 1)) ||
+                    (day.lessons.length === 0 && index + 1 === config.parser.lessonIndexIfEmpty);
+            }).map(([teacher]): string => {
+                return teacher;
             });
-
-            return [teacher, todayDay];
-        }).filter(([, day]): boolean => {
-            if (!day) return false;
-
-            return (day.lessons.length === index + 1) || (day.lessons.length === 0 && index + 1 === config.parser.lessonIndexIfEmpty);
-        }).map(([teacher]): string => {
-            return teacher;
-        });
 
         const chats: T[] = this.getTeachersChats(teachers);
         if (chats.length === 0) return;

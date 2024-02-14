@@ -1,5 +1,5 @@
 import { Keyboard, KeyboardButton } from 'viber-bot';
-import { KeyboardBuilder, KeyboardColor } from '../abstract';
+import { ButtonType, KeyboardBuilder, KeyboardColor } from '../abstract';
 import { KeyboardBuilder as ViberKeyboardBuilder } from './keyboardBuilder';
 
 function convertColor(keyboard: ViberKeyboardBuilder, color?: KeyboardColor): string {
@@ -28,18 +28,26 @@ export function convertAbstractToViber(aKeyboard?: KeyboardBuilder): Keyboard | 
         for (const button of row) {
             let data: KeyboardButton;
 
-            if (button.payload) {
+            if (button.type === ButtonType.Url) {
                 data = {
+                    ActionType: 'open-url',
+                    ActionBody: button.url,
+                    Text: button.text
+                }
+            } else if (button.payload) {
+                data = {
+                    ActionType: 'reply',
                     ActionBody: 'payload:' + JSON.stringify(button.payload),
-                    Text: button.text,
-                    BgColor: convertColor(keyboard, button.color)
+                    Text: button.text
                 }
             } else {
                 data = {
-                    ActionBody: button.text,
-                    BgColor: convertColor(keyboard, button.color)
+                    ActionType: 'reply',
+                    ActionBody: button.text
                 }
             }
+
+            data.BgColor = convertColor(keyboard, button.color);
 
             keyboard.add(data);
         }

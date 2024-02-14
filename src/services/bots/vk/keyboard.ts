@@ -42,6 +42,12 @@ export function convertAbstractToVK(aKeyboard?: KeyboardBuilder): VKKeyboardBuil
                     color: convertColor(button.color),
                     payload: button.payload
                 });
+            } else if (button.type === ButtonType.Url) {
+                keyboard.urlButton({
+                    label: button.text,
+                    url: button.url,
+                    payload: button.payload
+                })
             }
         }
 

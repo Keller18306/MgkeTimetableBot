@@ -1,7 +1,6 @@
-import { App } from "../../app";
+import { App, AppServiceName } from "../../app";
 import { hints } from "../../defines";
 import { AbstractChat } from "../../services/bots/abstract/chat";
-import { Service } from "../../services/bots/abstract/command";
 import { RaspCache, RaspEntryCache } from "../../services/parser/raspCache";
 import { GroupDay, GroupLesson, GroupLessonExplain, Groups, TeacherDay, TeacherLesson, TeacherLessonExplain, Teachers } from "../../services/timetable/types";
 import { randArray } from "../rand";
@@ -41,7 +40,7 @@ export abstract class ScheduleFormatter {
     public static readonly label: string;
 
     constructor(
-        private service: Service,
+        private service: AppServiceName,
         private app: App,
         protected raspCache: RaspCache,
         protected chat?: AbstractChat

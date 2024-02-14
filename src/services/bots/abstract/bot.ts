@@ -9,7 +9,7 @@ import { BotInput, InputCancel } from "../input";
 import { StaticKeyboard } from "../keyboard";
 import { AbstractCallback, CbHandlerParams } from "./callback";
 import { AbstractChat } from "./chat";
-import { AbstractCommand, CmdHandlerParams, Service } from "./command";
+import { AbstractCommand, BotServiceName, CmdHandlerParams } from "./command";
 import { AbstractCallbackContext, AbstractCommandContext } from "./context";
 
 export type HandleMessageOptions = {
@@ -30,9 +30,9 @@ export abstract class AbstractBot {
     protected readonly cache: ServiceStorage;
     protected readonly app: App;
 
-    public service: Service;
+    public service: BotServiceName;
 
-    constructor(app: App, service: Service) {
+    constructor(app: App, service: BotServiceName) {
         this.app = app;
         this.service = service;
         this.cache = new ServiceStorage(this.service);

@@ -17,7 +17,7 @@ import { AbstractChat } from './chat';
 import { AbstractCommandContext } from './context';
 import { KeyboardBuilder } from './keyboardBuilder';
 
-export type Service = 'tg' | 'vk' | 'viber' | 'alice';
+export type BotServiceName = 'tg' | 'vk' | 'viber';
 
 export type CmdHandlerParams = {
     context: AbstractCommandContext,
@@ -25,7 +25,7 @@ export type CmdHandlerParams = {
     chat: AbstractChat,
     actions: AbstractAction,
     keyboard: Keyboard,
-    service: Service,
+    service: BotServiceName,
     scheduleFormatter: ScheduleFormatter,
     cache: ServiceStorage
 } & ({
@@ -70,7 +70,7 @@ export abstract class AbstractCommand {
     * Список сервисов ботов, в которых команда будет работать
     * (если undefined, во всех серисах)
     **/
-    public services?: Service[];
+    public services?: BotServiceName[];
 
     /**
     * Список сервисов, необходимые для работы команды

@@ -1,15 +1,14 @@
 import { Bot, Message } from 'viber-bot';
-import { config } from "../../../../config";
-import { MessageOptions, Service } from '../abstract';
+import { App } from '../../../app';
+import { BotServiceName, MessageOptions } from '../abstract';
 import { AbstractBotEventListener } from "../events";
 import { Keyboard } from "../keyboard";
 import { ViberChat, ViberDb } from "./chat";
 import { convertAbstractToViber } from './keyboard';
-import { App } from '../../../app';
 
 export class ViberEventListener extends AbstractBotEventListener<ViberChat> {
     protected _tableName: string = 'viber_bot_chats';
-    public readonly service: Service = 'viber';
+    public readonly service: BotServiceName = 'viber';
 
     private bot: Bot
 

@@ -6,10 +6,17 @@ import { fromZodError } from 'zod-validation-error';
 import { config } from '../../../config';
 import { App, AppService } from '../../app';
 import { unserialize } from '../../utils';
-import { AbstractBot, AbstractChat } from '../bots/abstract';
+import { AbstractBot, AbstractChat, BotServiceName } from '../bots/abstract';
 import { GoogleUserApi } from './api';
 import { GoogleCalendar } from './calendar';
 import { GoogleUser } from './user';
+
+type AuthState = {
+    service: 'test'
+} | {
+    service: BotServiceName,
+    peerId: string | number
+}
 
 export class GoogleService implements AppService {
     private app: App;
@@ -32,6 +39,10 @@ export class GoogleService implements AppService {
         this.calendar.run();
     }
 
+    public getAuthUrl(state: AuthState): string {
+        return GoogleUserApi.getAuthUrl(state);
+    }
+
     private async oauth(request: Request<null, null, null, Partial<{ code: string }>>, response: Response): Promise<void> {
         const result = z.object({
             code: z.string({
@@ -43,7 +54,7 @@ export class GoogleService implements AppService {
                 required_error: 'State not provided'
             }).transform((data: string, ctx) => {
                 try {
-                    return unserialize(data)
+                    return unserialize(data) as AuthState
                 } catch (e: any) {
                     ctx.addIssue({
                         code: z.ZodIssueCode.custom,
@@ -93,14 +104,14 @@ export class GoogleService implements AppService {
             return;
         }
 
-        const service = this.app.getService(state.service);
+        const service: AbstractBot = this.app.getService(state.service);
         if (service instanceof AbstractBot) {
-            const chat: AbstractChat = service.getChat(state.peerId);
+            const chat: AbstractChat = service.getChat(state.peerId).resync(true);
 
             chat.google_email = info.email;
-            service.event.sendMessage(chat, 'Test');
+            service.event.sendMessage(chat, `Гугл аккаунт '${chat.google_email}' успешно привязан!`);
             
-            response.send('Service connected');
+            response.send('Аккаунт успешно привязан, можете вернуться обратно в чат');
                 
             return;
         }

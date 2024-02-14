@@ -1,6 +1,6 @@
 import { AppServiceName } from "../../../../app";
 import db from "../../../../db";
-import { AbstractCommand, CmdHandlerParams, Service } from "../../abstract";
+import { AbstractCommand, BotServiceName, CmdHandlerParams } from "../../abstract";
 
 export default class extends AbstractCommand {
     public regexp = /^(!|\/)acceptApp($|\s)/i
@@ -8,7 +8,7 @@ export default class extends AbstractCommand {
 
     public adminOnly: boolean = true;
 
-    public services: Service[] = ['vk'];
+    public services: BotServiceName[] = ['vk'];
     public requireServices: AppServiceName[] = ['vk', 'vkApp'];
 
     handler({ context }: CmdHandlerParams) {

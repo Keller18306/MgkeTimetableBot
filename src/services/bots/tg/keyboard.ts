@@ -1,5 +1,5 @@
 import { InlineKeyboardBuilder as TgInlineKeyboardBuilder, KeyboardBuilder as TgKeyboardBuilder } from 'puregram';
-import { KeyboardBuilder } from '../abstract';
+import { ButtonType, KeyboardBuilder } from '../abstract';
 
 export function convertAbstractToTg(aKeyboard?: KeyboardBuilder): TgKeyboardBuilder | TgInlineKeyboardBuilder | undefined {
     if (!aKeyboard) {
@@ -12,10 +12,18 @@ export function convertAbstractToTg(aKeyboard?: KeyboardBuilder): TgKeyboardBuil
 
         for (const row of aKeyboard.buttons) {
             for (const button of row) {
-                keyboard.textButton({
-                    text: button.text,
-                    payload: button.payload
-                });
+                if (button.type === ButtonType.Url) {
+                    keyboard.urlButton({
+                        text: button.text,
+                        url: button.url,
+                        payload: button.payload
+                    });
+                } else {
+                    keyboard.textButton({
+                        text: button.text,
+                        payload: button.payload
+                    });
+                }
             }
 
             keyboard.row()
