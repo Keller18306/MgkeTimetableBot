@@ -143,10 +143,14 @@ export abstract class AbstractBot {
 
             const cb = this.getCallback(context);
             if (!cb) {
+                await context.answer('Callback not found');
+
                 return;
             }
 
             if (cb.acceptRequired && !chat.accepted) {
+                await context.answer('Чат не подтверждён, чтобы использовать это');
+                
                 return;
             }
 
@@ -154,6 +158,8 @@ export abstract class AbstractBot {
 
             try {
                 if (!cb.preHandle(handlerParams)) {
+                    await context.answer('Вы не можете использовать это');
+
                     return;
                 }
 

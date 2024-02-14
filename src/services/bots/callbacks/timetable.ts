@@ -12,11 +12,15 @@ export default class extends AbstractCallback {
         const [type, value, weekIndex, hidePastDays, showHeader] = z.tuple([
             z.enum(['g', 'group', 't', 'teacher']),
             z.coerce.string(),
-            z.number().int().default(() => {
-                return WeekIndex.getRelevant().valueOf();
+            z.number().int().nullish().transform((arg) => {
+                if (!arg) {
+                    return WeekIndex.getRelevant().valueOf();
+                }
+
+                return arg;
             }),
-            z.boolean().default(chat.hidePastDays),
-            z.boolean().default(true)
+            z.coerce.boolean().default(Boolean(chat.hidePastDays)),
+            z.coerce.boolean().default(true)
         ]).parse(context.payload);
 
         if (['g', 'group'].includes(type)) {

@@ -265,7 +265,7 @@ export class BotService implements AppService {
             throw new Error('Could\'t reload unloaded callback by id without path')
         }
 
-        await this.loadClass(AbstractCallback, cmdRootPath, path);
+        await this.loadClass(AbstractCallback, cbRootPath, path);
     }
 
     private pathToId(rootPath: string, filePath: string) {
