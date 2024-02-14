@@ -164,6 +164,10 @@ export abstract class AbstractBot {
 
                 this.handleMessageError(cb, context, err)
             }
+
+            if (!context.callbackAnswered) {
+                await context.answer().catch(() => { });
+            }
         } catch (err: any) {
             console.error('sys send error', context.peerId, err);
         }

@@ -62,9 +62,10 @@ export abstract class AbstractContext {
 }
 
 export abstract class AbstractCommandContext extends AbstractContext {
-    public abstract text: string
+    public abstract text: string;
 }
 
 export abstract class AbstractCallbackContext extends AbstractContext {
-    public abstract answer(text: string): Promise<boolean>;
+    public abstract callbackAnswered: boolean;
+    public abstract answer(text?: string): Promise<boolean>;
 }

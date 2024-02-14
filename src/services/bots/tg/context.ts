@@ -144,6 +144,7 @@ export class TgCallbackContext extends AbstractCallbackContext {
     public peerId: number;
     public userId: number;
     public messageId: number;
+    public callbackAnswered: boolean = false;
     public parsedPayload?: ParsedPayload;
 
     private context: CallbackQueryContext;
@@ -171,7 +172,9 @@ export class TgCallbackContext extends AbstractCallbackContext {
         return this.messageContext.isChannel() || this.messageContext.isSupergroup() || this.messageContext.isGroup();
     }
 
-    public async answer(text: string): Promise<boolean> {
+    public async answer(text?: string): Promise<boolean> {
+        this.callbackAnswered = true;
+
         return this.context.answerCallbackQuery({
             text: text
         })

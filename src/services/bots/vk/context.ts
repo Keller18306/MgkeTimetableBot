@@ -130,6 +130,7 @@ export class VkCallbackContext extends AbstractCallbackContext {
     public peerId: number;
     public userId: number;
     public messageId: number;
+    public callbackAnswered: boolean = true;
     public parsedPayload?: ParsedPayload;
 
     private context: MessageEventContext<ContextDefaultState>;
@@ -154,7 +155,9 @@ export class VkCallbackContext extends AbstractCallbackContext {
         return this.context.peerId > 2e9;
     }
 
-    public async answer(text: string): Promise<boolean> {
+    public async answer(text?: string): Promise<boolean> {
+        if (!text) return false;
+
         const res = await this.context.answer({
             type: 'show_snackbar',
             text: text
