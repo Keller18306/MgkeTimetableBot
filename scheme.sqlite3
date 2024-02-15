@@ -1,5 +1,5 @@
 --
--- Файл сгенерирован с помощью SQLiteStudio v3.4.4 в чт февр. 15 03:30:42 2024
+-- Файл сгенерирован с помощью SQLiteStudio v3.4.4 в чт февр. 15 03:51:00 2024
 --
 -- Использованная кодировка текста: System
 --
@@ -128,11 +128,11 @@ CREATE TABLE google_calendars (
 
 -- Таблица: storage
 CREATE TABLE storage (
-    storage STRING NOT NULL,
-    key     STRING NOT NULL,
+    storage STRING  NOT NULL,
+    key     STRING  NOT NULL,
     value   STRING,
-    time    INT,
-    expires INT    DEFAULT (0),
+    time    INTEGER,
+    expires INTEGER DEFAULT (0),
     meta    STRING,
     UNIQUE (
         storage,
