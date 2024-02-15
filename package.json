@@ -5,7 +5,7 @@
   "main": "src/index.ts",
   "scripts": {
     "start": "ts-node .",
-    "check": "tsc --noEmit"
+    "ts-check": "tsc --noEmit"
   },
   "author": "Keller",
   "license": "MIT",
