@@ -1,5 +1,4 @@
 import db from ".";
-import { addslashes } from "../utils";
 
 export function getValueFromStorageByKey(storage: string, key: string): any {
     return db.prepare("SELECT * FROM storage WHERE `storage` = ? AND `key` = ?").get(storage, key);

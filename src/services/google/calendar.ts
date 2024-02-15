@@ -2,19 +2,19 @@ import { config } from "../../../config";
 import { App } from "../../app";
 import { DayIndex, StringDate } from "../../utils";
 import { GroupDayEvent, TeacherDayEvent } from "../parser";
-import { ServiceStorage } from "../storage";
 import { GroupDay, GroupLessonExplain, TeacherDay, TeacherLessonExplain } from "../timetable/types";
 import { GoogleServiceApi } from "./api";
 import { GoogleCalendarApi } from "./api/calendar";
+import { CalendarStorage } from "./storage";
 
 export class GoogleCalendar {
     public api: GoogleCalendarApi;
-    private cache: ServiceStorage;
+    public storage: CalendarStorage;
     private app: App;
 
     constructor(app: App) {
         this.app = app;
-        this.cache = new ServiceStorage('google_calendar');
+        this.storage = new CalendarStorage();
         this.api = new GoogleServiceApi().calendar;
     }
 
@@ -114,7 +114,7 @@ export class GoogleCalendar {
     public async resyncGroup(group: string, forceFullResync: boolean = false) {
         let fromDay: number | undefined;
         if (!forceFullResync) {
-            fromDay = this.cache.getMeta(`group_${group}`, 'lastSyncedDay');
+            fromDay = this.storage.getLastManualSyncedDay('group', group);
 
             if (fromDay) {
                 fromDay += 1;
@@ -127,14 +127,14 @@ export class GoogleCalendar {
             await this.groupDay({ group, day });
 
             const dayIndex = DayIndex.fromStringDate(day.day).valueOf();
-            this.cache.setMeta(`group_${group}`, 'lastSyncedDay', dayIndex);
+            this.storage.setLastManualSyncedDay('group', group, dayIndex)
         }
     }
 
     public async resyncTeacher(teacher: string, forceFullResync: boolean = false) {
         let fromDay: number | undefined;
         if (!forceFullResync) {
-            fromDay = this.cache.getMeta(`teacher_${teacher}`, 'lastSyncedDay');
+            fromDay = this.storage.getLastManualSyncedDay('teacher', teacher);
 
             if (fromDay) {
                 fromDay += 1;
@@ -147,7 +147,7 @@ export class GoogleCalendar {
             await this.teacherDay({ teacher, day });
 
             const dayIndex = DayIndex.fromStringDate(day.day).valueOf();
-            this.cache.setMeta(`teacher_${teacher}`, 'lastSyncedDay', dayIndex);
+            this.storage.setLastManualSyncedDay('teacher', teacher, dayIndex);
         }
     }
 
@@ -192,11 +192,9 @@ export class GoogleCalendar {
     }
 
     private async getCalendarId(type: 'teacher' | 'group', value: string | number): Promise<string> {
-        const key = `${type}_${value}`;
-
-        let cacheId: string | null = this.cache.get(key);
-        if (cacheId) {
-            return cacheId;
+        let cachedCalendarId: string | undefined;
+        if (cachedCalendarId = this.storage.getCalendarId(type, value)) {
+            return cachedCalendarId;
         }
 
         let owner: string | undefined;
@@ -206,13 +204,13 @@ export class GoogleCalendar {
             owner = 'Преподаватель';
         }
 
-        console.log('Creating calendar:', key);
-        const id = await this.api.createCalendar(`Расписание занятий (${owner} - ${value})`);
-        console.log('Created', key, id);
+        console.log('Creating calendar:', type, value);
+        const calendarId = await this.api.createCalendar(`Расписание занятий (${owner} - ${value})`);
+        console.log('Created', type, value, calendarId);
 
-        this.cache.add(key, id);
+        this.storage.saveCalendarId(type, value, calendarId);
 
-        return id;
+        return calendarId;
     }
 
     private getLessonTimeBounds({ day }: GroupDay | TeacherDay, lessonIndex: number) {
@@ -279,9 +277,6 @@ export class GoogleCalendar {
     }
 
     private getTeacherLessonInfo(lesson: TeacherLessonExplain) {
-        const title = `${lesson.group}-${lesson.lesson}`;
-
-
         const line: string[] = [];
         line.push(`<b>Предмет:</b> ${lesson.lesson}`);
         if (lesson.type) {
@@ -298,13 +293,10 @@ export class GoogleCalendar {
             line.push(`<b>Примечание:</b> ${lesson.comment}`);
         }
 
-        const description = line.join('\n');
-
-
-        const location: string | undefined = lesson.cabinet || undefined;
-
         return {
-            title, description, location
+            title: `${lesson.group}-${lesson.lesson}`,
+            description: line.join('\n'),
+            location: lesson.cabinet || undefined
         }
     }
 }

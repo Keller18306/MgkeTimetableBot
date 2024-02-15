@@ -4,8 +4,8 @@ import { ContextDefaultState, MessageContext as VkMessageContext } from 'vk-io';
 import { App, AppServiceName } from '../../../app';
 import { ScheduleFormatter } from '../../../utils/formatters/abstract';
 import { raspCache } from '../../parser';
-import { ServiceStorage } from '../../storage';
 import { Keyboard, StaticKeyboard, withCancelButton } from '../keyboard';
+import { Storage } from '../storage';
 import { TgChat } from '../tg/chat';
 import { TgCommandContext } from '../tg/context';
 import { ViberChat } from '../viber/chat';
@@ -27,7 +27,7 @@ export type CmdHandlerParams = {
     keyboard: Keyboard,
     service: BotServiceName,
     scheduleFormatter: ScheduleFormatter,
-    cache: ServiceStorage
+    cache: Storage
 } & ({
     service: 'vk',
     context: VkCommandContext,

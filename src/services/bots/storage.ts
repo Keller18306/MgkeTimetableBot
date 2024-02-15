@@ -1,6 +1,6 @@
-import { addValueIntoStorageByKey, getValueFromStorageByKey, updateMetaStorageByKey } from "../db";
+import { addValueIntoStorageByKey, getValueFromStorageByKey, updateMetaStorageByKey } from "../../db";
 
-export class ServiceStorage {
+export class Storage {
     constructor(private storageName: string) { }
 
     public get(key: string): string | null {

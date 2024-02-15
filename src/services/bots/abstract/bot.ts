@@ -3,10 +3,10 @@ import { config } from "../../../../config";
 import { App } from "../../../app";
 import { defines } from "../../../defines";
 import { InputRequestKey, RequestKey } from "../../key";
-import { ServiceStorage } from "../../storage";
 import { AbstractBotEventListener } from "../events";
 import { BotInput, InputCancel } from "../input";
 import { StaticKeyboard } from "../keyboard";
+import { Storage } from "../storage";
 import { AbstractCallback, CbHandlerParams } from "./callback";
 import { AbstractChat } from "./chat";
 import { AbstractCommand, BotServiceName, CmdHandlerParams } from "./command";
@@ -27,7 +27,7 @@ export abstract class AbstractBot {
 
     protected readonly acceptTool: RequestKey = new RequestKey(config.encrypt_key);
     public readonly input: BotInput = new BotInput();
-    public readonly cache: ServiceStorage;
+    public readonly cache: Storage;
     public readonly app: App;
 
     public service: BotServiceName;
@@ -35,7 +35,7 @@ export abstract class AbstractBot {
     constructor(app: App, service: BotServiceName) {
         this.app = app;
         this.service = service;
-        this.cache = new ServiceStorage(this.service);
+        this.cache = new Storage(this.service);
     }
 
     protected getBotService() {

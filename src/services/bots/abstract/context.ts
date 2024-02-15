@@ -1,8 +1,8 @@
 import { App } from '../../../app';
 import { ParsedPayload } from '../../../utils';
 import { ImageFile } from '../../image/builder';
-import { ServiceStorage } from '../../storage';
 import { BotInput, InputResolvedValue } from '../input';
+import { Storage } from '../storage';
 import { AbstractBot } from './bot';
 import { KeyboardBuilder } from './keyboardBuilder';
 
@@ -36,7 +36,7 @@ export abstract class AbstractContext {
 
     public readonly _input: BotInput;
     protected readonly app: App;
-    protected readonly cache: ServiceStorage;
+    protected readonly cache: Storage;
 
     constructor(bot: AbstractBot) {
         this._input = bot.input;

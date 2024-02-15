@@ -1,5 +1,5 @@
 --
--- Файл сгенерирован с помощью SQLiteStudio v3.4.4 в сб февр. 10 02:01:25 2024
+-- Файл сгенерирован с помощью SQLiteStudio v3.4.4 в чт февр. 15 03:30:42 2024
 --
 -- Использованная кодировка текста: System
 --
@@ -107,6 +107,22 @@ CREATE TABLE google_accounts (
     refresh_token        STRING (128),
     access_token         STRING (256),
     access_token_expires INTEGER
+);
+
+
+-- Таблица: google_calendars
+CREATE TABLE google_calendars (
+    type                STRING,
+    value               STRING,
+    calendarId          STRING  NOT NULL,
+    lastManualSyncedDay INTEGER DEFAULT (0),
+    UNIQUE (
+        type,
+        value
+    ),
+    UNIQUE (
+        calendarId
+    )
 );
 
 
