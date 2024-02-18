@@ -5,7 +5,7 @@ import { AbstractCommand, CmdHandlerParams } from "../../abstract";
 
 export default class extends AbstractCommand {
     public regexp = /^((!|\/)archive)(\b|$|\s)/i;
-    public payload = null;
+    public payloadAction = null;
     public tgCommand: TelegramBotCommand = {
         command: 'archive',
         description: 'Архив расписания за прощедшие дни'

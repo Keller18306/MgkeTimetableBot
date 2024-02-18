@@ -3,7 +3,7 @@ import { AbstractCommand, CmdHandlerParams } from "../../abstract";
 
 export default class extends AbstractCommand {
     public regexp = /^(👀\s)?Гость$/i
-    public payload = null;
+    public payloadAction = null;
     public scene?: string | null = 'setup';
 
     async handler({ context, chat, keyboard, service }: CmdHandlerParams) {

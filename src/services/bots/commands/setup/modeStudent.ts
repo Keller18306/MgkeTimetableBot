@@ -1,38 +1,34 @@
 import { defines } from "../../../../defines";
-import { raspCache } from "../../../parser";
 import { randArray } from "../../../../utils";
+import { raspCache } from "../../../parser";
 import { AbstractCommand, CmdHandlerParams, MessageOptions } from "../../abstract";
-import { InputInitiator } from "../../input";
 import { StaticKeyboard } from "../../keyboard";
 
 export default class extends AbstractCommand {
     public regexp = /^((👩‍🎓\s)?(Ученик|Учащийся)|(👨‍👩‍👦\s)?Родитель)$/i
-    public payload = null;
+    public payloadAction = null;
     public scene?: string | null = 'setup';
 
-    async handler({ context, chat, keyboard, service }: CmdHandlerParams) {
+    async handler(params: CmdHandlerParams) {
+        const { context, chat, keyboard, service } = params;
+
         if (Object.keys(raspCache.groups.timetable).length == 0) {
             return context.send('Данные с сервера ещё не загружены, ожидайте...');
         }
 
         const randGroup = randArray(Object.keys(raspCache.groups.timetable));
 
-        let initiator: InputInitiator;
         let group: string | number | false | undefined = await context.input(`Введите номер своей группы (например, ${randGroup})`, {
             keyboard: StaticKeyboard.Cancel
         }).then<string | undefined>(value => {
-            initiator = value?.initiator;
-
             return value?.text;
         });
 
         while (true) {
-            group = await this.findGroup(context, keyboard, group);
+            group = await this.findGroup(params, group);
 
             if (!group) {
                 group = await context.waitInput().then<string | undefined>(value => {
-                    initiator = value?.initiator;
-
                     return value?.text;
                 });
                 continue;

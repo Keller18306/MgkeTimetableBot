@@ -4,7 +4,7 @@ import { AbstractCommand, CmdHandlerParams } from "../../abstract";
 
 export default class extends AbstractCommand {
     public regexp = /^((!|\/)(get)?about|(💡\s)?О боте)$/i
-    public payload = null;
+    public payloadAction = null;
     public tgCommand: TelegramBotCommand = {
         command: 'about',
         description: 'О боте и его создателе'

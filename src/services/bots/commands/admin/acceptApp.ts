@@ -4,7 +4,7 @@ import { AbstractCommand, BotServiceName, CmdHandlerParams } from "../../abstrac
 
 export default class extends AbstractCommand {
     public regexp = /^(!|\/)acceptApp($|\s)/i
-    public payload = null;
+    public payloadAction = null;
 
     public adminOnly: boolean = true;
 

@@ -4,7 +4,7 @@ import { StaticKeyboard } from "../keyboard";
 
 export default class extends AbstractCommand {
     public regexp = /(^(!|\/)start)|^(Начать|Start|(Главное\s)?Меню)$/i
-    public payload = null;
+    public payloadAction = null;
     public tgCommand: TelegramBotCommand = {
         command: 'start',
         description: 'Запустить бота'

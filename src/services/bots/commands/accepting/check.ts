@@ -12,7 +12,7 @@ export default class extends AbstractCommand {
 
     public acceptRequired: boolean = false;
     public regexp = /^Проверить$/i
-    public payload = null;
+    public payloadAction = null;
 
     public services: BotServiceName[] = ['vk'];
     public requireServices: AppServiceName[] = ['vk', 'vkApp'];

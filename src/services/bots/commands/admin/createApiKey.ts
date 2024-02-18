@@ -9,7 +9,7 @@ const keyTool = new ApiKey(config.encrypt_key);
 
 export default class extends AbstractCommand {
     public regexp = /^(!|\/)createApi(Key|Token)/i
-    public payload = null;
+    public payloadAction = null;
     public adminOnly: boolean = true;
     public requireServices: AppServiceName[] = ['api'];
 

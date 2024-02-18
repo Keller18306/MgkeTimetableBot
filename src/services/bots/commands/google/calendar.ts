@@ -3,7 +3,7 @@ import { AbstractCommand, ButtonType, CmdHandlerParams } from "../../abstract";
 
 export default class extends AbstractCommand {
     public regexp = /^(!|\/)(g(oogle)?)?calendar$/i
-    public payload = null;
+    public payloadAction = null;
     public requireServices: AppServiceName[] = ['google'];
 
     handler({ context, chat, service, keyboard }: CmdHandlerParams) {

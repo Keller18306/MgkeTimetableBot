@@ -4,7 +4,7 @@ import { AbstractCommand, CmdHandlerParams } from "../../abstract";
 
 export default class extends AbstractCommand {
     public regexp = /^\/setTeacher/i
-    public payload = null;
+    public payloadAction = null;
 
     handler({ context, chat, keyboard }: CmdHandlerParams) {
         if (Object.keys(raspCache.teachers.timetable).length == 0) {

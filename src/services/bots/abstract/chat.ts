@@ -25,7 +25,7 @@ export type DbChat = {
     mode: ChatMode | null;
 
     /** Выбранная группа для ученика */
-    group: number | null;
+    group: string | null;
 
     /** Выбранное имя для преподавателя */
     teacher: string | null;

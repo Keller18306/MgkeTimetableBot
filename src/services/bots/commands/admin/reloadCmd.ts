@@ -1,10 +1,9 @@
 import { TelegramBotCommand } from 'puregram/generated';
-import { BotService } from '../..';
 import { AbstractCommand, CmdHandlerParams } from "../../abstract";
 
 export default class extends AbstractCommand {
     public regexp = /^(!|\/)reloadCmd/i
-    public payload = null;
+    public payloadAction = null;
     public adminOnly: boolean = true;
     public tgCommand: TelegramBotCommand = {
         command: 'reloadCmd',

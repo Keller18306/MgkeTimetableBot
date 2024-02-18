@@ -5,7 +5,7 @@ import { AbstractCommand, CmdHandlerParams } from "../../abstract";
 
 export default class extends AbstractCommand {
     public regexp = /^(!|\/)restart$/i
-    public payload = null;
+    public payloadAction = null;
     public adminOnly: boolean = true;
 
     public tgCommand: TelegramBotCommand = {

@@ -1,11 +1,11 @@
 import { TelegramBotCommand } from 'puregram/generated';
-import { raspCache } from '../../../parser';
 import { WeekIndex, randArray, removePastDays } from "../../../../utils";
+import { raspCache } from '../../../parser';
 import { AbstractCommand, CmdHandlerParams } from "../../abstract";
 
 export default class extends AbstractCommand {
     public regexp = /^((!|\/)(get)?(rasp)?week|(📑\s)?(расписание\s)?на неделю)$/i
-    public payload = null;
+    public payloadAction = null;
     public tgCommand: TelegramBotCommand = {
         command: 'week',
         description: 'Ваше расписание на неделю'

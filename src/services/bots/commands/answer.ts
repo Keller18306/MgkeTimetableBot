@@ -3,7 +3,7 @@ import { AbstractCommand, CmdHandlerParams } from "../abstract";
 
 export default class extends AbstractCommand {
     public regexp = null;
-    public payload = 'answer';
+    public payloadAction = 'answer';
     public acceptRequired: boolean = true;
 
     handler({ context }: CmdHandlerParams) {

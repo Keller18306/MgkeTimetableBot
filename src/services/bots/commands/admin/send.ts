@@ -1,10 +1,10 @@
 import { TelegramBotCommand } from 'puregram/generated';
 import { AbstractCommand, CmdHandlerParams } from "../../abstract";
-import { BotEventController, ServiceProgressCallback } from '../../events/controller';
+import { ServiceProgressCallback } from '../../events/controller';
 
 export default class extends AbstractCommand {
     public regexp = /^(!|\/)send/i
-    public payload = null;
+    public payloadAction = null;
     public adminOnly: boolean = true;
     public tgCommand: TelegramBotCommand = {
         command: 'send',

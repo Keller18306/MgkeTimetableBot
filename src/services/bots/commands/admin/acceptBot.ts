@@ -3,7 +3,7 @@ import { AbstractCommand, CmdHandlerParams } from "../../abstract";
 
 export default class extends AbstractCommand {
     public regexp = /^(!|\/)acceptBot($|\s)/i
-    public payload = null;
+    public payloadAction = null;
 
     public adminOnly: boolean = true;
 

@@ -19,10 +19,11 @@ import { KeyboardBuilder } from './keyboardBuilder';
 
 export type BotServiceName = 'tg' | 'vk' | 'viber';
 
-export type CmdHandlerParams = {
+export type CmdHandlerParams<C extends AbstractCommand = any> = {
     context: AbstractCommandContext,
     realContext: any,
     chat: AbstractChat,
+    regexp?: C['regexp'] extends RegExp ? 'index' : keyof C['regexp'],
     actions: AbstractAction,
     keyboard: Keyboard,
     service: BotServiceName,
@@ -64,7 +65,7 @@ export abstract class AbstractCommand {
     /**
     * Базовая команда и её описания для регистрации её в списке команд в помощи (и для списка телеги)
     **/
-    public tgCommand: TelegramBotCommand | null = null;
+    public tgCommand: TelegramBotCommand | TelegramBotCommand[] | null = null;
 
     /**
     * Список сервисов ботов, в которых команда будет работать
@@ -81,11 +82,17 @@ export abstract class AbstractCommand {
     /**
     * Регулярное выражение для команды, по котрому она будет вызываться
     **/
-    public abstract regexp: RegExp | null;
-    public abstract payload: string | null;
+    public abstract regexp: { [regexp: string]: RegExp } | RegExp | null;
+
+    /**
+     * Если указан, то команда будет вызываться при указанном действии
+     * если совпадают payload.action
+     */
+    public abstract payloadAction: string | null;
 
     /**
      * Сцена, в которой будет работать команда.
+     * (не работает для payload)
      * 
      * null - работа только в главной сцене
      * string - работа в указанной сцене
@@ -109,7 +116,7 @@ export abstract class AbstractCommand {
         return true;
     }
 
-    protected async findGroup(context: AbstractCommandContext, keyboard: Keyboard, group: string | undefined, errorKeyboard: KeyboardBuilder | undefined = StaticKeyboard.Cancel): Promise<false | number> {
+    protected async findGroup({ context }: CmdHandlerParams, group?: string, errorKeyboard: KeyboardBuilder = StaticKeyboard.Cancel): Promise<false | string> {
         if (!group || isNaN(+group)) {
             await context.send('Это не число', {
                 keyboard: errorKeyboard
@@ -134,14 +141,15 @@ export abstract class AbstractCommand {
             return false;
         }
 
-        return Number(group);
+        return group;
     }
 
-    protected async findTeacher(context: AbstractCommandContext, keyboard: Keyboard, teacher: string | undefined, errorKeyboard: KeyboardBuilder | undefined = StaticKeyboard.Cancel): Promise<false | undefined | string> {
+    protected async findTeacher({ context, keyboard }: CmdHandlerParams, teacher?: string, errorKeyboard: KeyboardBuilder = StaticKeyboard.Cancel): Promise<false | undefined | string> {
         if (!teacher || teacher.length < 3) {
             await context.send('Фамилия введена некорректно', {
                 keyboard: errorKeyboard
-            })
+            });
+
             return false;
         }
 

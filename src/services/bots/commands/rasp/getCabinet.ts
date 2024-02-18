@@ -1,12 +1,12 @@
 import { TelegramBotCommand } from "puregram/generated";
-import { raspCache } from "../../../parser";
 import { StringDate } from "../../../../utils";
+import { raspCache } from "../../../parser";
 import { TeacherLessonExplain } from "../../../timetable/types";
 import { AbstractCommand, CmdHandlerParams } from "../../abstract";
 
 export default class extends AbstractCommand {
     public regexp = /^((!|\/)(get)?cabinet)(\b|$|\s)/i;
-    public payload = null;
+    public payloadAction = null;
     public tgCommand: TelegramBotCommand = {
         command: 'cabinet',
         description: 'Получить информацию по кабинету'

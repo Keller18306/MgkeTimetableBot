@@ -3,7 +3,7 @@ import { AbstractCommand, CmdHandlerParams } from "../../../abstract";
 
 export default class extends AbstractCommand {
     public regexp = /^((!|\/)formatter)|(📃\s)?(Настройка форматировщика|Форматировщик)$/i
-    public payload = null;
+    public payloadAction = null;
     public tgCommand: TelegramBotCommand = {
         command: 'formatter',
         description: 'Настройки форматировщика'

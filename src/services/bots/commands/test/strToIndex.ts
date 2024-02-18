@@ -3,7 +3,7 @@ import { AbstractCommand, CmdHandlerParams } from "../../abstract";
 
 export default class extends AbstractCommand {
     public regexp = /^(!|\/)(date|str(Date)?)To(Day)?Index/i
-    public payload = null;
+    public payloadAction = null;
 
     handler({ context }: CmdHandlerParams) {
         const day = context.text?.replace(this.regexp, '').trim()

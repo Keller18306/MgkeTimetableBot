@@ -1,11 +1,11 @@
 import { TelegramBotCommand } from "puregram/generated";
-import { raspCache } from "../../../parser";
 import { formatSeconds } from "../../../../utils";
+import { raspCache } from "../../../parser";
 import { AbstractCommand, CmdHandlerParams } from "../../abstract";
 
 export default class extends AbstractCommand {
     public regexp = /^(!|\/)(get)?groups$/i
-    public payload = null;
+    public payloadAction = null;
     public tgCommand: TelegramBotCommand = {
         command: 'groups',
         description: 'Получить полный список групп в кэше бота'

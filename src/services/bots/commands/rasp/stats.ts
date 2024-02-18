@@ -5,7 +5,7 @@ import { AbstractCommand, CmdHandlerParams } from "../../abstract";
 
 export default class extends AbstractCommand {
     public regexp = /^(!|\/)stats$/i;
-    public payload = null;
+    public payloadAction = null;
     public tgCommand: TelegramBotCommand = {
         command: 'stats',
         description: 'Статистика пар'
@@ -28,7 +28,7 @@ export default class extends AbstractCommand {
         return context.send(message);
     }
 
-    private getGroupStats(archive: Timetable, group: string | number) {
+    private getGroupStats(archive: Timetable, group: string) {
         const message: string[] = [];
 
         const days = archive.getGroupDays(group);

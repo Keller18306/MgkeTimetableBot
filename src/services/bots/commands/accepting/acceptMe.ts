@@ -9,7 +9,7 @@ const acceptTool = new RequestKey(config.encrypt_key)
 
 export default class extends AbstractCommand {
     public regexp = /^(!|\/)acceptMe($|\s)/i
-    public payload = null;
+    public payloadAction = null;
 
     public services: BotServiceName[] = ['vk'];
     public requireServices: AppServiceName[] = ['vk', 'vkApp'];

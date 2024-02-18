@@ -1,11 +1,11 @@
 import { TelegramBotCommand } from "puregram/generated";
-import { raspCache } from "../../../parser";
 import { getDayRasp } from "../../../../utils";
+import { raspCache } from "../../../parser";
 import { AbstractCommand, CmdHandlerParams } from "../../abstract";
 
 export default class extends AbstractCommand {
     public regexp = /^(!|\/)endings$/i;
-    public payload = null;
+    public payloadAction = null;
     public tgCommand: TelegramBotCommand = {
         command: 'endings',
         description: 'Отображает сколько групп заканчивают к определённой паре'

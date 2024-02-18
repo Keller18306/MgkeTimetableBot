@@ -5,7 +5,7 @@ import { TelegramBotCommand } from "puregram/generated";
 import { config } from "../../../config";
 import { App, AppService } from "../../app";
 import { ParsedPayload } from "../../utils";
-import { AbstractCallback, AbstractCommand } from "./abstract";
+import { AbstractCallback, AbstractChat, AbstractCommand, AbstractCommandContext } from "./abstract";
 import { BotCron } from "./cron";
 import { BotEventController } from "./events/controller";
 
@@ -22,7 +22,7 @@ export class BotService implements AppService {
     public commands: {
         [id: string]: LoadedInstance<AbstractCommand>
     } = {};
-    
+
     public callbacks: {
         [id: string]: LoadedInstance<AbstractCallback>
     } = {};
@@ -41,15 +41,15 @@ export class BotService implements AppService {
         this.cron.run();
     }
 
-    public getCommandById(id: string): AbstractCommand {
-        const cmd = this.commands[id];
+    // public getCommandById(id: string): AbstractCommand {
+    //     const cmd = this.commands[id];
 
-        if (!cmd) throw new Error(`Command with id '${id}' not found`);
+    //     if (!cmd) throw new Error(`Command with id '${id}' not found`);
 
-        return cmd.instance;
-    }
+    //     return cmd.instance;
+    // }
 
-    public searchCommandByMessage(message?: string, scene?: string | null): AbstractCommand | null {
+    public searchCommandByMessage(message?: string, scene?: string | null): { regexp: string, cmd: AbstractCommand } | null {
         if (!message) return null
 
         const cmds = this.commands;
@@ -61,15 +61,37 @@ export class BotService implements AppService {
                 if (scene !== cmd.scene) continue;
             }
 
-            if (cmd.regexp == null || !cmd.regexp.test(message)) continue;
+            if (cmd.regexp == null) continue;
 
-            return cmd;
+            let matched: string | undefined;
+
+            if (cmd.regexp instanceof RegExp) {
+                if (cmd.regexp.test(message)) {
+                    matched = 'index';
+                }
+            } else if (typeof cmd.regexp === 'object') {
+                for (const regexId in cmd.regexp) {
+                    const regex = cmd.regexp[regexId];
+
+                    if (regex.test(message)) {
+                        matched = regexId;
+                        break;
+                    }
+                }
+            }
+
+            if (matched) {
+                return {
+                    regexp: matched,
+                    cmd: cmd
+                };
+            }
         }
 
         return null;
     }
 
-    public searchCommandByPayload(payload?: ParsedPayload, scene?: string | null): AbstractCommand | null {
+    public searchCommandByPayload(payload?: ParsedPayload): AbstractCommand | null {
         if (!payload) return null;
 
         const cmds = this.commands;
@@ -77,7 +99,7 @@ export class BotService implements AppService {
         for (const id in cmds) {
             const cmd = cmds[id].instance;
 
-            if (cmd.payload == null || cmd.payload != payload.action) continue;
+            if (cmd.payloadAction == null || cmd.payloadAction != payload.action) continue;
 
             return cmd;
         }
@@ -85,23 +107,40 @@ export class BotService implements AppService {
         return null;
     }
 
-    public getCallbackById(id: string): AbstractCallback {
-        const cb = this.callbacks[id];
+    public getCommand(context: AbstractCommandContext, chat: AbstractChat): { regexp?: string, cmd: AbstractCommand } | null {
+        if (context.parsedPayload) {
+            const cmd = this.searchCommandByPayload(context.parsedPayload);
 
-        if (!cb) throw new Error(`Command with id '${id}' not found`);
+            if (cmd) {
+                return { cmd };
+            }
+        }
 
-        return cb.instance;
+        const cmd = this.searchCommandByMessage(context.text, chat.scene);
+        if (cmd) {
+            return cmd;
+        }
+
+        return null;
     }
+
+    // public getCallbackById(id: string): AbstractCallback {
+    //     const cb = this.callbacks[id];
+
+    //     if (!cb) throw new Error(`Command with id '${id}' not found`);
+
+    //     return cb.instance;
+    // }
 
     public getCallbackByPayload(payload?: ParsedPayload): AbstractCallback | null {
         if (!payload) return null;
 
         const cbs = this.callbacks;
-        
+
         for (const id in cbs) {
             const cb = cbs[id].instance;
 
-            if (cb.action != payload.action) continue;
+            if (cb.payloadAction != payload.action) continue;
 
             return cb;
         }
@@ -111,15 +150,18 @@ export class BotService implements AppService {
 
     public getBotCommands(showAdminCommands: boolean = false): TelegramBotCommand[] {
         return Object.values(this.commands).reduce<TelegramBotCommand[]>((commands, { instance }) => {
-            const tgCommand = instance.tgCommand;
+            const tgCommands = Array.isArray(instance.tgCommand) ? instance.tgCommand : [instance.tgCommand];
 
-            if (tgCommand && (!instance.adminOnly || showAdminCommands)) {
-                tgCommand.command = tgCommand.command.toLowerCase();
-                if (instance.adminOnly) {
-                    tgCommand.description = '[адм] ' + tgCommand.description;
+            for (const tgCommand of tgCommands) {
+                if (tgCommand && (!instance.adminOnly || showAdminCommands)) {
+                    tgCommand.command = tgCommand.command.toLowerCase();
+
+                    if (instance.adminOnly) {
+                        tgCommand.description = '[адм] ' + tgCommand.description;
+                    }
+
+                    commands.push(tgCommand);
                 }
-
-                commands.push(tgCommand)
             }
 
             return commands;

@@ -4,7 +4,7 @@ import { AbstractCommand, CmdHandlerParams } from "../../abstract";
 
 export default class extends AbstractCommand {
     public regexp = /^(!|\/)(sql|db)_?all/i
-    public payload = null;
+    public payloadAction = null;
     public tgCommand: TelegramBotCommand = {
         command: 'sql_all',
         description: 'Выполнить SQL запрос с вывести все (много) результаты'

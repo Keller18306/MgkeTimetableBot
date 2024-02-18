@@ -7,7 +7,7 @@ const acceptTool = new RequestKey(config.encrypt_key)
 
 export default class extends AbstractCommand {
     public regexp = /^(!|\/)decrypt(key)?/i
-    public payload = null;
+    public payloadAction = null;
 
     public adminOnly: boolean = true;
 

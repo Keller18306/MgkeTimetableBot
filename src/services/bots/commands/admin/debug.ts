@@ -26,7 +26,7 @@ setInterval(() => {
 
 export default class extends AbstractCommand {
     public regexp = /^(!|\/)debug$/i
-    public payload = null;
+    public payloadAction = null;
     public tgCommand: TelegramBotCommand = {
         command: 'debug',
         description: 'Вывод отладочной информации'

@@ -1,10 +1,9 @@
 import { TelegramBotCommand } from "puregram/generated";
-import { BotService } from "..";
 import { AbstractCommand, CmdHandlerParams } from "../abstract";
 
 export default class extends AbstractCommand {
     public regexp = /^(!|\/)help$/i
-    public payload = null;
+    public payloadAction = null;
     public tgCommand: TelegramBotCommand | null = {
         command: 'help',
         description: 'Отобразить все команды бота'
@@ -21,9 +20,10 @@ export default class extends AbstractCommand {
             //todo bot admin help
             if (instance.adminOnly) continue;
 
-            const { tgCommand } = instance;
-
-            message.push(`/${tgCommand.command} - ${tgCommand.description}`)
+            const tgCommands = Array.isArray(instance.tgCommand) ? instance.tgCommand : [instance.tgCommand];
+            for (const tgCommand of tgCommands) {
+                message.push(`/${tgCommand.command} - ${tgCommand.description}`);
+            }
         }
 
         return context.send(message.join('\n'));

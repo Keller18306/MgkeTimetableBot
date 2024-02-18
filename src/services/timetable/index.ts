@@ -78,7 +78,7 @@ export class Timetable implements AppService {
         return this._teachers!;
     }
 
-    public addGroupDay(group: number | string, day: GroupDay): void {
+    public addGroupDay(group: string, day: GroupDay): void {
         this._dayIndexBounds = undefined;
         this._groups = undefined;
 
@@ -100,7 +100,7 @@ export class Timetable implements AppService {
             .run(dayIndex, teacher, data, data);
     }
 
-    public getGroupDay(dayIndex: number, group: number | string): GroupDay | null {
+    public getGroupDay(dayIndex: number, group: string): GroupDay | null {
         const entry = db.prepare('SELECT day,data FROM timetable_archive WHERE day = ? AND `group` = ?').get(dayIndex, group) as any;
         return entry ? dbEntryToDayObject(entry) : null;
     }
@@ -110,7 +110,7 @@ export class Timetable implements AppService {
         return entry ? dbEntryToDayObject(entry) : null;
     }
 
-    public getGroupDaysByRange(dayBounds: [number, number], group: number | string): GroupDay[] {
+    public getGroupDaysByRange(dayBounds: [number, number], group: string): GroupDay[] {
         const days = db.prepare('SELECT day,data FROM timetable_archive WHERE day >= ? AND day <= ? AND `group` = ?').all(...dayBounds, group) as any;
 
         return days.map(dbEntryToDayObject);
@@ -122,7 +122,7 @@ export class Timetable implements AppService {
         return days.map(dbEntryToDayObject);
     }
 
-    public getGroupDays(group: number | string, fromDay?: number): GroupDay[] {
+    public getGroupDays(group: string, fromDay?: number): GroupDay[] {
         const days = db.prepare(
             'SELECT day, data FROM timetable_archive WHERE `group` = ?' +
             (fromDay ? ` AND day >= ${addslashes(fromDay)}` : '')

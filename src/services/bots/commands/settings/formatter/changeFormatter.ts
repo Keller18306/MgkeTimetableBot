@@ -4,7 +4,7 @@ import { AbstractCommand, CmdHandlerParams } from "../../../abstract";
 
 export default class extends AbstractCommand {
     public regexp: RegExp | null = null;
-    public payload = null;
+    public payloadAction = null;
     public scene?: string | null = 'settings';
 
     constructor(app: App) {

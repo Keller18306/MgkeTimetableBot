@@ -3,7 +3,7 @@ import { AbstractCommand, CmdHandlerParams } from '../abstract';
 
 export default class extends AbstractCommand {
     public regexp = /^(!|\/)math/i
-    public payload = null;
+    public payloadAction = null;
 
     async handler({ context }: CmdHandlerParams) {
         const cmd = context.text!.split(' ')[0]

@@ -5,7 +5,7 @@ import { AbstractCommand, BotServiceName as BotService, CmdHandlerParams } from 
 
 export default class extends AbstractCommand {
     public regexp = /^(!|\/)activate/i
-    public payload = null;
+    public payloadAction = null;
 
     public services: BotService[] = ['vk'];
     public requireServices: AppServiceName[] = ['vk', 'vkApp'];

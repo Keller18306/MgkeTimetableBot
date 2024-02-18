@@ -6,7 +6,7 @@ import { raspCache } from "../../parser";
 import { AbstractCallback, CbHandlerParams } from "../abstract";
 
 export default class extends AbstractCallback {
-    public action: string = 'image';
+    public payloadAction: string = 'image';
     public requireServices: AppServiceName[] = ['image'];
 
     async handler({ context }: CbHandlerParams) {

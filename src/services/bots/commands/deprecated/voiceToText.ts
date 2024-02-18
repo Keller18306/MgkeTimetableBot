@@ -2,7 +2,7 @@ import { AbstractCommand, CmdHandlerParams } from "../../abstract";
 
 export default class extends AbstractCommand {
     public regexp = /^(!|\/)(vtt?|voice(to)?text)$/i
-    public payload = null;
+    public payloadAction = null;
 
     public services: ("vk" | "tg" | "viber")[] = ['vk'];
 

@@ -4,7 +4,7 @@ import { raspCache } from "../../parser";
 import { AbstractCallback, CbHandlerParams } from "../abstract";
 
 export default class extends AbstractCallback {
-    public action: string = 'timetable';
+    public payloadAction: string = 'timetable';
 
     handler(params: CbHandlerParams) {
         const { context, chat }: CbHandlerParams = params;
@@ -34,7 +34,7 @@ export default class extends AbstractCallback {
         return context.editOrSend('unknown type');
     }
 
-    private async groupRasp({ context, scheduleFormatter, keyboard }: CbHandlerParams, value: string | number, weekIndex: number, hidePastDays: boolean, showHeader: boolean) {
+    private async groupRasp({ context, scheduleFormatter, keyboard }: CbHandlerParams, value: string, weekIndex: number, hidePastDays: boolean, showHeader: boolean) {
         const group = raspCache.groups.timetable[value];
         if (group === undefined) return context.editOrSend('Данной учебной группы не существует');
 

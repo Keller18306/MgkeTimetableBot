@@ -3,7 +3,7 @@ import { AbstractCommand, CmdHandlerParams } from "../abstract";
 
 export default class extends AbstractCommand {
     public regexp = /^\/cancel$/i;
-    public payload = 'cancel';
+    public payloadAction = 'cancel';
     public tgCommand: TelegramBotCommand = {
         command: 'cancel',
         description: 'Отменить действие ввода (если таковое имеется)'

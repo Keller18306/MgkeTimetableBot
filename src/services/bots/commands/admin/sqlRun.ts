@@ -4,7 +4,7 @@ import { AbstractCommand, CmdHandlerParams } from "../../abstract";
 
 export default class extends AbstractCommand {
     public regexp = /^(!|\/)(sql|db)_?run/i
-    public payload = null;
+    public payloadAction = null;
     public tgCommand: TelegramBotCommand = {
         command: 'sql_run',
         description: 'Выполнить SQL запрос без вывода результата (только кол-во затронутых строк)'

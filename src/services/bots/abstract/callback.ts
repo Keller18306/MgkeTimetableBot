@@ -60,7 +60,7 @@ export abstract class AbstractCallback {
     **/
     public requireServices?: AppServiceName[];
 
-    public abstract action: string;
+    public abstract payloadAction: string;
 
     public abstract handler(params: CbHandlerParams): any | Promise<any>
 

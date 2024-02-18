@@ -2,7 +2,7 @@ import { AbstractCommand, BotServiceName, CmdHandlerParams } from "../../abstrac
 
 export default class extends AbstractCommand {
     public regexp = /^(!|\/)deleteLastMsg$/i
-    public payload = null;
+    public payloadAction = null;
 
     public services: BotServiceName[] = ['vk'];
 

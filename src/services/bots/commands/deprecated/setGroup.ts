@@ -4,7 +4,7 @@ import { AbstractCommand, CmdHandlerParams } from "../../abstract";
 
 export default class extends AbstractCommand {
     public regexp = /^\/setGroup/i
-    public payload = null;
+    public payloadAction = null;
 
     handler({ context, chat, keyboard }: CmdHandlerParams) {
         const group = context.text!.split(' ')[1]
@@ -23,7 +23,7 @@ export default class extends AbstractCommand {
             return context.send('Данной учебной группы не существует')
         }
 
-        chat.group = Number(group);
+        chat.group = group;
         chat.mode = 'student';
         chat.scene = null;
 

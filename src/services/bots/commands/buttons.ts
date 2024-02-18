@@ -3,7 +3,7 @@ import { AbstractCommand, CmdHandlerParams } from "../abstract";
 
 export default class extends AbstractCommand {
     public regexp = /^(!|\/)button(s)?_reload$/i
-    public payload = null;
+    public payloadAction = null;
     public tgCommand: TelegramBotCommand = {
         command: 'buttons_reload',
         description: 'Обновить клавиатуру бота'

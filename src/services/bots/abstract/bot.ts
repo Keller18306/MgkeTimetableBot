@@ -42,20 +42,6 @@ export abstract class AbstractBot {
         return this.app.getService('bot');
     }
 
-    private getCommand(context: AbstractCommandContext, chat: AbstractChat): AbstractCommand | null {
-        let cmd: AbstractCommand | null = null;
-
-        if (context.parsedPayload) {
-            cmd = this.getBotService().searchCommandByPayload(context.parsedPayload, chat.scene);
-        }
-
-        if (!cmd) {
-            cmd = this.getBotService().searchCommandByMessage(context.text, chat.scene);
-        }
-
-        return cmd;
-    }
-
     private getCallback(context: AbstractCallbackContext): AbstractCallback | null {
         return this.getBotService().getCallbackByPayload(context.parsedPayload);
     }
@@ -73,21 +59,21 @@ export abstract class AbstractBot {
 
             if (chat.accepted && !chat.eula) {
                 chat.eula = true;
-                
+
                 context.send(defines.eula).catch(() => { });
             }
-            
+
             if (chat.accepted && chat.needUpdateButtons) {
                 chat.needUpdateButtons = false;
                 chat.scene = null;
-                
+
                 context.send('Клавиатура была принудительно пересоздана (обновлена)', {
                     keyboard: keyboard.MainMenu
                 }).catch(() => { });
             }
-            
-            const cmd = this.getCommand(context, chat);
-            if (!cmd) {
+
+            const cmdResult = this.getBotService().getCommand(context, chat);
+            if (!cmdResult) {
                 if (selfMention || !context.isChat) {
                     if (chat.accepted) {
                         if (this.input.has(String(context.peerId))) {
@@ -102,6 +88,9 @@ export abstract class AbstractBot {
 
                 return;
             }
+
+            const { cmd, regexp } = cmdResult;
+            handlerParams.regexp = regexp;
 
             if (cmd.acceptRequired && !chat.accepted) {
                 if (context.isChat && !selfMention) return;
@@ -150,7 +139,7 @@ export abstract class AbstractBot {
 
             if (cb.acceptRequired && !chat.accepted) {
                 await context.answer('Чат не подтверждён, чтобы использовать это');
-                
+
                 return;
             }
 

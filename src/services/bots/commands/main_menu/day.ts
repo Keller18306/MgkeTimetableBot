@@ -6,7 +6,7 @@ import { AbstractAction, AbstractChat, AbstractCommand, AbstractCommandContext, 
 
 export default class extends AbstractCommand {
     public regexp = /^((!|\/)(get)?(rasp)?day|(📄\s)?(расписание\s)?на день)$/i
-    public payload = null;
+    public payloadAction = null;
     public tgCommand: TelegramBotCommand = {
         command: 'day',
         description: 'Ваше расписание на день'

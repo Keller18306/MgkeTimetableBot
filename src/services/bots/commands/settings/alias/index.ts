@@ -1,9 +1,8 @@
-import { TelegramBotCommand } from "puregram/generated";
 import { AbstractCommand, CmdHandlerParams } from "../../../abstract";
 
 export default class extends AbstractCommand {
     public regexp = /^((!|\/)(alias|aliases))|(⌨️\s)?(Настройка алиасов|Алиасы)$/i
-    public payload = null;
+    public payloadAction = null;
     // public tgCommand: TelegramBotCommand = {
     //     command: 'alias',
     //     description: 'Настройки алиасов'

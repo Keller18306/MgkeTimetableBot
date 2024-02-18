@@ -2,7 +2,7 @@ import { z } from "zod";
 import { AbstractCallback, CbHandlerParams } from "../abstract";
 
 export default class extends AbstractCallback {
-    public action: string = 'answer';
+    public payloadAction: string = 'answer';
     public acceptRequired: boolean = true;
 
     async handler({ context }: CbHandlerParams) {

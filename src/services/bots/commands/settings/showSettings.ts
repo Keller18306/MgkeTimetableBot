@@ -2,7 +2,7 @@ import { AbstractCommand, CmdHandlerParams } from "../../abstract";
 
 export default class extends AbstractCommand {
     public regexp = /^((!|\/)(show|current)Settings)|(Показать текущие)$/i
-    public payload = null;
+    public payloadAction = null;
 
     handler({ context, chat, service }: CmdHandlerParams) {
         return context.send([

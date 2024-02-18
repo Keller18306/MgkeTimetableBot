@@ -5,7 +5,7 @@ import { AbstractCommand, CmdHandlerParams } from "../../abstract";
 export default class extends AbstractCommand {
     public regexp = /^(!|\/)requireNewButtons$/i
     public adminOnly: boolean = true;
-    public payload = null;
+    public payloadAction = null;
     public tgCommand: TelegramBotCommand = {
         command: 'requireNewButtons',
         description: 'Выставляет метку, что после обращения юзера бот обновит клавиатуру'

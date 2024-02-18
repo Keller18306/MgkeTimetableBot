@@ -2,7 +2,7 @@ import { AbstractCommand, CmdHandlerParams } from "../../../abstract";
 
 export default class extends AbstractCommand {
     public regexp = /^(✅|🚫)\sКнопка "(👩‍🏫\s)?Преподаватель"$/i
-    public payload = null;
+    public payloadAction = null;
     public scene?: string | null = 'settings';
 
     handler({ context, chat, keyboard }: CmdHandlerParams) {
