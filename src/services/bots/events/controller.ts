@@ -1,8 +1,10 @@
 import { AbstractBotEventListener, CronDay, ProgressCallback } from ".";
+import { config } from "../../../../config";
 import { App } from "../../../app";
 import { DayIndex } from "../../../utils";
 import { GroupDayEvent, TeacherDayEvent } from "../../parser";
 import { raspCache, saveCache } from "../../parser/raspCache";
+import { GroupLesson, GroupLessonExplain, TeacherLesson, TeacherLessonExplain } from "../../timetable";
 import { BotServiceName, ChatMode } from "../abstract";
 
 export type ServiceProgressCallback = (data: { service: BotServiceName } & Parameters<ProgressCallback>[0]) => void;
@@ -58,17 +60,31 @@ export class BotEventController {
 
         groupEntry.lastNoticedDay = dayIndex;
 
-        for (const service of this.serviceList) {
-            await service.addGroupDay(data);
+        if (this.hasAlertableGroupLessons(day.lessons)) {
+            const promises: Promise<void>[] = [];
+
+            for (const service of this.serviceList) {
+                promises.push(service.addGroupDay(data));
+            }
+
+            await Promise.all(promises);
         }
 
         await saveCache();
     }
 
     public async updateGroupDay(data: GroupDayEvent) {
-        for (const service of this.serviceList) {
-            await service.updateGroupDay(data);
+        if (!this.hasAlertableGroupLessons(data.day.lessons)) {
+            return;
         }
+
+        const promises: Promise<void>[] = [];
+
+        for (const service of this.serviceList) {
+            promises.push(service.updateGroupDay(data));
+        }
+
+        await Promise.all(promises);
     }
 
     public async addTeacherDay(data: TeacherDayEvent) {
@@ -82,17 +98,31 @@ export class BotEventController {
 
         teacherEntry.lastNoticedDay = dayIndex;
 
-        for (const service of this.serviceList) {
-            await service.addTeacherDay(data);
+        if (this.hasAlertableTeacherLessons(data.day.lessons)) {
+            const promises: Promise<void>[] = [];
+
+            for (const service of this.serviceList) {
+                promises.push(service.addTeacherDay(data));
+            }
+
+            await Promise.all(promises);
         }
 
         await saveCache();
     }
 
     public async updateTeacherDay(data: TeacherDayEvent) {
-        for (const service of this.serviceList) {
-            await service.updateTeacherDay(data);
+        if (!this.hasAlertableTeacherLessons(data.day.lessons)) {
+            return;
         }
+
+        const promises: Promise<void>[] = [];
+
+        for (const service of this.serviceList) {
+            promises.push(service.updateTeacherDay(data));
+        }
+
+        await Promise.all(promises);
     }
 
     public async updateWeek(chatMode: ChatMode, weekIndex: number) {
@@ -133,5 +163,52 @@ export class BotEventController {
 
             delete this.deferred[id];
         }
+    }
+
+    private hasAlertableGroupLessons(_lessons: GroupLesson[]): boolean {
+        return _lessons.reduce((store: GroupLessonExplain[], lesson) => {
+            if (lesson === null) {
+                return store;
+            }
+
+            const lessons = Array.isArray(lesson) ? lesson : [lesson];
+            store.push(...lessons);
+
+            return store;
+        }, []).filter((value) => {
+            let valid: boolean = true;
+
+            for (const filter of config.parser.alertableIgnoreFilter.group) {
+                if (filter.lesson === value.lesson && filter.type === value.type) {
+                    valid = false;
+                    break;
+                }
+            }
+
+            return valid;
+        }).length > 0;
+    }
+
+    private hasAlertableTeacherLessons(_lessons: TeacherLesson[]): boolean {
+        return _lessons.reduce((store: TeacherLessonExplain[], lesson) => {
+            if (lesson === null) {
+                return store;
+            }
+
+            store.push(lesson);
+
+            return store;
+        }, []).filter((value) => {
+            let valid: boolean = true;
+
+            for (const filter of config.parser.alertableIgnoreFilter.teacher) {
+                if (filter.lesson === value.lesson && filter.type === value.type) {
+                    valid = false;
+                    break;
+                }
+            }
+
+            return valid;
+        }).length > 0;
     }
 }

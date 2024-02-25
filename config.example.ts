@@ -71,6 +71,15 @@ export const config: ConfigScheme = {
             error: 60, // 1 min
             teams: 1 * 24 * 60 * 60 // 1 day
         },
+        alertableIgnoreFilter: {
+            group: [
+                {
+                    lesson: 'Уч прак програм',
+                    type: 'Пр-ка'
+                }
+            ],
+            teacher: []
+        },
         lessonIndexIfEmpty: 2, //Если сегодня пар нет - после данной пары отправятся сообщения людям
         endpoints: {
             timetableGroup: 'https://mgkct.minskedu.gov.by/персоналии/учащимся/расписание-занятий-на-неделю',

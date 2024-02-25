@@ -1,4 +1,5 @@
 import { AppServiceName } from "./src/app";
+import { GroupLessonExplain, TeacherLessonExplain } from "./src/services/timetable";
 
 type DayCall = [[string, string], [string, string]];
 type DayCallShort = [string, string];
@@ -74,6 +75,10 @@ export type ConfigScheme = {
             activity: number,
             error: number,
             teams: number
+        },
+        alertableIgnoreFilter: {
+            group: Pick<GroupLessonExplain, 'lesson' | 'type'>[],
+            teacher: Pick<TeacherLessonExplain, 'lesson' | 'type'>[]
         },
         lessonIndexIfEmpty: number,
         endpoints: {
