@@ -48,7 +48,7 @@ class GoogleUser {
                         value = Number(value)
                     }
 
-                    updateKeyInTableById('alice_users', key, value, this.data.id);
+                    updateKeyInTableById('google_accounts', key, value, this.data.id);
                     this.data[key] = value;
 
                     return true;
@@ -72,7 +72,9 @@ class GoogleUser {
     }
 
     private updateCredentials(credentials: Credentials) {
-
+        this.refresh_token = credentials.refresh_token || null;
+        this.access_token = credentials.access_token || null;
+        this.access_token_expires = credentials.expiry_date || null;
     }
 }
 

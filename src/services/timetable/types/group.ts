@@ -16,7 +16,7 @@ export type GroupDay = {
 export type GroupLesson = GroupLessonExplain | GroupLessonExplain[] | null
 
 export type GroupLessonExplain = {
-    subgroup?: number
+    subgroup?: number,
     lesson: string,
     type: string | null,
     teacher: string | null,

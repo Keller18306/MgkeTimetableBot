@@ -68,6 +68,8 @@ type ParserEvents = {
 
     updateWeek: [chatMode: ChatMode, weekIndex: number];
 
+    flushCache: [days: ArchiveAppendDay[]]
+
     error: [error: Error];
 }
 
@@ -500,6 +502,7 @@ export class ParserService implements AppService {
         }
 
         this.app.getService('timetable').appendDays(archiveDays);
+        this.events.emit('flushCache', archiveDays);
 
         // проверка на то, что добавлена новая неделя
         const maxWeekIndex = Math.max(...(Object.values(cache.timetable) as (Group | Teacher)[])

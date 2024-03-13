@@ -28,9 +28,9 @@ const main = async () => {
     await app.getService('parser').parse();
 
     console.log('Sync calendar');
-    await calendar.resync();
+    // await calendar.resync(true);
     // await calendar.resyncTeacher()
-    // await calendar.resyncGroup()
+    await calendar.resyncGroup('63', true);
 }
 
 main();

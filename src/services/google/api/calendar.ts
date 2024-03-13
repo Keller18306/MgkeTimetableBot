@@ -18,8 +18,11 @@ export class GoogleCalendarApi {
     private queueCreateCalendar: <Return = unknown>(fn: () => Return | Promise<Return>) => Promise<Return>;
 
     constructor(auth: OAuth2Client | GoogleAuth) {
+        const { maxRequestsPerInterval, interval } = config.google.rateLimitter;
+
         this.auth = auth;
-        this.queue = throttledQueue(600, 60 * 1e3, true); //не более запросов
+
+        this.queue = throttledQueue(maxRequestsPerInterval, interval, true); //не более запросов
         this.queueCreateCalendar = throttledQueue(20, 2 * 60 * 60 * 1e3); //не более 20 календарей в 2 часа
     }
 

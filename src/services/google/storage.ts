@@ -12,6 +12,12 @@ export class CalendarStorage {
             .run({ type, value, calendarId });
     }
 
+    public deleteCalendarId(calendarId: string): void {
+        db.prepare('DELETE FROM google_calendars WHERE calendarId = :calendarId')
+            .run({ calendarId });
+    }
+
+
     public getLastManualSyncedDay(type: 'teacher' | 'group', value: string | number): number | undefined {
         const calendar: any = db.prepare("SELECT lastManualSyncedDay FROM google_calendars WHERE `type` = ? AND `value` = ?")
             .get(type, value);

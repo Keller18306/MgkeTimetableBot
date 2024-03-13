@@ -1,11 +1,18 @@
+import { GaxiosError } from "gaxios";
 import { config } from "../../../config";
 import { App } from "../../app";
 import { DayIndex, StringDate } from "../../utils";
 import { GroupDayEvent, TeacherDayEvent } from "../parser";
+import { ArchiveAppendDay } from "../timetable";
 import { GroupDay, GroupLessonExplain, TeacherDay, TeacherLessonExplain } from "../timetable/types";
-import { GoogleServiceApi } from "./api";
-import { GoogleCalendarApi } from "./api/calendar";
+import { GoogleCalendarApi, GoogleServiceApi } from "./api";
 import { CalendarStorage } from "./storage";
+
+interface LessonInfo {
+    title: string;
+    description: string;
+    location: string | undefined;
+}
 
 export class GoogleCalendar {
     public api: GoogleCalendarApi;
@@ -19,13 +26,15 @@ export class GoogleCalendar {
     }
 
     public run() {
-        const updater = this.app.getService('parser');
+        const { events } = this.app.getService('parser');
 
-        updater.events.on('addGroupDay', this.groupDay.bind(this));
-        updater.events.on('updateGroupDay', this.groupDay.bind(this));
+        events.on('addGroupDay', this.groupDay.bind(this));
+        events.on('updateGroupDay', this.groupDay.bind(this));
 
-        updater.events.on('addTeacherDay', this.teacherDay.bind(this));
-        updater.events.on('updateTeacherDay', this.teacherDay.bind(this));
+        events.on('addTeacherDay', this.teacherDay.bind(this));
+        events.on('updateTeacherDay', this.teacherDay.bind(this));
+
+        events.on('flushCache', this.flushCache.bind(this))
     }
 
     private getTimetable() {
@@ -39,7 +48,12 @@ export class GoogleCalendar {
             console.log(`[GoogleCalendar:group:${group}]`, `Sync ${day.day}`, calendarId);
         }
 
-        await this.clearDay(calendarId, day);
+        try {
+            await this.clearDay(calendarId, day);
+        } catch (e) {
+            console.error(e);
+            return;
+        }
 
         const promises: Promise<any>[] = [];
 
@@ -48,24 +62,19 @@ export class GoogleCalendar {
             if (!lesson) continue;
 
             const lessons = Array.isArray(lesson) ? lesson : [lesson];
-            const { title, description, location } = this.getGroupLessonInfo(lessons);
-            const [from, to] = this.getLessonTimeBounds(day, +i);
+            const lessonInfo = this.getGroupLessonInfo(lessons);
+            const bounds = this.getLessonTimeBounds(+i, day);
 
-            const response = this.api.createEvent({
-                calendarId: calendarId,
-                title: title,
-                start: from,
-                end: to,
-                description: description,
-                location: location
-            });
+            for (const bound of bounds) {
+                const response = this.createEvent(calendarId, lessonInfo, day, bound).then(response => {
+                    if (config.dev) {
+                        console.log(`[GoogleCalendar:group:${group}]`, `EventCreated`, +i + 1, lessonInfo.title, response.id);
+                    }
 
-            promises.push(response);
+                    return response;
+                });
 
-            if (config.dev) {
-                response.then((response) => {
-                    console.log(`[GoogleCalendar:group:${group}]`, `EventCreated`, +i + 1, title, response.id)
-                })
+                promises.push(response);
             }
         }
 
@@ -79,7 +88,12 @@ export class GoogleCalendar {
             console.log(`[GoogleCalendar:teacher:${teacher}]`, `Sync ${day.day}`, calendarId);
         }
 
-        await this.clearDay(calendarId, day);
+        try {
+            await this.clearDay(calendarId, day);
+        } catch (e) {
+            console.error(e);
+            return;
+        }
 
         const promises: Promise<any>[] = [];
 
@@ -87,28 +101,83 @@ export class GoogleCalendar {
             const lesson = day.lessons[i];
             if (!lesson) continue;
 
-            const { title, description, location } = this.getTeacherLessonInfo(lesson);
-            const [from, to] = this.getLessonTimeBounds(day, +i);
+            const lessonInfo = this.getTeacherLessonInfo(lesson);
+            const bounds = this.getLessonTimeBounds(+i, day);
 
-            const response = this.api.createEvent({
-                calendarId: calendarId,
-                title: title,
-                start: from,
-                end: to,
-                description: description,
-                location: location
-            });
+            for (const bound of bounds) {
+                const response = this.createEvent(calendarId, lessonInfo, day, bound).then(response => {
+                    if (config.dev) {
+                        console.log(`[GoogleCalendar:teacher:${teacher}]`, `EventCreated`, +i + 1, lessonInfo.title, response.id);
+                    }
 
-            promises.push(response);
+                    return response;
+                });
 
-            if (config.dev) {
-                response.then((response) => {
-                    console.log(`[GoogleCalendar:teacher:${teacher}]`, `EventCreated`, +i + 1, title, response.id)
-                })
+                promises.push(response);
             }
         }
 
         await Promise.all(promises);
+    }
+
+    public async flushCache(days: ArchiveAppendDay[]) {
+        const ordered = days.slice().sort((_a, _b) => {
+            const a = DayIndex.fromStringDate(_a.day.day).valueOf();
+            const b = DayIndex.fromStringDate(_b.day.day).valueOf();
+
+            return a - b;
+        }).reduce<{ [key: string]: ArchiveAppendDay[] }>((acc, appendDay) => {
+            let value: string;
+
+            switch (appendDay.type) {
+                case 'group':
+                    value = appendDay.group;
+                    break;
+                case 'teacher':
+                    value = appendDay.teacher;
+                    break;
+            }
+
+            if (!acc[`${appendDay.type}_${value}`]) {
+                acc[`${appendDay.type}_${value}`] = [];
+            }
+
+            acc[`${appendDay.type}_${value}`].push(appendDay);
+
+            return acc;
+        }, {});
+
+        const promises: Promise<void>[] = [];
+
+        for (const key in ordered) {
+            const days = ordered[key];
+
+            const promise = (async () => {
+                for (const appendDay of days) {
+                    const dayIndex = DayIndex.fromStringDate(appendDay.day.day).valueOf();
+
+                    let value: string;
+                    switch (appendDay.type) {
+                        case 'group':
+                            await this.groupDay(appendDay);
+                            value = appendDay.group;
+                            break;
+                        case 'teacher':
+                            await this.teacherDay(appendDay);
+                            value = appendDay.teacher;
+                            break;
+                    }
+
+                    this.storage.setLastManualSyncedDay(appendDay.type, value, dayIndex)
+                }
+            })();
+
+            promise.catch(console.error);
+
+            promises.push(promise);
+        }
+
+        await Promise.all(promises)
     }
 
     public async resyncGroup(group: string, forceFullResync: boolean = false) {
@@ -151,7 +220,7 @@ export class GoogleCalendar {
         }
     }
 
-    public async resync() {
+    public async resync(forceFullResync?: boolean) {
         const promises: Promise<any>[] = [];
 
         const entries: {
@@ -175,11 +244,11 @@ export class GoogleCalendar {
             }
 
             if (type === 'group') {
-                promises.push(this.resyncGroup(value));
+                promises.push(this.resyncGroup(value, forceFullResync));
             }
 
             if (type === 'teacher') {
-                promises.push(this.resyncTeacher(value));
+                promises.push(this.resyncTeacher(value, forceFullResync));
             }
         }
 
@@ -188,7 +257,17 @@ export class GoogleCalendar {
 
     private async clearDay(calendarId: string, { day }: GroupDay | TeacherDay) {
         const dayDate = StringDate.fromStringDate(day).toDate();
-        await this.api.clearDayEvents(calendarId, dayDate);
+        try {
+            await this.api.clearDayEvents(calendarId, dayDate);
+        } catch (e) {
+            if (e instanceof GaxiosError) {
+                if (e.status === 410) {
+                    this.storage.deleteCalendarId(calendarId);
+                }
+            }
+
+            throw e;
+        }
     }
 
     private async getCalendarId(type: 'teacher' | 'group', value: string | number): Promise<string> {
@@ -213,31 +292,42 @@ export class GoogleCalendar {
         return calendarId;
     }
 
-    private getLessonTimeBounds({ day }: GroupDay | TeacherDay, lessonIndex: number) {
-        let dayCall = config.timetable.weekdays[lessonIndex];
+    private getLessonTimeBounds(lessonIndex: number, { day }: TeacherDay | GroupDay) {
+        const isSaturday: boolean = StringDate.fromStringDate(day).isSaturday();
+        const calls = config.timetable[isSaturday ? 'saturday' : 'weekdays'];
+
+        let dayCall = calls[lessonIndex];
         if (!dayCall) {
-            dayCall = config.timetable.weekdays.at(-1)!;
+            dayCall = calls.at(-1)!;
         }
 
-        return [
-            StringDate.fromStringDateTime(day, dayCall[0][0]).toDate(),
-            StringDate.fromStringDateTime(day, dayCall[1][1]).toDate()
-        ]
+        return dayCall;
     }
 
-    private getGroupLessonInfo(lessons: GroupLessonExplain[]) {
-        const title = lessons.map((lesson) => {
-            const line: string[] = [];
+    private getGroupLessonInfo(lessons: GroupLessonExplain[]): LessonInfo {
+        const everyTitleEqual = lessons.every(
+            lesson => lesson.lesson === lessons[0].lesson
+        );
 
-            if (lesson.subgroup) {
-                line.push(`${lesson.subgroup}.`);
-            }
+        let title: string;
+        if (everyTitleEqual && lessons.length > 1) {
+            title = lessons.map((lesson) => {
+                return lesson.subgroup;
+            }).join(',') + ' - ' + lessons[0].lesson;
+        } else {
+            title = lessons.map((lesson) => {
+                const line: string[] = [];
 
-            line.push(lesson.lesson);
+                if (lesson.subgroup) {
+                    line.push(`${lesson.subgroup}.`);
+                }
 
-            return line.join(' ');
-        }).join(' | ');
+                line.push(lesson.lesson);
 
+                return line.join(' ');
+            }).join(' | ');
+        }
+  
         const description = lessons.map((lesson) => {
             const line: string[] = [];
 
@@ -276,7 +366,7 @@ export class GoogleCalendar {
         }
     }
 
-    private getTeacherLessonInfo(lesson: TeacherLessonExplain) {
+    private getTeacherLessonInfo(lesson: TeacherLessonExplain): LessonInfo {
         const line: string[] = [];
         line.push(`<b>Предмет:</b> ${lesson.lesson}`);
         if (lesson.type) {
@@ -298,5 +388,19 @@ export class GoogleCalendar {
             description: line.join('\n'),
             location: lesson.cabinet || undefined
         }
+    }
+
+    private createEvent(calendarId: string, { title, description, location }: LessonInfo, { day }: GroupDay | TeacherDay, bound: [string, string]) {
+        const from = StringDate.fromStringDateTime(day, bound[0]).toDate();
+        const to = StringDate.fromStringDateTime(day, bound[1]).toDate();
+
+        return this.api.createEvent({
+            calendarId: calendarId,
+            title: title,
+            start: from,
+            end: to,
+            description: description,
+            location: location
+        });
     }
 }

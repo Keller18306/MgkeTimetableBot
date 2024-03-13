@@ -142,13 +142,14 @@ export class Timetable implements AppService {
 
     public appendDays(entries: ArchiveAppendDay[]) {
         for (const entry of entries) {
-            // const dayIndex: number = strDateToIndex(entry.day.day);
-            // const data = JSON.stringify(entry.day.lessons);
+            switch (entry.type) {
+                case 'group':
+                    this.addGroupDay(entry.group, entry.day);
+                    break;
 
-            if (entry.type === 'group') {
-                this.addGroupDay(entry.group, entry.day);
-            } else if (entry.type === 'teacher') {
-                this.addTeacherDay(entry.teacher, entry.day);
+                case 'teacher':
+                    this.addTeacherDay(entry.teacher, entry.day);
+                    break;
             }
         }
     }

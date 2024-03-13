@@ -1,4 +1,5 @@
 import { AppServiceName } from "../../../../app";
+import { GoogleUser } from "../../../google/user";
 import { AbstractCommand, ButtonType, CmdHandlerParams } from "../../abstract";
 
 export default class extends AbstractCommand {
@@ -6,7 +7,7 @@ export default class extends AbstractCommand {
     public payloadAction = null;
     public requireServices: AppServiceName[] = ['google'];
 
-    handler({ context, chat, service, keyboard }: CmdHandlerParams) {
+    async handler({ context, chat, service, keyboard }: CmdHandlerParams) {
         const google = this.app.getService('google');
 
         if (!chat.google_email) {
@@ -24,8 +25,29 @@ export default class extends AbstractCommand {
             });
         }
 
+        //recheck account
+        await GoogleUser
+            .getByEmail(chat.google_email)
+            .api.getAuth()
+            .getAccessToken();
+
         return context.send([
-            `Привязанный гугл аккаунт: ${chat.google_email}`
-        ].join('\n'))
+            `Привязанный гугл аккаунт: ${chat.google_email}.`,
+            'Действие с календарями:'
+        ].join('\n'), {
+            keyboard: keyboard.getKeyboardBuilder('GoogleAuth', true).add({
+                type: ButtonType.Callback,
+                text: 'Список',
+                payload: {}
+            }).row().add({
+                type: ButtonType.Callback,
+                text: 'Добавить',
+                payload: {}
+            }).add({
+                type: ButtonType.Callback,
+                text: 'Удалить',
+                payload: {}
+            })
+        })
     }
 }
