@@ -1,5 +1,6 @@
+import SQLite3 from 'better-sqlite3';
 import { App } from './src/app';
-import { dbOld, sequelize } from './src/db';
+import { sequelize } from './src/db';
 import { ApiKeyModel } from './src/services/api/key';
 import { BotChat } from './src/services/bots/chat';
 import { StorageModel } from './src/services/bots/storage/model';
@@ -8,6 +9,8 @@ import { ViberChat } from './src/services/bots/viber/chat';
 import { VkChat } from './src/services/bots/vk/chat';
 import { TimetableArchive } from './src/services/timetable/models/timetable';
 import { VKAppUser } from './src/services/vk_app/user';
+
+export const dbOld = new SQLite3('sqlite3.db');
 
 // Чтобы создались все ORM модели
 new App();
