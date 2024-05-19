@@ -40,18 +40,15 @@ export default class extends AbstractCommand {
         const botMemory = memoryUsage();
         const totalMem = totalmem();
 
-        const [cpuTemp, resUsage] = await Promise.all([
-            cpuTemperature(),
-            resourceUsage()
-        ]);
-
         const [
+            cpuTemp, resUsage,
             // botChats,
             vkBotChats, viberBotChats, tgBotChats,
             vkBotChatsAllowed, viberBotChatsAllowed, tgBotChatsAllowed,
             vkAppUsers,
             apiKeys, apiKeysActive
         ] = await Promise.all([
+            cpuTemperature(), resourceUsage(),
             // BotChat.count(),
 
             BotChat.count({ where: { service: 'vk' } }),
