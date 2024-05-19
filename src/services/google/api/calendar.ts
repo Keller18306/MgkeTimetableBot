@@ -122,15 +122,30 @@ export class GoogleCalendarApi {
         await Promise.all(promises);
     }
 
-    public async addById(id: string) {
+    public async addById(calendarId: string) {
         await this.queue(() => {
             return this.api.calendarList.insert({
                 requestBody: {
-                    id: id,
+                    id: calendarId,
                     hidden: false,
                     selected: true
                 }
             })
+        })
+    }
+
+    public async getList(): Promise<string[]> {
+        return this.queue(async () => {
+            const list = await this.api.calendarList.list();
+            return list.data.items?.map((calendar) => {
+                return calendar.id!;
+            }) ?? [];
+        })
+    }
+
+    public async deleteFromListById(calendarId: string) {
+        await this.queue(() => {
+            return this.api.calendarList.delete({ calendarId });
         })
     }
 

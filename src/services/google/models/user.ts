@@ -51,7 +51,7 @@ class GoogleUser extends Model<InferAttributes<GoogleUser>, InferCreationAttribu
         this.accessToken = credentials.access_token || null;
         this.accessTokenExpires = credentials.expiry_date || null;
 
-        await this.save()
+        await this.save();
     }
 }
 

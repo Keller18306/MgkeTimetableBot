@@ -50,6 +50,10 @@ export class GoogleService implements AppService {
         return GoogleUserApi.getAuthUrl(state);
     }
 
+    public getByEmail(email: string): Promise<GoogleUser> {
+        return GoogleUser.getByEmail(email);
+    }
+
     private async oauth(request: Request<null, null, null, Partial<{ code: string }>>, response: Response): Promise<void> {
         const result = z.object({
             code: z.string({

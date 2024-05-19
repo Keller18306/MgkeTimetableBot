@@ -5,6 +5,8 @@ import { StringDate } from "../../../utils";
 import { GroupDay, TeacherDay } from "../../timetable";
 import { GoogleCalendarApi } from "../api";
 
+export type CalendarType = 'group' | 'teacher';
+
 export interface CalendarLessonInfo {
     title: string;
     description: string;
@@ -26,7 +28,7 @@ class CalendarItem extends Model<InferAttributes<CalendarItem>, InferCreationAtt
         return this._api;
     }
 
-    public static async getOrCreateCalendar(type: 'teacher' | 'group', value: string | number): Promise<CalendarItem> {
+    public static async getOrCreateCalendar(type: CalendarType, value: string | number): Promise<[CalendarItem, boolean]> {
         return sequelize.transaction({
             isolationLevel: Transaction.ISOLATION_LEVELS.READ_COMMITTED
         }, async (transaction) => {
@@ -37,7 +39,7 @@ class CalendarItem extends Model<InferAttributes<CalendarItem>, InferCreationAtt
             });
 
             if (calendar) {
-                return calendar;
+                return [calendar, false];
             }
 
             let owner: string | undefined;
@@ -51,15 +53,17 @@ class CalendarItem extends Model<InferAttributes<CalendarItem>, InferCreationAtt
             const calendarId = await this.api.createCalendar(`Расписание занятий (${owner} - ${value})`);
             console.log('Created', type, value, calendarId);
 
-            return CalendarItem.upsert({
+            calendar = await CalendarItem.upsert({
                 calendarId: calendarId,
                 type: type,
                 value: String(value)
             }, { transaction }).then(res => res[0]);
+
+            return [calendar!, true];
         })
     }
 
-    public static async getCalendar(type: 'teacher' | 'group', value: string | number): Promise<CalendarItem | null> {
+    public static async getCalendar(type: CalendarType, value: string | number): Promise<CalendarItem | null> {
         return CalendarItem.findOne({
             where: { type, value }
         });
@@ -69,7 +73,7 @@ class CalendarItem extends Model<InferAttributes<CalendarItem>, InferCreationAtt
     declare type: 'group' | 'teacher';
     declare value: string;
     declare calendarId: string;
-    declare lastManualSyncedDay: CreationOptional<number>;
+    declare lastManualSyncedDay: CreationOptional<number | null>;
 
     public async clearDay({ day }: GroupDay | TeacherDay) {
         const dayDate = StringDate.fromStringDate(day).toDate();
@@ -123,7 +127,8 @@ CalendarItem.init({
     },
     lastManualSyncedDay: {
         type: DataTypes.INTEGER,
-        defaultValue: 0
+        defaultValue: 0,
+        allowNull: true
     }
 }, {
     sequelize: sequelize,

@@ -1,12 +1,12 @@
 import { Op } from "sequelize";
 import { config } from "../../../config";
 import { App } from "../../app";
+import { Logger } from "../../logger";
 import { DayIndex, StringDate } from "../../utils";
 import { GroupDayEvent, TeacherDayEvent } from "../parser";
 import { GroupDay, GroupLessonExplain, TeacherDay, TeacherLessonExplain } from "../parser/types";
 import { ArchiveAppendDay } from "../timetable";
-import { CalendarItem, CalendarLessonInfo } from "./models/calendar";
-import { Logger } from "../../logger";
+import { CalendarItem, CalendarLessonInfo, CalendarType } from "./models/calendar";
 
 export class GoogleCalendarController {
     public logger: Logger = new Logger('GoogleCalendar');
@@ -38,14 +38,14 @@ export class GoogleCalendarController {
             where: {
                 lastManualSyncedDay: {
                     [Op.not]: null
-                } as any
+                }
             }
         });
 
         const promises: Promise<any>[] = [];
 
         for (const calendar of calendarsToSync) {
-            promises.push(this.resyncCalendar(calendar));
+            promises.push(this.resync(calendar));
         }
 
         await Promise.all(promises);
@@ -212,9 +212,9 @@ export class GoogleCalendarController {
         await Promise.all(promises)
     }
 
-    public async resyncCalendar(calendar: CalendarItem, forceFullResync: boolean = false) {
+    public async resync(calendar: CalendarItem, forceFullResync: boolean = false) {
         let fromDay: number | undefined;
-        if (!forceFullResync) {
+        if (!forceFullResync && calendar.lastManualSyncedDay !== null) {
             fromDay = calendar.lastManualSyncedDay;
 
             if (fromDay) {
@@ -252,9 +252,11 @@ export class GoogleCalendarController {
 
             await calendar.update({ lastManualSyncedDay: dayIndex });
         }
+
+        await calendar.update({ lastManualSyncedDay: null });
     }
 
-    public async resync(forceFullResync?: boolean) {
+    public async resyncAll(forceFullResync?: boolean) {
         const promises: Promise<any>[] = [];
 
         const [groups, teachers] = await Promise.all([
@@ -263,7 +265,7 @@ export class GoogleCalendarController {
         ]);
 
         const entries: {
-            type: 'group' | 'teacher',
+            type: CalendarType,
             value: string
         }[] = [
                 ...groups.map((value): { type: 'group', value: string } => {
@@ -275,15 +277,19 @@ export class GoogleCalendarController {
             ];
 
         for (const { type, value } of entries) {
-            let calendar: CalendarItem;
+            let calendar: CalendarItem | null;
+
             try {
-                calendar = await CalendarItem.getOrCreateCalendar(type, value);
+                calendar = await CalendarItem.getCalendar(type, value);
+                if (!calendar) {
+                    continue;
+                }
             } catch (e) {
                 console.error(e);
                 break;
             }
 
-            promises.push(this.resyncCalendar(calendar, forceFullResync));
+            promises.push(this.resync(calendar, forceFullResync));
         }
 
         await Promise.all(promises);

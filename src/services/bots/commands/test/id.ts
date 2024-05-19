@@ -4,8 +4,9 @@ export default class extends AbstractCommand {
     public regexp = /^(!|\/)id$/i
     public payloadAction = null;
 
-    handler({ context }: CmdHandlerParams) {
+    handler({ chat, context }: CmdHandlerParams) {
         return context.send([
+            `chat_id: ${chat.id}`,
             `peer_id: ${context.peerId}`,
             `user_id: ${context.userId}`
         ].join('\n'))

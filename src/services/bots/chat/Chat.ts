@@ -75,22 +75,22 @@ class BotChat<T extends AbstractServiceChat = any> extends Model<InferAttributes
     declare accepted: CreationOptional<boolean>;
 
     /** Откуда пришёл юзер */
-    declare ref: CreationOptional<string | null>;
+    declare ref: string | null;
 
     /** Текущая сцена */
-    declare scene: CreationOptional<string | null>;
+    declare scene: string | null;
 
     /** Режим чата (ученик, преподаватель, родитель) */
-    declare mode: CreationOptional<ChatMode | null>;
+    declare mode: ChatMode | null;
 
     /** Выбранная группа для ученика */
-    declare group: CreationOptional<string | null>;
+    declare group: string | null;
 
     /** Выбранное имя для преподавателя */
-    declare teacher: CreationOptional<string | null>;
+    declare teacher: string | null;
 
     /** Почта привязанного гугл аккаунта */
-    declare googleEmail: CreationOptional<string | null>;
+    declare googleEmail: string | null;
 
     /** Показывать ли кнопку "О боте" */
     declare showAbout: CreationOptional<boolean>;
@@ -117,7 +117,7 @@ class BotChat<T extends AbstractServiceChat = any> extends Model<InferAttributes
     declare deleteLastMsg: CreationOptional<boolean>;
 
     /** Последний ID сообщения бота с расписанием */
-    declare lastMsgId: CreationOptional<number | null>;
+    declare lastMsgId: number | null;
 
     /** Время последнего сообщения к боту */
     declare lastMsgTime: CreationOptional<number>;

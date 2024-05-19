@@ -50,6 +50,15 @@ export class BotService implements AppService {
     //     return cmd.instance;
     // }
 
+    public getCallbackById<T extends AbstractCallback>(id: string): T {
+        const cb = this.callbacks[id];
+        if (!cb) {
+            throw new Error(`Callback with id '${id}' not found`);
+        }
+
+        return cb.instance as T;
+    }
+
     public searchCommandByMessage(message?: string, scene?: string | null): { regexp: string, cmd: AbstractCommand } | null {
         if (!message) return null
 
