@@ -1,23 +1,34 @@
 import { CronJob } from 'cron';
-import db from '.';
+import { Op } from 'sequelize';
+import { sequelize } from '.';
 import { App } from '../app';
+import { StorageModel } from '../services/bots/storage/model';
+import { TimetableArchive } from '../services/timetable/models/timetable';
 import { DayIndex } from '../utils';
-import { vaccum } from './common';
 
-export function vanish(app: App) {
+export async function vanish(app: App) {
     //clean storage
-    db.prepare('DELETE FROM storage WHERE expires != 0 AND expires < ?')
-        .run(Math.ceil(Date.now() / 1e3));
+    await StorageModel.destroy({
+        where: {
+            expiresAt: {
+                [Op.ne]: 0,
+                [Op.lt]: Math.ceil(Date.now() / 1e3)
+            }
+        }
+    })
 
     //clean timetable days larger then 5 years
-    db.prepare('DELETE FROM timetable_archive WHERE day <= ?')
-        .run(DayIndex.fromDate(new Date(Date.now() - (1e3 * 60 * 60 * 24 * 365 * 5))).valueOf());
+    await TimetableArchive.destroy({
+        where: {
+            day: {
+                [Op.lte]: DayIndex.fromDate(new Date(Date.now() - (1e3 * 60 * 60 * 24 * 365 * 5))).valueOf()
+            }
+        }
+    });
 
     //TODO DELETE OLD CHATS
 
-    vaccum();
-
-    app.getService('timetable').resetCache();
+    await sequelize.query('VACUUM');
 }
 
 export function startVanishCronJob(app: App) {

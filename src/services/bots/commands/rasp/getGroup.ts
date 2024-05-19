@@ -60,7 +60,7 @@ export default class GetGroupCommand extends AbstractCommand {
             break;
         }
 
-        chat.appendGroupSearchHistory(group);
+        chat.appendGroupHistory(group);
 
         if (regexp === 'day') {
             return this.sendDay(group, initiator, params);
@@ -77,9 +77,9 @@ export default class GetGroupCommand extends AbstractCommand {
         throw new Error('unknown error');
     }
 
-    private async sendDay(group: string, initiator: InputInitiator, { context, keyboard, scheduleFormatter }: CmdHandlerParams) {
+    private async sendDay(group: string, initiator: InputInitiator, { context, keyboard, formatter }: CmdHandlerParams) {
         const groupRasp = raspCache.groups.timetable[group];
-        const message = scheduleFormatter.formatGroupFull(String(group), {
+        const message = formatter.formatGroupFull(String(group), {
             showHeader: true,
             days: getDayRasp(groupRasp.days, true, 2)
         });
@@ -95,18 +95,18 @@ export default class GetGroupCommand extends AbstractCommand {
         return context.send(message, options);
     }
 
-    private async sendWeek(group: string, initiator: InputInitiator, { context, keyboard, scheduleFormatter }: CmdHandlerParams) {
+    private async sendWeek(group: string, initiator: InputInitiator, { context, keyboard, formatter }: CmdHandlerParams) {
         const weekIndex = WeekIndex.getRelevant();
         const weekRange = weekIndex.getWeekDayIndexRange();
-        const days = this.app.getService('timetable').getGroupDaysByRange(weekRange, group);
+        const days = await this.app.getService('timetable').getGroupDaysByRange(weekRange, group);
 
-        const message = scheduleFormatter.formatGroupFull(String(group), {
+        const message = formatter.formatGroupFull(String(group), {
             showHeader: true,
             days: days
         });
 
         const options: MessageOptions = {
-            keyboard: keyboard.WeekControl('group', group, weekIndex.valueOf(), false)
+            keyboard: await keyboard.WeekControl('group', group, weekIndex.valueOf(), false)
         }
 
         if (initiator === 'callback') {
@@ -119,7 +119,7 @@ export default class GetGroupCommand extends AbstractCommand {
     private async sendImage(group: string, initiator: InputInitiator, { context }: CmdHandlerParams) {
         const weekIndex = WeekIndex.getRelevant();
         const weekRange = weekIndex.getWeekDayIndexRange();
-        const days = this.app.getService('timetable').getGroupDaysByRange(weekRange, group);
+        const days = await this.app.getService('timetable').getGroupDaysByRange(weekRange, group);
 
         const image: ImageFile = await this.app.getService('image').builder.getGroupImage(group, days);
 

@@ -1,6 +1,8 @@
+import { BotChat } from "../chat";
+
 export abstract class AbstractAction {
     protected abstract context: any;
-    protected abstract chat: any;
+    protected abstract chat: BotChat;
 
     public abstract deleteLastMsg(): Promise<boolean>
 

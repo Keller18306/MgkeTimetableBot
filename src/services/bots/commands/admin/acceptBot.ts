@@ -1,5 +1,4 @@
-import db from "../../../../db";
-import { AbstractCommand, CmdHandlerParams } from "../../abstract";
+import { AbstractBot, AbstractCommand, CmdHandlerParams } from "../../abstract";
 
 export default class extends AbstractCommand {
     public regexp = /^(!|\/)acceptBot($|\s)/i
@@ -7,13 +6,20 @@ export default class extends AbstractCommand {
 
     public adminOnly: boolean = true;
 
-    handler({ context, chat, service }: CmdHandlerParams) {
-        let id: string | undefined | number = context.text?.replace(this.regexp, '').trim()
-        if (id == undefined || id === '') id = context.peerId
-        if (isNaN(+id)) return context.send('это не число');
+    async handler({ context, service }: CmdHandlerParams) {
+        let peerId: string | undefined | number = context.text?.replace(this.regexp, '').trim() || context.peerId;
+        if (isNaN(+peerId)) {
+            return context.send('это не число');
+        }
 
-        db.prepare(`UPDATE chat_options SET accepted = 1 WHERE service = ? AND id = (SELECT id FROM ${chat.db_table} WHERE peerId = ?)`).run(service, id);
+        const botService: AbstractBot = this.app.getService(service);
+        const chat = await botService.getChat(peerId);
 
-        return context.send(`ok ${id}`)
+        await chat.update({ accepted: true });
+
+        return context.send([
+            `ok:${peerId}`,
+            JSON.stringify(chat.toJSON(), null, 4)
+        ].join('\n'));
     }
 }

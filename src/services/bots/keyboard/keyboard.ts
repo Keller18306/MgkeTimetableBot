@@ -1,19 +1,14 @@
-import { App } from '../../app';
-import { SCHEDULE_FORMATTERS, WeekIndex } from '../../utils';
-import { AbstractChat, AbstractContext, ButtonType, KeyboardBuilder, KeyboardColor } from './abstract';
-
-function noYesSmile(value: number | boolean, text: string, smiles: [string, string] = ['✅', '🚫']): string {
-    return (value ? smiles[0] : smiles[1]) + ` ${text}`
-}
-
-function noYesColor(value: number | boolean) {
-    return value ? KeyboardColor.POSITIVE_COLOR : KeyboardColor.NEGATIVE_COLOR
-}
+import { App } from '../../../app';
+import { SCHEDULE_FORMATTERS } from '../../../formatter';
+import { WeekIndex } from '../../../utils';
+import { AbstractContext, ButtonType, KeyboardBuilder, KeyboardColor } from '../abstract';
+import { BotChat } from '../chat';
+import { noYesColor, noYesSmile } from './utils';
 
 export class Keyboard {
     constructor(
         private app: App,
-        private chat: AbstractChat,
+        private chat: BotChat,
         private context?: AbstractContext
     ) { }
 
@@ -241,7 +236,7 @@ export class Keyboard {
     public get GroupHistory() {
         const keyboard: KeyboardBuilder = new KeyboardBuilder('GroupHistory', true);
 
-        for (const group of this.chat.groupSearchHistory) {
+        for (const group of this.chat.historyGroup) {
             keyboard.add({
                 type: ButtonType.Callback,
                 text: group,
@@ -257,7 +252,7 @@ export class Keyboard {
     public get TeacherHistory() {
         const keyboard: KeyboardBuilder = new KeyboardBuilder('TeacherHistory', true);
 
-        for (const teacher of this.chat.teacherSearchHistory) {
+        for (const teacher of this.chat.historyTeacher) {
             keyboard.add({
                 type: ButtonType.Callback,
                 text: teacher,
@@ -286,7 +281,7 @@ export class Keyboard {
         return keyboard;
     }
 
-    public WeekControl(type: string, value: string | number, weekIndex: number, hidePastDays: boolean = true, showHeader: boolean = false): KeyboardBuilder | undefined {
+    public async WeekControl(type: string, value: string | number, weekIndex: number, hidePastDays: boolean = true, showHeader: boolean = false): Promise<KeyboardBuilder | undefined> {
         const keyboard: KeyboardBuilder = new KeyboardBuilder('WeekControl', true);
 
         if (!isNaN(+value)) {
@@ -297,7 +292,7 @@ export class Keyboard {
             type = type[0]; //first letter of type
         }
 
-        const { min, max } = this.app.getService('timetable').getWeekIndexBounds();
+        const { min, max } = await this.app.getService('timetable').getWeekIndexBounds();
 
         let newLine: boolean = false;
 
@@ -377,89 +372,4 @@ export class Keyboard {
             color: KeyboardColor.PRIMARY_COLOR
         });
     }
-}
-
-export class StaticKeyboard {
-    public static get NeedAccept() {
-        return new KeyboardBuilder('NeedAccept', true)
-            .add({
-                text: 'Проверить',
-                color: KeyboardColor.POSITIVE_COLOR
-            })
-    }
-
-    // public static get DisableChanges() {
-    //     return new KeyboardBuilder('DisableChanges', true)
-    //         .add({
-    //             text: 'Не оповещать об изменениях',
-    //             color: KeyboardColor.PRIMARY_COLOR,
-    //             payload: {
-    //                 action: 'disableNoticeChanges'
-    //             }
-    //         })
-    // }
-
-    // public static get UnsubscribeMessages() {
-    //     return new KeyboardBuilder('UnsubscribeMessages', true)
-    //         .add({
-    //             text: 'Отписаться от рассылки',
-    //             color: KeyboardColor.PRIMARY_COLOR,
-    //             payload: {
-    //                 action: 'unsubscribeMessages'
-    //             }
-    //         })
-    // }
-
-    public static get StartButton(): KeyboardBuilder {
-        const keyboard: KeyboardBuilder = new KeyboardBuilder('StartButton');
-
-        return keyboard.add({
-            text: 'Начать',
-            color: KeyboardColor.PRIMARY_COLOR
-        });
-    }
-
-    public static get SelectMode(): KeyboardBuilder {
-        const keyboard: KeyboardBuilder = new KeyboardBuilder('SelectMode');
-
-        return keyboard.add({
-            text: '👀 Гость',
-            color: KeyboardColor.PRIMARY_COLOR
-        }).row().add({
-            text: '👩‍🎓 Учащийся',
-            color: KeyboardColor.PRIMARY_COLOR
-        }).add({
-            text: '👩‍🏫 Преподаватель',
-            color: KeyboardColor.PRIMARY_COLOR
-        }).row().add({
-            text: '👨‍👩‍👦 Родитель',
-            color: KeyboardColor.PRIMARY_COLOR
-        }).add({
-            text: '🔙 Пропустить',
-            color: KeyboardColor.SECONDARY_COLOR
-        });
-    }
-
-    public static get Cancel(): KeyboardBuilder {
-        const keyboard: KeyboardBuilder = new KeyboardBuilder('Cancel');
-
-        return keyboard.add({
-            payload: 'cancel',
-            text: 'Отмена',
-            color: KeyboardColor.NEGATIVE_COLOR
-        });
-    }
-}
-
-export function withCancelButton(keyboard: KeyboardBuilder) {
-    keyboard.withCancelButton = true;
-
-    keyboard.row().add({
-        type: ButtonType.Callback,
-        text: 'Отмена',
-        payload: 'cancel',
-        color: KeyboardColor.NEGATIVE_COLOR
-    });
-
-    return keyboard;
 }

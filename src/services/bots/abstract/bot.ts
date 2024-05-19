@@ -1,14 +1,16 @@
+import { CreationAttributes } from "sequelize";
 import { format } from "util";
 import { config } from "../../../../config";
 import { App } from "../../../app";
+import { sequelize } from "../../../db";
 import { defines } from "../../../defines";
-import { InputRequestKey, RequestKey } from "../../key";
+import { InputRequestKey, RequestKey } from "../../../key";
+import { BotChat } from "../chat";
 import { AbstractBotEventListener } from "../events";
 import { BotInput, InputCancel } from "../input";
 import { StaticKeyboard } from "../keyboard";
 import { Storage } from "../storage";
 import { AbstractCallback, CbHandlerParams } from "./callback";
-import { AbstractChat } from "./chat";
 import { AbstractCommand, BotServiceName, CmdHandlerParams } from "./command";
 import { AbstractCallbackContext, AbstractCommandContext } from "./context";
 
@@ -22,7 +24,8 @@ export type HandleMessageOptions = {
 
 export abstract class AbstractBot {
     protected abstract _getAcceptKeyParams(context: AbstractCommandContext): InputRequestKey;
-    public abstract getChat(peerId: number | string): AbstractChat;
+    public abstract getChat(peerId: number | string, creationDefaults?: Partial<CreationAttributes<BotChat>>): Promise<BotChat>;
+    // public abstract getBotChat(peerId: number | string): Promise<BotChat>;
     public abstract event: AbstractBotEventListener;
 
     protected readonly acceptTool: RequestKey = new RequestKey(config.encrypt_key);
@@ -46,11 +49,11 @@ export abstract class AbstractBot {
         return this.getBotService().getCallbackByPayload(context.parsedPayload);
     }
 
-    protected async handleMessage(handlerParams: CmdHandlerParams, options: HandleMessageOptions = {}) {
+    protected async handleMessage(handlerParams: CmdHandlerParams, advancedOptions: HandleMessageOptions = {}) {
         const { chat, context, keyboard } = handlerParams;
         const { selfMention } = Object.assign({}, {
             selfMention: true
-        }, options);
+        }, advancedOptions);
 
         try {
             if (!chat.allowSendMess) {
@@ -106,6 +109,8 @@ export abstract class AbstractBot {
                 }
 
                 await cmd.handler(handlerParams);
+
+                await this.saveChanges(handlerParams);
             } catch (err: any) {
                 if (err instanceof InputCancel) return;
                 console.error(cmd.id, context.peerId, err);
@@ -152,12 +157,14 @@ export abstract class AbstractBot {
                     return;
                 }
 
-                await cb.handler(handlerParams)
+                await cb.handler(handlerParams);
+
+                await this.saveChanges(handlerParams);
             } catch (err: any) {
                 if (err instanceof InputCancel) return;
                 console.error(cb.id, context.peerId, err);
 
-                this.handleMessageError(cb, context, err)
+                this.handleMessageError(cb, context, err);
             }
 
             if (!context.callbackAnswered) {
@@ -168,24 +175,31 @@ export abstract class AbstractBot {
         }
     }
 
+    private async saveChanges({ chat, serviceChat }: CbHandlerParams | CmdHandlerParams): Promise<void> {
+        await sequelize.transaction(async (transaction) => {
+            await serviceChat.save({ transaction });
+            await chat.save({ transaction });
+        });
+    }
+
     protected handleMessageError(cmd: AbstractCommand | AbstractCallback, context: AbstractCommandContext | AbstractCallbackContext, err: Error) {
         const name = (cmd as any).__proto__.__proto__.constructor.name.replace(/^Abstract/, '').toLowerCase();
 
         if (context instanceof AbstractCallbackContext) {
-            context.answer('Произошла ошибка').catch(() => { })
+            context.answer('Произошла ошибка').catch(() => { });
         }
 
-        context.send(`🚫 Произошла ошибка во время выполнения ${name}#${cmd.id}: ${err.toString()}`).catch(() => { })
+        context.send(`🚫 Произошла ошибка во время выполнения ${name}#${cmd.id}: ${err.toString()}`).catch(() => { });
     }
 
-    protected notFound(chat: AbstractChat, context: AbstractCommandContext, keyboard: any, selfMention: boolean = true) {
+    protected notFound(chat: BotChat, context: AbstractCommandContext, keyboard: any, selfMention: boolean = true) {
         chat.scene = null; //set main scene
 
         return context.send('Команда не найдена', {
             ...(selfMention ? {
                 keyboard: keyboard
             } : {})
-        })
+        });
     }
 
     protected notAccepted(context: AbstractCommandContext) {
@@ -194,6 +208,6 @@ export abstract class AbstractBot {
         ), {
             disable_mentions: true,
             keyboard: StaticKeyboard.NeedAccept
-        })
+        });
     }
 }

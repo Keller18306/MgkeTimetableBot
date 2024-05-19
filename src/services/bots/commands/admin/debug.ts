@@ -3,26 +3,29 @@ import { arch, freemem, loadavg, uptime as osUptime, platform, release, totalmem
 import { uptime as botUptime, cpuUsage, memoryUsage, pid, resourceUsage, version, versions } from 'process';
 import { TelegramBotCommand } from 'puregram/generated';
 import { cpuTemperature } from 'systeminformation';
-import { getAllowSendMessCount, getRowsCountInTable } from "../../../../db";
+import { sequelize } from "../../../../db";
 import { formatBytes, formatSeconds } from "../../../../utils";
+import { ApiKeyModel } from '../../../api/key';
+import { VKAppUser } from '../../../vk_app/user';
 import { AbstractCommand, CmdHandlerParams } from "../../abstract";
+import { BotChat } from '../../chat';
+import { Op } from 'sequelize';
 
-let latestUsage = cpuUsage()
-let latestTime = Date.now()
-let percentCpu = 0
+let latestUsage = cpuUsage();
+let latestTime = Date.now();
+let percentCpu = 0;
+
 setInterval(() => {
-    const currentUsage = cpuUsage()
-    const currentTime = Date.now()
+    const currentUsage = cpuUsage();
+    const currentTime = Date.now();
 
-    const cpuTime = (currentUsage.system - latestUsage.system) + (currentUsage.user - latestUsage.user)
+    const cpuTime = (currentUsage.system - latestUsage.system) + (currentUsage.user - latestUsage.user);
 
-    percentCpu = 100 * cpuTime / ((currentTime - latestTime) * 1000)
+    percentCpu = 100 * cpuTime / ((currentTime - latestTime) * 1000);
 
-    latestUsage = currentUsage
-    latestTime = currentTime
-}, 3e3)
-
-//const { size: startBdSize } = fs.statSync('./sqlite3.db')
+    latestUsage = currentUsage;
+    latestTime = currentTime;
+}, 3e3);
 
 export default class extends AbstractCommand {
     public regexp = /^(!|\/)debug$/i
@@ -46,14 +49,30 @@ export default class extends AbstractCommand {
 
         const { size: bdSize } = fs.statSync('./sqlite3.db');
 
-        const vkBotChats = getRowsCountInTable('vk_bot_chats');
-        const vkBotChatsAllowed = getAllowSendMessCount('vk');
-        const vkAppUsers = getRowsCountInTable('vk_app_users');
-        const viberBotChats = getRowsCountInTable('viber_bot_chats');
-        const viberBotChatsAllowed = getAllowSendMessCount('viber');
-        const apiKeys = getRowsCountInTable('api');
-        const tgBotChats = getRowsCountInTable('tg_bot_chats');
-        const tgBotChatsAllowed = getAllowSendMessCount('tg');
+        const [
+            // botChats,
+            vkBotChats, viberBotChats, tgBotChats,
+            vkBotChatsAllowed, viberBotChatsAllowed, tgBotChatsAllowed,
+            vkAppUsers,
+            apiKeys, apiKeysActive
+        ] = await sequelize.transaction((transaction) => {
+            return Promise.all([
+                // BotChat.count(),
+
+                BotChat.count({ where: { service: 'vk' }, transaction }),
+                BotChat.count({ where: { service: 'viber' }, transaction }),
+                BotChat.count({ where: { service: 'tg' }, transaction }),
+
+                BotChat.count({ where: { service: 'vk', allowSendMess: true }, transaction }),
+                BotChat.count({ where: { service: 'viber', allowSendMess: true }, transaction }),
+                BotChat.count({ where: { service: 'tg', allowSendMess: true }, transaction }),
+
+                VKAppUser.count({ transaction }),
+
+                ApiKeyModel.count({ transaction }),
+                ApiKeyModel.count({ where: { lastUsed: { [Op.not]: null } }, transaction })
+            ]);
+        });
 
         return context.send([
             '-- Система --',
@@ -86,11 +105,11 @@ export default class extends AbstractCommand {
             `Время работы: ${formatSeconds(Math.floor(botUptime()))}`,
 
             `\n-- База данных --`,
-            `Чатов бота ВК: ${vkBotChats} (${vkBotChatsAllowed})`,
+            `Чатов бота ВК: ${vkBotChats} (allow: ${vkBotChatsAllowed})`,
             `Юзеров приложения ВК: ${vkAppUsers}`,
-            `Чатов бота Viber: ${viberBotChats} (${viberBotChatsAllowed})`,
-            `Чатов бота Telegram: ${tgBotChats} (${tgBotChatsAllowed})`,
-            `API ключей: ${apiKeys}`,
+            `Чатов бота Viber: ${viberBotChats} (allow: ${viberBotChatsAllowed})`,
+            `Чатов бота Telegram: ${tgBotChats} (allow: ${tgBotChatsAllowed})`,
+            `API ключей: ${apiKeys} (active: ${apiKeysActive})`,
         ].join('\n'));
     }
 }

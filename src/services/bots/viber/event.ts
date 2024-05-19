@@ -1,30 +1,27 @@
 import { Bot, Message } from 'viber-bot';
 import { App } from '../../../app';
 import { BotServiceName, MessageOptions } from '../abstract';
+import { BotChat } from '../chat';
 import { AbstractBotEventListener } from "../events";
 import { Keyboard } from "../keyboard";
-import { ViberChat, ViberDb } from "./chat";
+import { ViberChat } from "./chat";
 import { convertAbstractToViber } from './keyboard';
 
-export class ViberEventListener extends AbstractBotEventListener<ViberChat> {
-    protected _tableName: string = 'viber_bot_chats';
+export class ViberEventListener extends AbstractBotEventListener {
+    protected _model = ViberChat;
     public readonly service: BotServiceName = 'viber';
 
-    private bot: Bot
+    private bot: Bot;
 
     constructor(app: App, bot: Bot) {
         super(app)
         this.bot = bot
     }
 
-    protected createChat(chat: ViberDb): ViberChat {
-        return new ViberChat(chat);
-    }
-
-    public async sendMessage(chat: ViberChat, message: string, options: MessageOptions = {}) {
+    public async sendMessage(chat: BotChat<ViberChat>, message: string, options: MessageOptions = {}) {
         const keyboard = new Keyboard(this.app, chat)
 
-        return this.bot.sendMessage({ id: chat.peerId }, [
+        return this.bot.sendMessage({ id: chat.serviceChat.peerId }, [
             new Message.Text(message, convertAbstractToViber(keyboard.MainMenu))
         ]).catch((err) => {
             if (err.status == 6) {

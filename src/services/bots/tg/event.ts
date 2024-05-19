@@ -2,13 +2,14 @@ import { APIError, Telegram } from "puregram";
 import StatusCode from "status-code-enum";
 import { App } from "../../../app";
 import { BotServiceName, MessageOptions } from "../abstract";
+import { BotChat } from "../chat";
 import { AbstractBotEventListener } from "../events";
 import { Keyboard } from '../keyboard';
-import { TgChat, TgDb } from './chat';
+import { TgChat } from './chat';
 import { convertAbstractToTg } from "./keyboard";
 
-export class TgEventListener extends AbstractBotEventListener<TgChat> {
-    protected _tableName: string = 'tg_bot_chats';
+export class TgEventListener extends AbstractBotEventListener {
+    protected _model = TgChat;
     public readonly service: BotServiceName = 'tg';
 
     private tg: Telegram;
@@ -18,16 +19,12 @@ export class TgEventListener extends AbstractBotEventListener<TgChat> {
         this.tg = tg
     }
 
-    protected createChat(chat: TgDb): TgChat {
-        return new TgChat(chat);
-    }
-
-    public async sendMessage(chat: TgChat, message: string, options: MessageOptions = {}) {
+    public async sendMessage(chat: BotChat<TgChat>, message: string, options: MessageOptions = {}) {
         const keyboard = new Keyboard(this.app, chat)
 
         return this.tg.api.sendMessage({
             text: message,
-            chat_id: chat.peerId,
+            chat_id: chat.serviceChat.peerId,
             ...(!options.disableHtmlParser ? {
                 parse_mode: 'HTML',
             } : {}),

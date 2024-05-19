@@ -1,3 +1,4 @@
+import { Options } from "sequelize";
 import { AppServiceName } from "./src/app";
 import { GroupLessonExplain, TeacherLessonExplain } from "./src/services/timetable";
 
@@ -7,6 +8,7 @@ type DayCallShort = [string, string];
 export type ConfigScheme = {
     dev: boolean,
     services: AppServiceName[],
+    db: Options,
     http: {
         servername: string,
         port: number

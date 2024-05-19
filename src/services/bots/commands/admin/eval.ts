@@ -2,7 +2,7 @@ import * as crypto from 'crypto';
 import * as fs from 'fs';
 import { TelegramBotCommand } from 'puregram/generated';
 import { runInNewContext } from 'vm';
-import db from '../../../../db';
+import { sequelize } from '../../../../db';
 import { loadCache, raspCache, saveCache } from "../../../parser/raspCache";
 import { AbstractCommand, CmdHandlerParams } from "../../abstract";
 
@@ -15,7 +15,7 @@ export default class extends AbstractCommand {
         description: 'Выполнение произвольного JavaScript кода в услово изолированной среде'
     };
 
-    async handler({ context, chat }: CmdHandlerParams) {
+    async handler({ context, chat, serviceChat }: CmdHandlerParams) {
         const code = context.text?.replace(this.regexp, '').trim()
         if (code === undefined) {
             return context.send('Код для выполнения не введён');
@@ -32,7 +32,7 @@ export default class extends AbstractCommand {
                 global, clearInterval, clearTimeout, setInterval,
                 setTimeout, queueMicrotask, clearImmediate, setImmediate,
                 context, fs, crypto, require, process, Buffer,
-                console, db, chat, raspCache, saveCache, loadCache
+                console, sequelize, chat, serviceChat, raspCache, saveCache, loadCache
             }, {
                 timeout: 10000
             })

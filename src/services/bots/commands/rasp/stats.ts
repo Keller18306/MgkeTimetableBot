@@ -1,6 +1,6 @@
 import { TelegramBotCommand } from "puregram/generated";
+import { GroupLessonExplain, TeacherLessonExplain } from "../../../parser/types";
 import { Timetable } from "../../../timetable";
-import { GroupLessonExplain, TeacherLessonExplain } from "../../../timetable/types";
 import { AbstractCommand, CmdHandlerParams } from "../../abstract";
 
 export default class extends AbstractCommand {
@@ -18,9 +18,9 @@ export default class extends AbstractCommand {
         const archive = this.app.getService('timetable');
 
         if ((chat.mode === 'student' || chat.mode === 'parent') && chat.group) {
-            message = this.getGroupStats(archive, chat.group);
-        } else if(chat.mode === 'teacher' && chat.teacher) {
-            message = this.getTeacherStats(archive, chat.teacher);
+            message = await this.getGroupStats(archive, chat.group);
+        } else if (chat.mode === 'teacher' && chat.teacher) {
+            message = await this.getTeacherStats(archive, chat.teacher);
         } else {
             message = 'Группа или учитель не были выбраны';
         }
@@ -28,10 +28,10 @@ export default class extends AbstractCommand {
         return context.send(message);
     }
 
-    private getGroupStats(archive: Timetable, group: string) {
+    private async getGroupStats(archive: Timetable, group: string) {
         const message: string[] = [];
 
-        const days = archive.getGroupDays(group);
+        const days = await archive.getGroupDays(group);
 
         const total: {
             [lesson: string]: number
@@ -94,10 +94,10 @@ export default class extends AbstractCommand {
         return message.join('\n');
     }
 
-    private getTeacherStats(archive: Timetable, teacher: string) {
+    private async getTeacherStats(archive: Timetable, teacher: string) {
         const message: string[] = [];
 
-        const days = archive.getTeacherDays(teacher);
+        const days = await archive.getTeacherDays(teacher);
 
         const total: {
             [lesson: string]: number

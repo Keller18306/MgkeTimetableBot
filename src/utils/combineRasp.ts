@@ -1,4 +1,4 @@
-import { GroupDay, TeacherDay } from "../services/timetable/types";
+import { GroupDay, TeacherDay } from "../services/parser/types";
 
 /**
  * @description Перезаписывает старые дни, новыми, сохраняя старые неизменённые
@@ -31,14 +31,4 @@ export function mergeDays<T extends GroupDay | TeacherDay>(new_days: T[], old_da
         added: addedDays,
         changed: changedDays
     }
-}
-
-export function collectDays(rasp_array: GroupDay[] | TeacherDay[]): string[] {
-    const days: string[] = [];
-
-    for (const rasp of rasp_array) {
-        days.push(rasp.day)
-    }
-
-    return days;
 }

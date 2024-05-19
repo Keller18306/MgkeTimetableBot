@@ -1,85 +1,113 @@
+import { CreationOptional, DataTypes, InferAttributes, InferCreationAttributes } from "sequelize";
+import { UserDetails } from "viber-bot";
 import { config } from "../../../../config";
-import db from "../../../db";
-import { AbstractChat, BotServiceName, DbChat } from "../abstract";
+import { sequelize } from "../../../db";
+import { BotServiceName } from "../abstract";
+import { AbstractServiceChat, BotChat } from "../chat";
 import { Theme } from "./keyboardBuilder";
 
-export type ViberDb = DbChat & {
-    peerId: string; //Переопределение как строка
+const updateDITime: number = 12 * 60 * 60 * 1000;
+
+class ViberChat extends AbstractServiceChat<InferAttributes<ViberChat>, InferCreationAttributes<ViberChat>> {
+    public static service: BotServiceName = 'viber';
+
+    declare id: number;
+    declare peerId: string;
 
     /** Тема кнопок в Viber (цвет: бело-розовые, тёмно-синие, серо-чёрные) */
-    theme: Theme;
+    declare theme: CreationOptional<Theme>;
 
-    /** Время последнего обновления Device Info */
-    lastUpdateDI: number;
+    /** Время последнего обновления User Details */
+    declare lastUpdateDI: CreationOptional<number>;
 
     /** Имя юзера в Viber */
-    name: string | null;
+    declare name: CreationOptional<string | null>;
 
     /** Операционная система пользователя (Android, IOS, ... + version) */
-    device_os: string | null;
+    declare device_os: CreationOptional<string | null>;
 
     /** Полная модель телефона */
-    device_type: string | null;
+    declare device_type: CreationOptional<string | null>;
 
     /** Версия Viber */
-    viber_version: string | null;
-}
+    declare viber_version: CreationOptional<string | null>;
 
-class ViberChat extends AbstractChat {
-    public peerId: string;
+    // protected defaultAllowSendMess: boolean = false; //todo
 
-    public db_table: string = 'viber_bot_chats';
-    public readonly service: BotServiceName = 'viber';
-    protected columns: string[] = [
-        'theme', 'lastUpdateDI', 'name', 'device_os', 'device_type', 'viber_version'
-    ];
-
-    private updateDITime: number = 12 * 60 * 60 * 1000;
-    protected defaultAllowSendMess: boolean = false;
-
-    constructor(peerId: string | ViberDb) {
-        if (typeof peerId === 'object') {
-            super(peerId);
-            this.peerId = peerId.peerId;
-            this._initialized = true;
-            return;
-        }
-        
-        super()
-        this.peerId = peerId;
+    public needUpdateUserDetails(): boolean {
+        return Date.now() - this.lastUpdateDI >= updateDITime
     }
 
-    public get isChat(): boolean {
-        return false
+    public async setUserDetails(userDetails: UserDetails) {
+        this.name = userDetails.name;
+        this.device_os = userDetails.primary_device_os;
+        this.viber_version = userDetails.viber_version;
+        this.device_type = userDetails.device_type;
+        this.lastUpdateDI = Date.now();
+
+        await this.save();
     }
 
-    public get isAdmin(): boolean {
-        if (this.isChat) return false;
-
+    public isSuperAdmin(): boolean {
         return config.viber.admin_ids.includes(this.peerId)
     }
-
-    public setDeviceInfo(name: string, device_os: string, viber_version: string, device_type: string) {
-        if (this._cache) {
-            this._cache.name = name;
-            this._cache.device_os = device_os;
-            this._cache.viber_version = viber_version;
-            this._cache.device_type = device_type;
-        }
-
-        db.prepare(
-            'UPDATE ' + this.db_table + ' SET name = ?, device_os = ?, viber_version = ?, device_type = ?, lastUpdateDI = ? WHERE peerId = ?'
-        ).run(
-            name, device_os, viber_version, device_type, Date.now(), this.peerId
-        )
-    }
-
-    public needUpdateDeviceInfo(): boolean {
-        return Date.now() - this.lastUpdateDI >= this.updateDITime
-    }
 }
 
-interface ViberChat extends ViberDb { };
+ViberChat.init({
+    id: {
+        type: DataTypes.INTEGER,
+        primaryKey: true,
+        autoIncrement: false
+    },
+    chatId: {
+        type: DataTypes.INTEGER,
+        unique: true,
+        allowNull: false
+    },
+    peerId: {
+        type: DataTypes.STRING,
+        unique: true,
+        allowNull: false
+    },
+    theme: {
+        type: DataTypes.ENUM<Theme>('white', 'dark', 'black'),
+        defaultValue: 'white'
+    },
+    lastUpdateDI: {
+        type: DataTypes.BIGINT,
+        defaultValue: 0
+    },
+    name: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+    device_os: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+    device_type: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+    viber_version: {
+        type: DataTypes.STRING,
+        allowNull: true
+    }
+}, {
+    sequelize: sequelize,
+    tableName: 'bot_chats_viber'
+});
+
+ViberChat.belongsTo(BotChat, {
+    foreignKey: 'chatId',
+    targetKey: 'id',
+    as: 'serviceChat'
+});
+
+BotChat.hasOne(ViberChat, {
+    sourceKey: 'id',
+    foreignKey: 'chatId'
+});
 
 export { ViberChat };
 

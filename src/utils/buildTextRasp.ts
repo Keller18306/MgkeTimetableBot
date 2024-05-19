@@ -1,32 +1,6 @@
 import { config } from '../../config';
-import { App } from '../app';
-import { AbstractChat } from '../services/bots/abstract/chat';
-import { BotServiceName } from '../services/bots/abstract/command';
-import { RaspCache } from '../services/parser/raspCache';
-import { GroupDay, TeacherDay } from '../services/timetable/types';
-import { ScheduleFormatter } from './formatters/abstract';
-import { DefaultScheduleFormatter } from './formatters/default';
-import { LitolaxScheduleFormatter } from './formatters/litolax';
-import { VisualScheduleFormatter } from './formatters/visual';
+import { GroupDay, TeacherDay } from '../services/parser/types';
 import { DayIndex, StringDate, nowInTime } from './time';
-
-export const SCHEDULE_FORMATTERS = [
-    DefaultScheduleFormatter, VisualScheduleFormatter, LitolaxScheduleFormatter
-];
-
-export function createScheduleFormatter(service: BotServiceName, app: App, raspCache: RaspCache, chat: AbstractChat): ScheduleFormatter {
-    if (!chat) {
-        return new DefaultScheduleFormatter(service, app, raspCache, chat);
-    }
-
-    if (chat.scheduleFormatter > SCHEDULE_FORMATTERS.length - 1) {
-        chat.scheduleFormatter = 0;
-    }
-
-    const Formatter = SCHEDULE_FORMATTERS[chat.scheduleFormatter];
-
-    return new Formatter(service, app, raspCache, chat);
-}
 
 export function removePastDays<T extends GroupDay | TeacherDay>(days: T[], processAutoskip: boolean = true): T[] {
     const isSaturday: boolean = StringDate.now().isSaturday();

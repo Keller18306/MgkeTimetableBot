@@ -11,12 +11,10 @@ export default class extends AbstractCommand {
     };
 
     handler({ context, chat }: CmdHandlerParams) {
-        //if (chat.isChat) return context.send('Недоступно в беседе');
-
         chat.scene = 'setup';
 
         return context.send('Кто будет использовать бота?', {
             keyboard: StaticKeyboard.SelectMode
-        })
+        });
     }
 }

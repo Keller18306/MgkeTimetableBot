@@ -5,7 +5,8 @@ import { DayIndex } from "../../../utils";
 import { GroupDayEvent, TeacherDayEvent } from "../../parser";
 import { raspCache, saveCache } from "../../parser/raspCache";
 import { GroupLesson, GroupLessonExplain, TeacherLesson, TeacherLessonExplain } from "../../timetable";
-import { BotServiceName, ChatMode } from "../abstract";
+import { BotServiceName } from "../abstract";
+import { ChatMode } from "../chat";
 
 export type ServiceProgressCallback = (data: { service: BotServiceName } & Parameters<ProgressCallback>[0]) => void;
 

@@ -3,7 +3,7 @@ import path from 'path';
 import StatusCode from 'status-code-enum';
 import { config } from '../../../config';
 import { App, AppService } from '../../app';
-import { ImageKey } from '../key/image';
+import { ImageKey } from '../../key/image';
 import { ImageBuilder } from './builder';
 
 export class ImageService implements AppService {

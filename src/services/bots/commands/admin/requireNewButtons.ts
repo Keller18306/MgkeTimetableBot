@@ -1,6 +1,6 @@
 import { TelegramBotCommand } from "puregram/generated";
-import db from "../../../../db";
 import { AbstractCommand, CmdHandlerParams } from "../../abstract";
+import { BotChat } from "../../chat";
 
 export default class extends AbstractCommand {
     public regexp = /^(!|\/)requireNewButtons$/i
@@ -11,8 +11,15 @@ export default class extends AbstractCommand {
         description: 'Выставляет метку, что после обращения юзера бот обновит клавиатуру'
     };
 
-    handler({ context, chat, keyboard }: CmdHandlerParams) {
-        db.prepare("UPDATE chat_options SET `needUpdateButtons` = 1 WHERE `accepted` = 1 AND `service` IN ('vk', 'tg')").run();
+    async handler({ context }: CmdHandlerParams) {
+        await BotChat.update({
+            needUpdateButtons: true
+        }, {
+            where: {
+                accepted: true,
+                service: ['vk', 'tg']
+            }
+        });
 
         return context.send('ok')
     }

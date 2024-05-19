@@ -1,15 +1,16 @@
 import { AbstractAction } from "../abstract";
-import { ViberChat } from "./chat";
+import { BotChat as chat } from "../chat";
 import { ViberCommandContext } from "./context";
 
 export class ViberAction extends AbstractAction {
     protected context: ViberCommandContext;
-    protected chat: ViberChat;
+    protected chat: chat;
 
-    constructor(context: ViberCommandContext, chat: ViberChat) {
-        super()
-        this.context = context
-        this.chat = chat
+    constructor(context: ViberCommandContext, options: chat) {
+        super();
+
+        this.context = context;
+        this.chat = options;
     }
 
     async deleteLastMsg() {

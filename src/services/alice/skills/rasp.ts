@@ -1,8 +1,8 @@
 import { IContext, Reply } from "@keller18306/yandex-dialogs-sdk";
-import { raspCache } from "../../parser";
+import { DefaultScheduleFormatter } from "../../../formatter";
 import { StringDate, closestJaroWinkler, getDayRasp, getFullSubjectName } from "../../../utils";
-import { DefaultScheduleFormatter } from "../../../utils/formatters/default";
-import { GroupDay, TeacherDay } from "../../timetable/types";
+import { raspCache } from "../../parser";
+import { GroupDay, TeacherDay } from "../../parser/types";
 import { AliceSkill } from "../skill";
 import { AliceUser } from "../user";
 

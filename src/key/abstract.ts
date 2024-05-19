@@ -1,5 +1,5 @@
 import { createCipheriv, createDecipheriv, createHmac, createSecretKey, randomBytes } from 'crypto';
-import { ReadBuffer, WriteBuffer } from '../../utils';
+import { ReadBuffer, WriteBuffer } from '../utils';
 
 export enum KeyType {
     Request,

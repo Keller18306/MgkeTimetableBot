@@ -26,7 +26,7 @@ export default class extends AbstractCallback {
             const rasp = raspCache.groups.timetable[value];
             if (!rasp) return context.answer('Данной учебной группы не существует');
 
-            const days = archive.getGroupDaysByRange(weekBounds, value);
+            const days = await archive.getGroupDaysByRange(weekBounds, value);
             if (!days.length) {
                 return context.answer('Нет расписания для отображения');
             }
@@ -38,7 +38,7 @@ export default class extends AbstractCallback {
             const rasp = raspCache.teachers.timetable[value];
             if (!rasp) return context.answer('Данного преподавателя не существует');
 
-            const days = archive.getTeacherDaysByRange(weekBounds, value);
+            const days = await archive.getTeacherDaysByRange(weekBounds, value);
             if (!days.length) {
                 return context.answer('Нет расписания для отображения');
             }

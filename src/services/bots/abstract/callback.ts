@@ -1,21 +1,20 @@
 import { CallbackQueryContext as TgRealCallbackContext } from 'puregram'
 import { ContextDefaultState, MessageEventContext } from 'vk-io'
 import { App, AppServiceName } from '../../../app'
-import { ScheduleFormatter } from "../../../utils/formatters/abstract"
+import { ScheduleFormatter } from "../../../formatter"
+import { AbstractServiceChat, BotChat } from "../chat"
 import { Keyboard } from "../keyboard"
 import { Storage } from '../storage'
-import { TgChat } from "../tg/chat"
 import { TgCallbackContext } from '../tg/context'
-import { VkChat } from "../vk/chat"
 import { VkCallbackContext } from '../vk/context'
-import { AbstractChat } from "./chat"
 import { BotServiceName } from "./command"
 import { AbstractCallbackContext } from './context'
 
 export type CbHandlerParams = {
     context: AbstractCallbackContext,
     realContext: any,
-    chat: AbstractChat,
+    chat: BotChat,
+    serviceChat: AbstractServiceChat,
     keyboard: Keyboard,
     service: BotServiceName,
     scheduleFormatter: ScheduleFormatter,
@@ -24,12 +23,12 @@ export type CbHandlerParams = {
     service: 'vk',
     context: VkCallbackContext,
     realContext: MessageEventContext<ContextDefaultState>,
-    chat: VkChat
+    // chat: VkChat
 } | {
     service: 'tg',
     context: TgCallbackContext,
     realContext: TgRealCallbackContext,
-    chat: TgChat
+    // chat: TgChat
 })
 
 export abstract class AbstractCallback {
@@ -66,12 +65,12 @@ export abstract class AbstractCallback {
 
     constructor(protected app: App) { }
 
-    public preHandle({ service, chat }: CbHandlerParams) {
+    public preHandle({ service, serviceChat }: CbHandlerParams) {
         if (this.services && !this.services.includes(service)) {
             return false;
         }
 
-        if (this.adminOnly && !chat.isAdmin) {
+        if (this.adminOnly && !serviceChat.isSuperAdmin()) {
             return false;
         }
 

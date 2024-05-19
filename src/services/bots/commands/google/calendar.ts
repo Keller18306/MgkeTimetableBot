@@ -1,5 +1,5 @@
 import { AppServiceName } from "../../../../app";
-import { GoogleUser } from "../../../google/user";
+import { GoogleUser } from "../../../google/models/user";
 import { AbstractCommand, ButtonType, CmdHandlerParams } from "../../abstract";
 
 export default class extends AbstractCommand {
@@ -10,7 +10,7 @@ export default class extends AbstractCommand {
     async handler({ context, chat, service, keyboard }: CmdHandlerParams) {
         const google = this.app.getService('google');
 
-        if (!chat.google_email) {
+        if (!chat.googleEmail) {
             const url = google.getAuthUrl({
                 service: service,
                 peerId: context.peerId
@@ -25,14 +25,13 @@ export default class extends AbstractCommand {
             });
         }
 
+        const user = await GoogleUser.getByEmail(chat.googleEmail);
+
         //recheck account
-        await GoogleUser
-            .getByEmail(chat.google_email)
-            .api.getAuth()
-            .getAccessToken();
+        await user.getApi().getAuth().getAccessToken();
 
         return context.send([
-            `Привязанный гугл аккаунт: ${chat.google_email}.`,
+            `Привязанный гугл аккаунт: ${chat.googleEmail}.`,
             'Действие с календарями:'
         ].join('\n'), {
             keyboard: keyboard.getKeyboardBuilder('GoogleAuth', true).add({

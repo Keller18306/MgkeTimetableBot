@@ -1,8 +1,8 @@
-import { GroupLessonExplain, TeacherLessonExplain } from "../../services/timetable/types";
+import { GroupLessonExplain, TeacherLessonExplain } from "../services/parser/types";
 import { GroupLessonOptions, ScheduleFormatter } from "./abstract";
 
-export class VisualScheduleFormatter extends ScheduleFormatter {
-    public static readonly label: string = '🌈 Визуальный';
+export class DefaultScheduleFormatter extends ScheduleFormatter {
+    public static readonly label: string = '📝 Стуктурированный';
 
     protected formatGroupLesson(lesson: GroupLessonExplain, options: GroupLessonOptions): string {
         const line: string[] = [];
@@ -12,7 +12,11 @@ export class VisualScheduleFormatter extends ScheduleFormatter {
         }
 
         if (options.showLesson) {
-            line.push(this.Lesson(this.getLessonAlias(lesson.lesson)) + ((options.showType && lesson.type) ? this.Type(lesson.type) : ''));
+            line.push(this.Lesson(this.getLessonAlias(lesson.lesson)));
+        }
+
+        if (options.showType && lesson.type) {
+            line.push(this.Type(lesson.type));
         }
 
         if (options.showTeacher && lesson.teacher) {
@@ -27,15 +31,19 @@ export class VisualScheduleFormatter extends ScheduleFormatter {
             line.push(this.Comment(lesson.comment));
         }
 
-        return line.join('\n');
+        return line.join(' ');
     }
 
     protected formatTeacherLesson(lesson: TeacherLessonExplain): string {
         const line: string[] = [];
 
         line.push(
-            `${this.Lesson(this.Group(lesson.group) + this.getLessonAlias(lesson.lesson)) + (lesson.type ? this.Type(lesson.type) : '')}`
+            `${this.Group(lesson.group)}${this.Lesson(this.getLessonAlias(lesson.lesson))}`
         );
+
+        if (lesson.type) {
+            line.push(this.Type(lesson.type));
+        }
 
         if (lesson.cabinet != null) {
             line.push(this.Cabinet(lesson.cabinet));
@@ -45,7 +53,7 @@ export class VisualScheduleFormatter extends ScheduleFormatter {
             line.push(this.Comment(lesson.comment));
         }
 
-        return line.join('\n');
+        return line.join(' ');
     }
 
     protected formatLessonHeader(header: string, mainLessons: string, withSubgroups: boolean): string {
@@ -55,50 +63,49 @@ export class VisualScheduleFormatter extends ScheduleFormatter {
 
         if (mainLessons) {
             line.push(mainLessons);
-            if (withSubgroups) {
-                line.push('')
-            }
         }
 
-        return line.join('\n');
+        return line.join('');
     }
 
     protected formatSubgroupLesson(value: string, currentIndex: number, lastIndex: number): string {
-        if (currentIndex > 0) {
-            value = '\n' + value;
+        if (currentIndex === lastIndex) {
+            value = '└── ' + value;
+        } else {
+            value = '├── ' + value;
         }
 
         return value;
     }
 
     protected GroupHeader(group: string): string {
-        return `👩‍🎓 Группа '${group}'`;
+        return `- Группа '${group}' -`;
     }
 
     protected TeacherHeader(teacher: string): string {
-        return `👩‍🏫 Преподаватель '${this.getFullTeacherName(teacher)}'`;
+        return `- Преподаватель '${this.getFullTeacherName(teacher)}' -`;
     }
 
     protected DayHeader(day: string, weekday: string): string {
         const hint: string | undefined = this.dayHint(day);
 
-        return `📅 ${this.b(weekday + (hint ? ` ${this.i(hint)}` : ''))}, ${day}`;
+        return `__ ${this.b(weekday + (hint ? ` ${this.i(hint)}` : ''))}, ${day} __`;
     }
 
     protected LessonHeader(i: number): string {
-        return `\n${this.getSmileNumber(i + 1)} Пара:`;
+        return `${+i + 1}. `;
     }
 
     protected Subgroup(subgroup: string): string {
-        return `    🎒 Подгруппа ${subgroup}:`
+        return `${subgroup}.`;
     }
 
     protected Lesson(lesson: string): string {
-        return `    📚 ${lesson}`;
+        return lesson;
     }
 
     protected Type(type: string): string {
-        return ` (${type})`;
+        return `(${type})`;
     }
 
     protected Group(group: string): string {
@@ -106,11 +113,11 @@ export class VisualScheduleFormatter extends ScheduleFormatter {
     }
 
     protected Teacher(teacher: string): string {
-        return `    🎓 ${teacher}`;
+        return teacher;
     }
 
     protected Cabinet(cabinet: string): string {
-        return `    🏫 ${cabinet}`;
+        return `{${cabinet}}`;
     }
 
     protected Comment(comment: string): string {
@@ -118,16 +125,10 @@ export class VisualScheduleFormatter extends ScheduleFormatter {
     }
 
     protected NoLessons(): string {
-        return `🚫 Нет пар на этот день`;
-    }
-
-    private getSmileNumber(index: number): string {
-        return [
-            '0️⃣', '1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '🔟'
-        ][index];
+        return this.i('Пар нет');
     }
 
     protected NoTimetable(): string {
-        return `🚫 Нет расписания для отображения`;
+        return 'Нет расписания для отображения';
     }
 }

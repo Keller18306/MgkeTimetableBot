@@ -1,7 +1,6 @@
 import Alice, { IApiResponseBody, IContext, Reply, Stage } from "@keller18306/yandex-dialogs-sdk";
 import { NextFunction, Request, Response } from "express";
 import StatusCode from "status-code-enum";
-import { config } from "../../../config";
 import { App, AppService } from "../../app";
 import { SkillController } from "./controller";
 import { AliceUser } from "./user";
@@ -34,16 +33,18 @@ export class AliceApp implements AppService {
     }
     
     private async handleCommand(ctx: IContext): Promise<IApiResponseBody> {
-        const user = AliceUser.getById(ctx.user?.user_id || ctx.application.application_id);
+        const user = await AliceUser.getById(ctx.user?.user_id || ctx.application.application_id);
 
         const matched = this.controller.matchSkill(ctx);
         if (!matched) {
             return Reply.text('Извините, но я вас не поняла. Попробуйте сказать по-другому или напишите разработчику моего навыка, чтобы он меня научил этому.')
         }
 
-        const { skill, match } = matched
+        const { skill, match } = matched;
 
-        const response = skill.controller(ctx, user, match);
+        const response = await skill.controller(ctx, user, match);
+
+        await user.save();
 
         return response;
     }

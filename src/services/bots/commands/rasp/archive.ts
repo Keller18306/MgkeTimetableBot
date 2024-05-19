@@ -1,6 +1,6 @@
 import { TelegramBotCommand } from "puregram/generated";
 import { DayIndex, StringDate } from "../../../../utils";
-import { GroupDay, TeacherDay } from "../../../timetable/types";
+import { GroupDay, TeacherDay } from "../../../parser/types";
 import { AbstractCommand, CmdHandlerParams } from "../../abstract";
 
 export default class extends AbstractCommand {
@@ -12,7 +12,7 @@ export default class extends AbstractCommand {
     };
     public scene?: string | null = null;
 
-    async handler({ context, chat, scheduleFormatter }: CmdHandlerParams) {
+    async handler({ context, chat, formatter }: CmdHandlerParams) {
         const day: string | undefined = context.text?.replace(this.regexp, '').trim();
         if (!day) {
             return context.send('День не указан');
@@ -28,22 +28,22 @@ export default class extends AbstractCommand {
                 return context.send(`Для данного чата группа не была выбрана.`);
             }
 
-            entry = archive.getGroupDay(dayIndex, chat.group);
-            text = scheduleFormatter.formatGroupLessons(entry?.lessons);
+            entry = await archive.getGroupDay(dayIndex, chat.group);
+            text = formatter.formatGroupLessons(entry?.lessons);
         } else if (chat.mode === 'teacher') {
             if (chat.teacher == null) {
                 return context.send(`Для данного чата учитель не был выбран.`);
             }
 
-            entry = archive.getTeacherDay(dayIndex, chat.teacher);
-            text = scheduleFormatter.formatTeacherLessons(entry?.lessons);
+            entry = await archive.getTeacherDay(dayIndex, chat.teacher);
+            text = formatter.formatTeacherLessons(entry?.lessons);
         } else {
             //todo get from args
             return context.send(`Для данного режима чата (${chat.mode}) нельзя автоматически получить группу или учителя.`);
         }
 
         if (!entry) {
-            const { min: minDayIndex, max: maxDayIndex } = archive.getDayIndexBounds();
+            const { min: minDayIndex, max: maxDayIndex } = await archive.getDayIndexBounds();
             
             if (dayIndex < minDayIndex || dayIndex > maxDayIndex) {
                 const fromDay = StringDate.fromDayIndex(minDayIndex).toString();
@@ -59,7 +59,7 @@ export default class extends AbstractCommand {
             return context.send('Ничего не найдено на данный день');
         }
 
-        text = scheduleFormatter.formatDayHeader(entry.day) + '\n' + text;
+        text = formatter.formatDayHeader(entry.day) + '\n' + text;
 
         return context.send(text);
     }

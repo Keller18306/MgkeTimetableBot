@@ -1,15 +1,15 @@
 import { MessageContext } from "puregram";
 import { TgBot } from ".";
 import { AbstractAction, AbstractCommandContext } from "../abstract";
-import { TgChat } from "./chat";
+import { BotChat } from "../chat";
 import { TgCommandContext } from "./context";
 
 export class TgBotAction extends AbstractAction {
     protected context: MessageContext;
-    protected chat: TgChat;
+    protected chat: BotChat;
     protected _context: AbstractCommandContext;
 
-    constructor(bot: TgBot, context: MessageContext, chat: TgChat) {
+    constructor(bot: TgBot, context: MessageContext, chat: BotChat) {
         super();
         this.context = context;
         this.chat = chat;

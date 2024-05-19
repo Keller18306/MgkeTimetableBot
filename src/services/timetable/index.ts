@@ -1,8 +1,10 @@
+import { Op } from "sequelize";
 import { AppService } from "../../app";
-import db from "../../db";
-import { DayIndex, StringDate, WeekIndex, addslashes } from "../../utils";
+import { sequelize } from "../../db";
+import { DayIndex, StringDate, WeekIndex } from "../../utils";
 import { loadCache } from "../parser/raspCache";
-import { GroupDay, TeacherDay } from "./types";
+import { GroupDay, TeacherDay } from "../parser/types";
+import { TimetableArchive } from "./models/timetable";
 
 export type ArchiveAppendDay = {
     type: 'group',
@@ -14,7 +16,7 @@ export type ArchiveAppendDay = {
     day: TeacherDay
 }
 
-function dbEntryToDayObject(entry: any): any {
+function dbEntryToDayObject(entry: TimetableArchive): any {
     return {
         day: StringDate.fromDayIndex(entry.day).toString(),
         lessons: JSON.parse(entry.data)
@@ -22,35 +24,31 @@ function dbEntryToDayObject(entry: any): any {
 }
 
 export class Timetable implements AppService {
-    private _dayIndexBounds: { min: number, max: number } | undefined;
-    private _groups: string[] | undefined;
-    private _teachers: string[] | undefined;
-
-    constructor() {
-
-    }
+    constructor() { }
 
     public run() {
         loadCache();
     }
 
-    public resetCache() {
-        this._dayIndexBounds = undefined;
-        this._groups = undefined;
-        this._teachers = undefined;
+    public async getDayIndexBounds(): Promise<{ min: number, max: number }> {
+        const { fn, col } = sequelize;
+
+        const data = await TimetableArchive.findOne({
+            attributes: [
+                [fn('min', col('day')), 'min'],
+                [fn('max', col('day')), 'max'],
+            ],
+            rejectOnEmpty: true
+        });
+
+        return {
+            min: data.get('min') as number,
+            max: data.get('max') as number
+        };
     }
 
-    public getDayIndexBounds(): { min: number, max: number } {
-        if (!this._dayIndexBounds) {
-            this._dayIndexBounds = db.prepare('SELECT MIN(`day`) as `min`, MAX(`day`) as `max` FROM timetable_archive').get() as any;
-        }
-
-        return this._dayIndexBounds!;
-    }
-
-    public getWeekIndexBounds(): { min: number, max: number } {
-        const { min, max } = this.getDayIndexBounds();
-
+    public async getWeekIndexBounds(): Promise<{ min: number, max: number }> {
+        const { min, max } = await this.getDayIndexBounds();
 
         return {
             min: WeekIndex.fromDayIndex(min).valueOf(),
@@ -58,102 +56,195 @@ export class Timetable implements AppService {
         }
     }
 
-    public getGroups() {
-        if (!this._groups) {
-            this._groups = (db.prepare('SELECT DISTINCT `group` FROM timetable_archive WHERE `group` IS NOT NULL').all() as any).map((entry: any) => {
-                return entry.group;
-            });
-        }
+    public async getGroups(): Promise<string[]> {
+        const data = await TimetableArchive.findAll({
+            attributes: ['group'],
+            where: {
+                group: {
+                    [Op.not]: null
+                }
+            },
+            group: 'group'
+        });
 
-        return this._groups!;
+        return data.map((entry) => {
+            return entry.group!;
+        });
     }
 
-    public getTeachers() {
-        if (!this._teachers) {
-            this._teachers = (db.prepare('SELECT DISTINCT `teacher` FROM timetable_archive WHERE `teacher` IS NOT NULL').all() as any).map((entry: any) => {
-                return entry.teacher;
-            });
-        }
+    public async getTeachers(): Promise<string[]> {
+        const data = await TimetableArchive.findAll({
+            attributes: ['teacher'],
+            where: {
+                teacher: {
+                    [Op.not]: null
+                }
+            },
+            group: 'teacher'
+        });
 
-        return this._teachers!;
+        return data.map((entry) => {
+            return entry.teacher!;
+        });
     }
 
-    public addGroupDay(group: string, day: GroupDay): void {
-        this._dayIndexBounds = undefined;
-        this._groups = undefined;
-
-        const dayIndex: number = DayIndex.fromStringDate(day.day).valueOf();
-        const data = JSON.stringify(day.lessons);
-
-        db.prepare('INSERT INTO timetable_archive (day, `group`, data) VALUES (?, ?, ?) ON CONFLICT(day, `group`) DO UPDATE SET data = ?')
-            .run(dayIndex, group, data, data);
-    }
-
-    public addTeacherDay(teacher: string, day: TeacherDay): void {
-        this._dayIndexBounds = undefined;
-        this._teachers = undefined;
-
-        const dayIndex: number = DayIndex.fromStringDate(day.day).valueOf();
-        const data = JSON.stringify(day.lessons);
-
-        db.prepare('INSERT INTO timetable_archive (day, teacher, data) VALUES (?, ?, ?) ON CONFLICT(day, teacher) DO UPDATE SET data = ?')
-            .run(dayIndex, teacher, data, data);
-    }
-
-    public getGroupDay(dayIndex: number, group: string): GroupDay | null {
-        const entry = db.prepare('SELECT day,data FROM timetable_archive WHERE day = ? AND `group` = ?').get(dayIndex, group) as any;
-        return entry ? dbEntryToDayObject(entry) : null;
-    }
-
-    public getTeacherDay(dayIndex: number, teacher: string): TeacherDay | null {
-        const entry = db.prepare('SELECT day,data FROM timetable_archive WHERE day = ? AND teacher = ?').get(dayIndex, teacher) as any;
-        return entry ? dbEntryToDayObject(entry) : null;
-    }
-
-    public getGroupDaysByRange(dayBounds: [number, number], group: string): GroupDay[] {
-        const days = db.prepare('SELECT day,data FROM timetable_archive WHERE day >= ? AND day <= ? AND `group` = ?').all(...dayBounds, group) as any;
-
-        return days.map(dbEntryToDayObject);
-    }
-
-    public getTeacherDaysByRange(dayBounds: [number, number], teacher: string): TeacherDay[] {
-        const days = db.prepare('SELECT day,data FROM timetable_archive WHERE day >= ? AND day <= ? AND teacher = ?').all(...dayBounds, teacher) as any;
-
-        return days.map(dbEntryToDayObject);
-    }
-
-    public getGroupDays(group: string, fromDay?: number): GroupDay[] {
-        const days = db.prepare(
-            'SELECT day, data FROM timetable_archive WHERE `group` = ?' +
-            (fromDay ? ` AND day >= ${addslashes(fromDay)}` : '')
-        ).all(group) as any;
-
-        return days.map(dbEntryToDayObject);
-    }
-
-    public getTeacherDays(teacher: string, fromDay?: number): TeacherDay[] {
-        const days = db.prepare(
-            'SELECT day, data FROM timetable_archive WHERE teacher = ?' +
-            (fromDay ? ` AND day >= ${addslashes(fromDay)}` : '')
-        ).all(teacher) as any;
-
-        return days.map(dbEntryToDayObject);
-    }
-
-    public appendDays(entries: ArchiveAppendDay[]) {
-        for (const entry of entries) {
-            switch (entry.type) {
-                case 'group':
-                    this.addGroupDay(entry.group, entry.day);
-                    break;
-
-                case 'teacher':
-                    this.addTeacherDay(entry.teacher, entry.day);
-                    break;
+    public async getGroupDay(dayIndex: number, group: string): Promise<GroupDay | null> {
+        const entry = await TimetableArchive.findOne({
+            attributes: ['day', 'data'],
+            where: {
+                day: dayIndex,
+                group: group
             }
+        });
+
+        return entry ? dbEntryToDayObject(entry) : null;
+    }
+
+    public async getTeacherDay(dayIndex: number, teacher: string): Promise<TeacherDay | null> {
+        const entry = await TimetableArchive.findOne({
+            attributes: ['day', 'data'],
+            where: {
+                day: dayIndex,
+                teacher: teacher
+            }
+        });
+
+        return entry ? dbEntryToDayObject(entry) : null;
+    }
+
+    public async getGroupDaysByRange(dayBounds: [number, number], group: string): Promise<GroupDay[]> {
+        const days = await TimetableArchive.findAll({
+            attributes: ['day', 'data'],
+            where: {
+                group: group,
+                day: {
+                    [Op.between]: dayBounds
+                }
+            }
+        });
+
+        return days.map(dbEntryToDayObject);
+    }
+
+    public async getTeacherDaysByRange(dayBounds: [number, number], teacher: string): Promise<TeacherDay[]> {
+        const days = await TimetableArchive.findAll({
+            attributes: ['day', 'data'],
+            where: {
+                teacher: teacher,
+                day: {
+                    [Op.between]: dayBounds
+                }
+            }
+        });
+
+        return days.map(dbEntryToDayObject);
+    }
+
+    public async getGroupDays(group: string, fromDay?: number): Promise<GroupDay[]> {
+        const days = await TimetableArchive.findAll({
+            attributes: ['day', 'data'],
+            where: {
+                group: group,
+                ...(fromDay !== undefined ? {
+                    day: {
+                        [Op.gte]: fromDay
+                    }
+                } : {})
+            }
+        });
+
+        return days.map(dbEntryToDayObject);
+    }
+
+    public async getTeacherDays(teacher: string, fromDay?: number): Promise<TeacherDay[]> {
+        const days = await TimetableArchive.findAll({
+            attributes: ['day', 'data'],
+            where: {
+                teacher: teacher,
+                ...(fromDay !== undefined ? {
+                    day: {
+                        [Op.gte]: fromDay
+                    }
+                } : {})
+            }
+        });
+
+        return days.map(dbEntryToDayObject);
+    }
+
+    public async appendDays(entries: ArchiveAppendDay[]) {
+        if (entries.length === 0) {
+            return;
         }
+
+        await sequelize.transaction(async (transaction) => {
+            await TimetableArchive.bulkCreate(entries.filter((entry) => {
+                return entry.type === 'group';
+            }).map((entry) => {
+                const { day } = entry;
+
+                const dayIndex: number = DayIndex.fromStringDate(day.day).valueOf();
+                const data: string = JSON.stringify(day.lessons);
+
+                return {
+                    day: dayIndex,
+                    group: (entry as any).group,
+                    data: data
+                }
+            }), {
+                returning: false,
+                updateOnDuplicate: ['data'],
+                conflictAttributes: ['day', 'group']
+            });
+
+            await TimetableArchive.bulkCreate(entries.filter((entry) => {
+                return entry.type === 'teacher';
+            }).map((entry) => {
+                const { day } = entry;
+
+                const dayIndex: number = DayIndex.fromStringDate(day.day).valueOf();
+                const data: string = JSON.stringify(day.lessons);
+
+                return {
+                    day: dayIndex,
+                    teacher: (entry as any).teacher,
+                    data: data
+                }
+            }), {
+                returning: false,
+                updateOnDuplicate: ['data'],
+                conflictAttributes: ['day', 'teacher']
+            });
+
+            // for (const entry of entries) {
+            //     const { day } = entry;
+
+            //     const dayIndex: number = DayIndex.fromStringDate(day.day).valueOf();
+            //     const data: string = JSON.stringify(day.lessons);
+
+            //     switch (entry.type) {
+            //         case 'group':
+            //             await TimetableArchive.upsert({
+            //                 day: dayIndex,
+            //                 group: entry.group,
+            //                 data: data
+            //             }, { transaction });
+
+            //             break;
+
+            //         case 'teacher':
+            //             await TimetableArchive.upsert({
+            //                 day: dayIndex,
+            //                 teacher: entry.teacher,
+            //                 data: data
+            //             }, { transaction });
+
+            //             break;
+            //     }
+            // }
+        });
     }
 }
 
-export * from './types';
+export * from '../parser/types';
 

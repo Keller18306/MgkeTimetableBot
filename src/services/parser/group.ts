@@ -1,15 +1,11 @@
 import { chunkArray, getShortSubjectName } from "../../utils";
-import { GroupDay, GroupLesson, GroupLessonExplain, Groups } from '../timetable/types/group';
 import { AbstractParser } from "./abstract";
+import { GroupDay, GroupLesson, GroupLessonExplain, Groups } from './types/group';
 
 export default class StudentParser extends AbstractParser {
     protected groups: Groups = {}
 
-    public run(groups?: Groups): Groups {
-        if (groups) {
-            this.groups = groups;
-        }
-
+    public run(): Groups {
         for (const table of this.parseBodyTables()) {
             let h2: HTMLHeadingElement | null = null;
             let element: Element | null = table.previousElementSibling;
@@ -144,8 +140,6 @@ export default class StudentParser extends AbstractParser {
         lesson = this.setNullIfEmpty(lesson)
         cabinet = this.setNullIfEmpty(this.removeDashes(cabinet))
         let subgroups: GroupLessonExplain[] | null = null;
-
-
 
         if (!lesson) {
             return null;

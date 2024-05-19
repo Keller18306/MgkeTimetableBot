@@ -1,5 +1,4 @@
 import { z } from "zod";
-import db from "../../../db";
 import VKAppDefaultMethod, { HandlerParams } from "./_default";
 
 export default class VkAppSetConfigMethod extends VKAppDefaultMethod {
@@ -7,9 +6,7 @@ export default class VkAppSetConfigMethod extends VKAppDefaultMethod {
     public httpMethod: "GET" | "POST" = 'POST';
     public method: string = 'setConfig';
 
-    handler({ user, request, response }: HandlerParams) {
-        const cfg = user.get();
-
+    async handler({ user, request, response }: HandlerParams) {
         const result = z.object({
             group: z.string().max(255).nullable(),
             teacher: z.string().max(255).nullable(),
@@ -25,14 +22,12 @@ export default class VkAppSetConfigMethod extends VKAppDefaultMethod {
             group, teacher, theme_id, firstPage
         } = result.data;
 
-        db.prepare([
-            'UPDATE `vk_app_users` SET',
-            '`group` = ?,',
-            '`teacher` = ?,',
-            '`theme_id` = ?,',
-            '`firstPage` = ?',
-            'WHERE `id` = ?'
-        ].join(' ')).run(group, teacher, theme_id, firstPage, cfg.id);
+        await user.update({
+            group: group,
+            teacher: teacher,
+            themeId: theme_id,
+            firstPage: firstPage
+        });
 
         return true;
     }

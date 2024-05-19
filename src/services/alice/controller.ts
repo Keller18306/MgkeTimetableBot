@@ -18,14 +18,18 @@ export class SkillController {
 
         for (const file of dir) {
             const { default: skillClass } = require(path.join(cmdsPath, file))
-
-            if (skillClass == undefined) continue;
+            if (skillClass == undefined) {
+                continue;
+            }
 
             const skill: AliceSkill = new skillClass(this.app);
+            if (skill.id == undefined) {
+                continue;
+            }
 
-            if (skill.id == undefined) continue;
-
-            if (Object.keys(this.skills).includes(skill.id)) throw new Error(`skill id '${skill.id}' is already registred`);
+            if (Object.keys(this.skills).includes(skill.id)) {
+                throw new Error(`skill id '${skill.id}' is already registred`);
+            }
 
             this.skills[skill.id] = skill;
         }

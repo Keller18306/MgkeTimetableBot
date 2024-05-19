@@ -1,54 +1,47 @@
-import { createAliceUserById, getAliceUserById, updateKeyInTableById } from "../../db";
+import { CreationOptional, DataTypes, InferAttributes, InferCreationAttributes, Model } from "sequelize";
+import { sequelize } from "../../db";
 
-interface IAliceUserFields {
-    id: string;
-    userId: string;
-
-    mode: 'teacher' | 'group' | null;
-    group: string | null;
-    teacher: string | null;
-}
-
-class AliceUser {
-    public static getById(userId: string): AliceUser {
-        const data = getAliceUserById(userId);
-
-        if (!data) {
-            createAliceUserById(userId);
-
-            return this.getById(userId);
-        }
-
-        return new this(data)
+class AliceUser extends Model<InferAttributes<AliceUser>, InferCreationAttributes<AliceUser>> {
+    public static async getById(userId: string): Promise<AliceUser> {
+        return this.findOrCreate({
+            defaults: { userId },
+            where: { userId }
+        }).then(res => res[0]);
     }
 
-    private constructor(private data: any) {
-        return new Proxy(this, {
-            get: (target: this, p: string, receiver: any) => {
-                if (Object.keys(this.data).includes(p)) {
-                    return this.data[p];
-                }
-
-                return Reflect.get(target, p, receiver);
-            },
-            set: (target: this, key: string, value: any, receiver: any) => {
-                if (Object.keys(this.data).includes(key)) {
-                    if (typeof value === 'boolean') {
-                        value = Number(value)
-                    }
-
-                    updateKeyInTableById('alice_users', key, value, this.data.id);
-                    this.data[key] = value;
-
-                    return true;
-                }
-
-                return Reflect.set(target, key, value, receiver);
-            }
-        })
-    }
+    declare id: CreationOptional<string>;
+    declare userId: string;
+    declare mode: 'teacher' | 'group' | null;
+    declare group: string | null;
+    declare teacher: string | null;
 }
 
-interface AliceUser extends IAliceUserFields { };
+AliceUser.init({
+    id: {
+        type: DataTypes.INTEGER,
+        primaryKey: true,
+        autoIncrement: true
+    },
+    userId: {
+        type: DataTypes.STRING,
+        unique: true
+    },
+    mode: {
+        type: DataTypes.ENUM('teacher', 'group'),
+        allowNull: true
+    },
+    group: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+    teacher: {
+        type: DataTypes.STRING,
+        allowNull: true
+    }
+}, {
+    sequelize: sequelize,
+    tableName: 'alice_users',
+    timestamps: true
+});
 
 export { AliceUser };

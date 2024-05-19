@@ -1,15 +1,11 @@
 import { getShortSubjectName } from '../../utils';
-import { Teacher, TeacherDay, TeacherLesson, Teachers } from '../timetable/types/teacher';
 import { AbstractParser } from './abstract';
+import { Teacher, TeacherDay, TeacherLesson, Teachers } from './types/teacher';
 
 export default class TeacherParser extends AbstractParser {
     protected teachers: Teachers = {}
 
-    public run(teachers?: Teachers): Teachers {
-        if (teachers) {
-            this.teachers = teachers;
-        }
-
+    public run(): Teachers {
         for (const table of this.parseBodyTables()) {
             const h3 = table.previousElementSibling! as HTMLHeadingElement //date
             const h2 = h3.previousElementSibling! as HTMLHeadingElement //teacher

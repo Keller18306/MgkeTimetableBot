@@ -6,10 +6,12 @@ import { fromZodError } from 'zod-validation-error';
 import { config } from '../../../config';
 import { App, AppService } from '../../app';
 import { unserialize } from '../../utils';
-import { AbstractBot, AbstractChat, BotServiceName } from '../bots/abstract';
-import { GoogleUserApi } from './api';
-import { GoogleCalendar } from './calendar';
-import { GoogleUser } from './user';
+import { AbstractBot, BotServiceName } from '../bots/abstract';
+import { BotChat } from '../bots/chat';
+import { GoogleServiceApi, GoogleUserApi } from './api';
+import { GoogleCalendarController } from './controller';
+import { CalendarItem } from './models/calendar';
+import { GoogleUser } from './models/user';
 
 type AuthState = {
     service: 'test'
@@ -19,12 +21,17 @@ type AuthState = {
 }
 
 export class GoogleService implements AppService {
+    public readonly api: GoogleServiceApi;
+    public calendarController: GoogleCalendarController;
+
     private app: App;
-    public calendar: GoogleCalendar;
 
     constructor(app: App) {
         this.app = app;
-        this.calendar = new GoogleCalendar(app);
+        this.api = new GoogleServiceApi();
+        this.calendarController = new GoogleCalendarController(app);
+
+        CalendarItem.api = this.api.calendar;
     }
 
     public run() {
@@ -36,7 +43,7 @@ export class GoogleService implements AppService {
             server.get('/google/link', this.link.bind(this));
         }
 
-        this.calendar.run();
+        this.calendarController.run();
     }
 
     public getAuthUrl(state: AuthState): string {
@@ -78,12 +85,12 @@ export class GoogleService implements AppService {
             api = await GoogleUserApi.createClientFromCode(code);
         } catch (e: any) {
             response.status(e.status).send(e.response.data);
-            
+
             return;
         }
-        
+
         const info = await api.getUserInfo();
-        
+
         const hasAllScopes: boolean = GoogleUserApi._requiredScopes().every((scope) => {
             return info.scopes.includes(scope);
         });
@@ -97,7 +104,7 @@ export class GoogleService implements AppService {
             return;
         }
 
-        GoogleUser.create(info.email, api.exportCredentials());
+        await GoogleUser.createByEmail(info.email, api.exportCredentials());
 
         if (state.service === 'test') {
             response.send({ info, auth: api.exportCredentials(), state });
@@ -106,13 +113,13 @@ export class GoogleService implements AppService {
 
         const service: AbstractBot = this.app.getService(state.service);
         if (service instanceof AbstractBot) {
-            const chat: AbstractChat = service.getChat(state.peerId).resync(true);
+            const chat: BotChat = await service.getChat(state.peerId);
 
-            chat.google_email = info.email;
-            service.event.sendMessage(chat, `Гугл аккаунт '${chat.google_email}' успешно привязан!`);
-            
+            await chat.update({ googleEmail: info.email });
+            await service.event.sendMessage(chat, `Гугл аккаунт '${chat.googleEmail}' успешно привязан!`);
+
             response.send('Аккаунт успешно привязан, можете вернуться обратно в чат');
-                
+
             return;
         }
 

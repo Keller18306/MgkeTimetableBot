@@ -1,5 +1,5 @@
 import { AppServiceName } from "../../../../app";
-import db from "../../../../db";
+import { VKAppUser } from "../../../vk_app/user";
 import { AbstractCommand, BotServiceName, CmdHandlerParams } from "../../abstract";
 
 export default class extends AbstractCommand {
@@ -11,14 +11,22 @@ export default class extends AbstractCommand {
     public services: BotServiceName[] = ['vk'];
     public requireServices: AppServiceName[] = ['vk', 'vkApp'];
 
-    handler({ context }: CmdHandlerParams) {
-        let id: string | undefined | number = context.text?.replace(this.regexp, '').trim()
-        if (id == undefined || id === '') return context.send('id не введен')
+    async handler({ context }: CmdHandlerParams) {
+        let id: string | undefined | number = context.text?.replace(this.regexp, '').trim();
+        if (id == undefined || id === '') {
+            return context.send('id не введен');
+        }
 
-        if (isNaN(+id)) return context.send('это не число')
+        if (isNaN(+id)) {
+            return context.send('это не число');
+        }
 
-        db.prepare('UPDATE `vk_app_users` SET `accepted` = 1 WHERE `user_id` = ?').run(id)
+        await VKAppUser.update({
+            accepted: true
+        }, {
+            where: { userId: id },
+        });
 
-        return context.send(`ok ${id}`)
+        return context.send(`ok ${id}`);
     }
 }

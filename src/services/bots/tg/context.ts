@@ -93,7 +93,7 @@ export class TgCommandContext extends AbstractCommandContext {
         let reply_to: number | string | undefined = options.reply_to
         if (typeof reply_to === 'string') reply_to = Number(reply_to)
 
-        let fileId = this.cache.get(image.id);
+        let fileId = await this.cache.get(image.id);
 
         let photo: MediaInput;
         if (fileId) {
@@ -118,7 +118,7 @@ export class TgCommandContext extends AbstractCommandContext {
         if (!fileId && attachment instanceof PhotoAttachment) {
             fileId = attachment.bigSize.fileId;
 
-            this.cache.add(image.id, fileId);
+            await this.cache.add(image.id, fileId);
         }
 
         return result.id.toString();
@@ -220,7 +220,7 @@ export class TgCallbackContext extends AbstractCallbackContext {
         let reply_to: number | string | undefined = options.reply_to
         if (typeof reply_to === 'string') reply_to = Number(reply_to)
 
-        let fileId = this.cache.get(image.id);
+        let fileId = await this.cache.get(image.id);
 
         let photo: MediaInput;
         if (!config.dev && fileId) {
@@ -245,7 +245,7 @@ export class TgCallbackContext extends AbstractCallbackContext {
         if (!fileId && attachment instanceof PhotoAttachment) {
             fileId = attachment.bigSize.fileId;
 
-            this.cache.add(image.id, fileId);
+            await this.cache.add(image.id, fileId);
         }
 
         return result.id.toString();

@@ -1,5 +1,5 @@
 import { randomBytes } from 'crypto';
-import { WriteBuffer } from '../../utils';
+import { WriteBuffer } from '../utils';
 import { AbstractKey, KeyType } from './abstract';
 
 export enum FromType {

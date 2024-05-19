@@ -19,7 +19,7 @@ export default class extends AbstractCallback {
 
                 return arg;
             }),
-            z.coerce.boolean().default(Boolean(chat.hidePastDays)),
+            z.coerce.boolean().default(chat.hidePastDays),
             z.coerce.boolean().default(true)
         ]).parse(context.payload);
 
@@ -41,7 +41,7 @@ export default class extends AbstractCallback {
         const relevantWeekIndex: number = WeekIndex.getRelevant().valueOf();
         const weekBounds = WeekIndex.fromWeekIndexNumber(weekIndex).getWeekDayIndexRange();
 
-        let days = this.app.getService('timetable').getGroupDaysByRange(weekBounds, value);
+        let days = await this.app.getService('timetable').getGroupDaysByRange(weekBounds, value);
         if (weekIndex === relevantWeekIndex && hidePastDays) {
             days = removePastDays(days);
         }
@@ -51,7 +51,7 @@ export default class extends AbstractCallback {
         });
 
         return context.editOrSend(message, {
-            keyboard: keyboard.WeekControl('group', value, weekIndex, hidePastDays, showHeader)
+            keyboard: await keyboard.WeekControl('group', value, weekIndex, hidePastDays, showHeader)
         });
     }
 
@@ -62,7 +62,7 @@ export default class extends AbstractCallback {
         const relevantWeekIndex: number = WeekIndex.getRelevant().valueOf();
         const weekBounds = WeekIndex.fromWeekIndexNumber(weekIndex).getWeekDayIndexRange();
 
-        let days = this.app.getService('timetable').getTeacherDaysByRange(weekBounds, value);
+        let days = await this.app.getService('timetable').getTeacherDaysByRange(weekBounds, value);
         if (weekIndex === relevantWeekIndex && hidePastDays) {
             days = removePastDays(days);
         }
@@ -72,7 +72,7 @@ export default class extends AbstractCallback {
         });
 
         return context.editOrSend(message, {
-            keyboard: keyboard.WeekControl('teacher', value, weekIndex, hidePastDays, showHeader)
+            keyboard: await keyboard.WeekControl('teacher', value, weekIndex, hidePastDays, showHeader)
         });
     }
 }

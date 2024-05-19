@@ -1,13 +1,14 @@
+import { InferAttributes, ModelStatic, Op, WhereOptions } from "sequelize";
 import { config } from "../../../../config";
 import { App } from "../../../app";
-import { getDistributionChats, getGroupsChats, getGroupsNoticeNextWeekChats, getNoticeErrorsChats, getTeachersChats, getTeachersNoticeNextWeekChats } from "../../../db";
-import { DayIndex, StringDate, WeekIndex, createScheduleFormatter, getFutureDays, prepareError } from "../../../utils";
+import { createScheduleFormatter } from "../../../formatter";
+import { DayIndex, StringDate, WeekIndex, getFutureDays, prepareError } from "../../../utils";
 import { GroupDayEvent, TeacherDayEvent } from "../../parser";
 import { raspCache, saveCache } from "../../parser/raspCache";
-import { GroupDay, TeacherDay } from "../../timetable/types";
+import { GroupDay, TeacherDay } from "../../parser/types";
 import { MessageOptions } from "../abstract";
-import { AbstractChat, ChatMode, DbChat } from "../abstract/chat";
 import { BotServiceName } from "../abstract/command";
+import { AbstractServiceChat, BotChat, ChatMode } from "../chat";
 
 function getDayPhrase(day: string, nextDayPhrase: string = 'день'): string {
     if (WeekIndex.fromStringDate(day).isFutureWeek()) {
@@ -37,20 +38,20 @@ export type CronDay = {
     latest?: boolean
 }
 
-export abstract class AbstractBotEventListener<T extends AbstractChat = AbstractChat> {
-    protected abstract _tableName: string;
+export abstract class AbstractBotEventListener {
+    protected abstract _model: ModelStatic<AbstractServiceChat>;
     public readonly abstract service: BotServiceName;
 
     constructor(protected app: App) { }
 
-    protected abstract createChat(chat: DbChat): T;
-    public abstract sendMessage(chat: T, message: string, options?: MessageOptions): Promise<any>;
+    // protected abstract createChat(chat: DbChat): T;
+    public abstract sendMessage(chat: BotChat, message: string, options?: MessageOptions): Promise<any>;
 
     protected getBotEventControlller() {
         return this.app.getService('bot').events;
     }
 
-    protected async sendMessages(chats: T | T[], message: string, options?: MessageOptions, cb?: ProgressCallback): Promise<void> {
+    protected async sendMessages(chats: BotChat | BotChat[], message: string, options?: MessageOptions, cb?: ProgressCallback): Promise<void> {
         if (!Array.isArray(chats)) {
             chats = [chats];
         }
@@ -70,22 +71,47 @@ export abstract class AbstractBotEventListener<T extends AbstractChat = Abstract
         }
     }
 
-    protected getGroupsChats<T>(groups: string | string[]): T[] {
-        if (!Array.isArray(groups)) groups = [groups];
+    protected async getChats(where?: WhereOptions<InferAttributes<BotChat>>): Promise<BotChat[]> {
+        return BotChat.findAll({
+            where: Object.assign({
+                accepted: true,
+                allowSendMess: true,
+                service: this.service,
+                ...(config.dev ? {
+                    noticeParserErrors: true
+                } : {})
+            }, where),
+            include: {
+                association: BotChat.associations[this._model.name],
+                required: true
+            },
+        }).then(chats => {
+            return chats.map(chat => {
+                chat.serviceChat = (chat as any)[this._model.name];
 
-        const chats: T[] = getGroupsChats(this._tableName, this.service, groups)
-            .map((chat: any) => this.createChat(chat));
-
-        return chats;
+                return chat;
+            });
+        });
     }
 
-    protected getTeachersChats<T>(teachers: string | string[]): T[] {
-        if (!Array.isArray(teachers)) teachers = [teachers];
+    protected async getGroupsChats<T>(group: string | string[], where?: WhereOptions<InferAttributes<BotChat>>): Promise<BotChat[]> {
+        return this.getChats(Object.assign({
+            group: group,
+            [Op.or]: {
+                deactivateSecondaryCheck: true,
+                mode: ['student', 'parent']
+            },
+        }, where));
+    }
 
-        const chats: T[] = getTeachersChats(this._tableName, this.service, teachers)
-            .map((chat: any) => this.createChat(chat));
-
-        return chats;
+    protected getTeachersChats<T>(teacher: string | string[], where?: WhereOptions<InferAttributes<BotChat>>): Promise<BotChat[]> {
+        return this.getChats(Object.assign({
+            teacher: teacher,
+            [Op.or]: {
+                deactivateSecondaryCheck: true,
+                mode: 'teacher'
+            },
+        }, where));
     }
 
     public async cronGroupDay({ index, latest }: CronDay) {
@@ -105,10 +131,10 @@ export abstract class AbstractBotEventListener<T extends AbstractChat = Abstract
                 return group;
             });
 
-        const chats: T[] = this.getGroupsChats(groups);
+        const chats: BotChat[] = await this.getGroupsChats(groups, { noticeChanges: true });
         if (chats.length === 0) return;
 
-        const chatsKeyed: { [group: string]: T[] } = chats.reduce<{ [group: string]: T[] }>((obj, chat: T) => {
+        const chatsKeyed: { [group: string]: BotChat[] } = chats.reduce<{ [group: string]: BotChat[] }>((obj, chat: BotChat) => {
             const group: string = String(chat.group!);
 
             if (!obj[group]) {
@@ -122,7 +148,7 @@ export abstract class AbstractBotEventListener<T extends AbstractChat = Abstract
 
         for (const group in chatsKeyed) {
             const groupEntry = raspCache.groups.timetable[group];
-            const chats: T[] = chatsKeyed[group];
+            const chats: BotChat[] = chatsKeyed[group];
 
             const nextDays = getFutureDays(groupEntry.days);
             if (!nextDays.length) continue;
@@ -162,7 +188,7 @@ export abstract class AbstractBotEventListener<T extends AbstractChat = Abstract
     }
 
     public async addGroupDay({ day, group }: GroupDayEvent) {
-        const chats: T[] = this.getGroupsChats(group);
+        const chats: BotChat[] = await this.getGroupsChats(group, { noticeChanges: true });
         if (chats.length === 0) return;
 
         const phrase: string = getDayPhrase(day.day, 'следующий день');
@@ -183,7 +209,7 @@ export abstract class AbstractBotEventListener<T extends AbstractChat = Abstract
     }
 
     public async updateGroupDay({ day, group }: GroupDayEvent) {
-        const chats: T[] = this.getGroupsChats(group);
+        const chats: BotChat[] = await this.getGroupsChats(group, { noticeChanges: true });
         if (chats.length === 0) return;
 
         const phrase: string = getDayPhrase(day.day);
@@ -220,10 +246,10 @@ export abstract class AbstractBotEventListener<T extends AbstractChat = Abstract
                 return teacher;
             });
 
-        const chats: T[] = this.getTeachersChats(teachers);
+        const chats: BotChat[] = await this.getTeachersChats(teachers, { noticeChanges: true });
         if (chats.length === 0) return;
 
-        const chatsKeyed: { [teacher: string]: T[] } = chats.reduce<{ [teacher: string]: T[] }>((obj, chat: T) => {
+        const chatsKeyed: { [teacher: string]: BotChat[] } = chats.reduce<{ [teacher: string]: BotChat[] }>((obj, chat: BotChat) => {
             const teacher: string = String(chat.teacher!);
 
             if (!obj[teacher]) {
@@ -237,7 +263,7 @@ export abstract class AbstractBotEventListener<T extends AbstractChat = Abstract
 
         for (const teacher in chatsKeyed) {
             const teacherEntry = raspCache.teachers.timetable[teacher];
-            const chats: T[] = chatsKeyed[teacher];
+            const chats: BotChat[] = chatsKeyed[teacher];
 
             const nextDays = getFutureDays(teacherEntry.days);
             if (!nextDays.length) continue;
@@ -277,7 +303,7 @@ export abstract class AbstractBotEventListener<T extends AbstractChat = Abstract
     }
 
     public async addTeacherDay({ day, teacher }: TeacherDayEvent) {
-        const chats: T[] = this.getTeachersChats(teacher);
+        const chats: BotChat[] = await this.getTeachersChats(teacher, { noticeChanges: true });
         if (chats.length === 0) return;
 
         const phrase: string = getDayPhrase(day.day, 'следующий день');
@@ -298,7 +324,7 @@ export abstract class AbstractBotEventListener<T extends AbstractChat = Abstract
     }
 
     public async updateTeacherDay({ day, teacher }: TeacherDayEvent) {
-        const chats: T[] = this.getTeachersChats(teacher);
+        const chats: BotChat[] = await this.getTeachersChats(teacher, { noticeChanges: true });
         if (chats.length === 0) return;
 
         const phrase: string = getDayPhrase(day.day);
@@ -321,7 +347,7 @@ export abstract class AbstractBotEventListener<T extends AbstractChat = Abstract
     public async updateWeek(chatMode: ChatMode, weekIndex: number) {
         const firstWeekDay = WeekIndex.fromWeekIndexNumber(weekIndex).getFirstDayDate();
 
-        let chats: T[] | undefined;
+        let chats: BotChat[] | undefined;
 
         if (chatMode === 'student') {
             const groups: string[] = Object.entries(raspCache.groups.timetable).map(([group, { days }]): [string, GroupDay[]] => {
@@ -336,8 +362,7 @@ export abstract class AbstractBotEventListener<T extends AbstractChat = Abstract
                 return group;
             });
 
-            chats = getGroupsNoticeNextWeekChats(this._tableName, this.service, groups)
-                .map((chat: any) => this.createChat(chat));
+            chats = await this.getGroupsChats(groups, { noticeNextWeek: true });
         }
 
         if (chatMode === 'teacher') {
@@ -353,8 +378,7 @@ export abstract class AbstractBotEventListener<T extends AbstractChat = Abstract
                 return teacher;
             });
 
-            chats = getTeachersNoticeNextWeekChats(this._tableName, this.service, teachers)
-                .map((chat: any) => this.createChat(chat));
+            chats = await this.getTeachersChats(teachers, { noticeNextWeek: true });
         }
 
         if (!chats || chats.length === 0) return;
@@ -363,15 +387,17 @@ export abstract class AbstractBotEventListener<T extends AbstractChat = Abstract
     }
 
     public async sendDistribution(message: string, cb?: ProgressCallback) {
-        const chats: T[] = getDistributionChats(this._tableName, this.service)
-            .map((chat: any) => this.createChat(chat));
+        const chats: BotChat[] = await this.getChats({
+            subscribeDistribution: true
+        });
 
         return this.sendMessages(chats, message, undefined, cb);
     }
 
     public async sendError(error: Error) {
-        const chats: T[] = getNoticeErrorsChats(this._tableName, this.service)
-            .map((chat: any) => this.createChat(chat));
+        const chats: BotChat[] = await this.getChats({
+            noticeParserErrors: true
+        });
 
         return this.sendMessages(chats, [
             '‼️ Произошла ошибка парсера ‼️\n',

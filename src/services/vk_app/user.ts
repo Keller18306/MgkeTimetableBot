@@ -1,108 +1,78 @@
+import { CreationOptional, DataTypes, InferAttributes, InferCreationAttributes, Model } from "sequelize";
 import { config } from "../../../config";
-import db from "../../db";
-import { VkChat } from "../bots/vk/chat";
-import { FromType, RequestKey } from "../key";
-import { checkSign } from "./checkSign";
+import { sequelize } from "../../db";
 
-const acceptTool = new RequestKey(config.encrypt_key)
+class VKAppUser extends Model<InferAttributes<VKAppUser>, InferCreationAttributes<VKAppUser>> {
+    public static async getOrCreateByUserId(userId: number): Promise<VKAppUser | null> {
+        return this.findOrCreate({
+            defaults: { userId },
+            where: { userId }
+        }).then(res => res[0]);
+    }
 
-export type UserData = {
-    id: number,
-    user_id: number,
-    accepted: number,
-    ref: string | null,
-    group: string | null,
-    teacher: string | null,
-    theme_id: number,
-    adblock: number,
-    insert_time: number,
-    last_time: number,
-    allowBotAccept: number,
-    firstPage: string,
-
-    resync: () => UserData
+    declare id: CreationOptional<number>
+    declare userId: number
+    declare accepted: CreationOptional<boolean>
+    declare ref: string | null
+    declare group: string | null
+    declare teacher: string | null
+    declare themeId: CreationOptional<number>
+    declare adblock: CreationOptional<boolean>
+    declare firstPage: string | null
+    declare loginAt: CreationOptional<Date>
+    declare createdAt: CreationOptional<Date>
+    declare updatedAt: CreationOptional<Date>
 }
 
-export class VKAppUser {
-    public url: string;
-    public vk_id: number;
-
-    public query: {
-        [key: string]: string
-    } = {}
-
-
-    private parseUrl(url: string) {
-        const data = new URL(url)
-
-        const query: {
-            [key: string]: string
-        } = {}
-
-        data.searchParams.forEach((value, key) => {
-            query[key] = value
-        })
-
-        return query
-    }
-
-    constructor(url: string) {
-        this.url = url;
-        this.query = this.parseUrl(url);
-        this.vk_id = Number(this.query.vk_user_id);
-    }
-
-    checkSign(validTime: number | false = 86400) {
-        return checkSign(this.url, config.vk.app, validTime)
-    }
-
-    get(doNotCreate: boolean = false): UserData {
-        const data: any = db.prepare('SELECT * FROM `vk_app_users` WHERE `user_id` = ?').get(this.vk_id);
-
-        if (!doNotCreate && data == undefined) {
-            db.prepare('INSERT INTO `vk_app_users` (`user_id`, `accepted`, `insert_time`, `last_time`) VALUES (?, ?, ?, ?)').run(
-                this.vk_id,
-                +config.accept.app,
-                Date.now(),
-                Date.now()
-            )
-            return this.get(doNotCreate)
+VKAppUser.init({
+    id: {
+        type: DataTypes.INTEGER,
+        primaryKey: true,
+        autoIncrement: true
+    },
+    userId: {
+        type: DataTypes.INTEGER,
+        unique: true
+    },
+    accepted: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: config.accept.app
+    },
+    ref: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+    group: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+    teacher: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+    themeId: {
+        type: DataTypes.INTEGER
+    },
+    adblock: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false
+    },
+    firstPage: {
+        type: DataTypes.STRING,
+        allowNull: true
+    }, 
+    loginAt: {
+        type: DataTypes.DATE,
+        defaultValue: () => {
+            return new Date();
         }
+    },
+    createdAt: DataTypes.DATE,
+    updatedAt: DataTypes.DATE
+}, {
+    sequelize: sequelize,
+    tableName: 'vk_app_users',
+    timestamps: true
+});
 
-        db.prepare('UPDATE `vk_app_users` SET `last_time` = ? WHERE `user_id` = ?').run(Date.now(), this.vk_id)
-
-        data.resync = (): UserData => {
-            return Object.assign(data, this.get(doNotCreate))
-        }
-
-        return data
-    }
-
-    getFromBot(): VkChat | null {
-        return new VkChat(this.vk_id).resync(true);
-    }
-
-    get accepted() {
-        return Boolean(this.get().accepted)
-    }
-
-    set accepted(value: boolean) {
-        db.prepare('UPDATE `vk_app_users` SET `accepted` = ? WHERE `user_id` = ?').run(value, this.vk_id)
-    }
-
-    get allowBotAccept() {
-        return Boolean(this.get().allowBotAccept)
-    }
-
-    set allowBotAccept(value: boolean) {
-        db.prepare('UPDATE `vk_app_users` SET `allowBotAccept` = ? WHERE `user_id` = ?').run(value, this.vk_id)
-    }
-
-    get acceptKey() {
-        return acceptTool.getKey({
-            from: FromType.VKApp,
-            user_id: this.vk_id,
-            time: Date.now()
-        })
-    }
-}
+export { VKAppUser };

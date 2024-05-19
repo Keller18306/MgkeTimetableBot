@@ -12,11 +12,11 @@ export default class extends AbstractCommand {
     };
 
     async handler({ context }: CmdHandlerParams) {
-        const archive = this.app.getService('timetable');
+        const groups = await this.app.getService('timetable').getGroups();
 
         return context.send([
             '__ Группы в кэше __\n',
-            archive.getGroups().join(', '),
+            groups.join(', '),
 
             `\nЗагружено: ${formatSeconds(Math.ceil((Date.now() - raspCache.groups.update) / 1e3))} назад`,
             `Изменено: ${formatSeconds(Math.ceil((Date.now() - raspCache.groups.changed) / 1e3))} назад`

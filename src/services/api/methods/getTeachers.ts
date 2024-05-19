@@ -5,9 +5,9 @@ export default class extends VKAppDefaultMethod {
     public httpMethod: "GET" | "POST" = 'GET';
     public method: string = 'getTeachers';
 
-    handler({ app }: HandlerParams) {
-        const archive = app.getService('timetable');
+    async handler({ app }: HandlerParams) {
+        const teachers = await app.getService('timetable').getTeachers();
 
-        return sort(archive.getTeachers());
+        return sort(teachers);
     }
 }

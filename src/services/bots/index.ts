@@ -5,7 +5,8 @@ import { TelegramBotCommand } from "puregram/generated";
 import { config } from "../../../config";
 import { App, AppService } from "../../app";
 import { ParsedPayload } from "../../utils";
-import { AbstractCallback, AbstractChat, AbstractCommand, AbstractCommandContext } from "./abstract";
+import { AbstractCallback, AbstractCommand, AbstractCommandContext } from "./abstract";
+import { BotChat } from "./chat";
 import { BotCron } from "./cron";
 import { BotEventController } from "./events/controller";
 
@@ -107,7 +108,7 @@ export class BotService implements AppService {
         return null;
     }
 
-    public getCommand(context: AbstractCommandContext, chat: AbstractChat): { regexp?: string, cmd: AbstractCommand } | null {
+    public getCommand(context: AbstractCommandContext, chat: BotChat): { regexp?: string, cmd: AbstractCommand } | null {
         if (context.parsedPayload) {
             const cmd = this.searchCommandByPayload(context.parsedPayload);
 

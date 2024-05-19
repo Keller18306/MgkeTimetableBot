@@ -11,8 +11,6 @@ export default class extends AbstractCommand {
     };
 
     handler({ context, chat, keyboard }: CmdHandlerParams) {
-        //if (context.isChat) return;
-
         if (chat.mode !== null) {
             context.cancelInput();
             chat.scene = null;
@@ -26,6 +24,6 @@ export default class extends AbstractCommand {
 
         return context.send('Кто будет использовать бота?', {
             keyboard: StaticKeyboard.SelectMode
-        })
+        });
     }
 }

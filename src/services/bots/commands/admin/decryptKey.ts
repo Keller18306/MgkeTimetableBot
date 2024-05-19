@@ -1,6 +1,6 @@
 import { config } from "../../../../../config";
+import { RequestKey, appType } from "../../../../key";
 import { StringDate } from "../../../../utils";
-import { RequestKey, appType } from "../../../key";
 import { AbstractCommand, CmdHandlerParams } from "../../abstract";
 
 const acceptTool = new RequestKey(config.encrypt_key)

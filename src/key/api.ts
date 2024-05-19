@@ -1,5 +1,5 @@
 import { randomBytes } from 'crypto';
-import { WriteBuffer } from '../../utils';
+import { WriteBuffer } from '../utils';
 import { AbstractKey, KeyType } from './abstract';
 
 export class ApiKey extends AbstractKey {
@@ -17,29 +17,17 @@ export class ApiKey extends AbstractKey {
         return this.finallyEncrypt(buffer_writer, iv);
     }
 
-    public parseKey(encoded: string): { id: bigint, iv: string } {
+    public parseKey(encoded: string): { id: bigint, iv: Buffer } {
         const buffer = this.finallyDecrypt(encoded);
         this.keyHeader(buffer);
 
         return {
             id: buffer.readBigUInt64BE(),
-            iv: this._iv!.toString('base64url')
+            iv: this._iv!
         }
     }
 
-    public createKey(id: bigint | number) {
-        if (typeof id === 'number') id = BigInt(id);
-
-        const iv = randomBytes(16);
-        const key = this.getKey(id, iv);
-
-        return {
-            key: key,
-            iv: iv.toString('base64url')
-        }
-    }
-
-    public createStringIV(): string {
-        return randomBytes(16).toString('base64url');
+    public createIV(): Buffer {
+        return randomBytes(16);
     }
 }

@@ -4,8 +4,8 @@ import { startVanishCronJob as setupVanishCron } from "./db";
 
 const app = new App(config.services);
 
-app.runServices().then(() => {
-    console.log('[CORE]', 'Loaded services:', app.getServiceList().join(', '))
-});
+app.runServices();
 
 setupVanishCron(app);
+
+export { app };

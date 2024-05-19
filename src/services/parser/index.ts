@@ -3,16 +3,17 @@ import got from "got"
 import { JSDOM } from "jsdom"
 import { config } from "../../../config"
 import { App, AppService } from "../../app"
+import { Logger } from "../../logger"
 import { DayIndex, WeekIndex, mergeDays } from "../../utils"
 import { TypedEventEmitter } from "../../utils/events"
-import { ChatMode } from "../bots/abstract"
+import { ChatMode } from "../bots/chat"
 import { clearOldImages } from "../image/clear"
 import { ArchiveAppendDay } from "../timetable"
-import { Group, GroupDay, Groups, Teacher, TeacherDay, Teachers, Team } from '../timetable/types'
 import StudentParser from "./group"
 import { RaspEntryCache, TeamCache, loadCache, raspCache, saveCache } from './raspCache'
 import TeacherParser from "./teacher"
 import TeamParser from "./team"
+import { Group, GroupDay, Groups, Teacher, TeacherDay, Teachers, Team } from './types'
 
 const MAX_LOG_LIMIT: number = 10;
 const LOG_COUNT_SEND: number = 3;
@@ -75,6 +76,7 @@ type ParserEvents = {
 
 export class ParserService implements AppService {
     public events: TypedEventEmitter<ParserEvents>;
+    public logger: Logger = new Logger('Parser');
 
     private logs: { date: Date, result: string | Error }[] = [];
     private delayPromise?: Delay;
@@ -283,6 +285,7 @@ export class ParserService implements AppService {
 
                 ms = updateTime - startTime;
             } catch (e) {
+                console.error('Parser error', e);
                 return reject(e);
             }
 
@@ -291,6 +294,12 @@ export class ParserService implements AppService {
     }
 
     private async runActions(): Promise<boolean[]> {
+        if (config.dev && !config.parser.localMode) {
+            // Перезагружаем данные из файла, если мы в режиме разработки.
+            // Используется для тестирования оповещений о изменениях в днях 
+            loadCache();
+        }
+
         const PARSER_ACTIONS = [
             this.parseTimetable.bind(
                 this, StudentParser, encodeURI(config.parser.endpoints.timetableGroup), raspCache.groups
@@ -331,6 +340,8 @@ export class ParserService implements AppService {
     }
 
     private async parseTimetable(Parser: typeof TeacherParser | typeof StudentParser, url: string, cache: RaspEntryCache<Teachers | Groups>) {
+        const logger = this.logger.extend(onParser<string>(Parser, 'Student', 'Teacher'));
+
         let data: Teachers | Groups;
         if (config.parser.localMode) {
             const fileName: string = onParser<string>(Parser, 'groups', 'teachers');
@@ -352,12 +363,9 @@ export class ParserService implements AppService {
 
             cache.hash = hash;
 
-            const parserName = onParser<string>(Parser, 'Student', 'Teacher');
-
-            console.log(`[${parserName}Parser] Start parsing (newHash: ${hash})...`);
+            logger.log(`Парсинг данных (newHash: ${hash})...`);
             data = parser.run();
-
-            console.log(`[${parserName}Parser] Start data processing...`);
+            logger.log('Обработка данных...');
         }
 
         if (Object.keys(data).length == 0) return false;
@@ -382,32 +390,23 @@ export class ParserService implements AppService {
             }
         }
 
-        const archiveDays: ArchiveAppendDay[] = [];
+        const archiveLessons: ArchiveAppendDay[] = [];
 
         // добавление новых данных
         for (const index in data) {
             const newEntry = data[index];
             const currentEntry = cache.timetable[index];
 
+            let toArchive: (GroupDay | TeacherDay)[] = [];
+
             if (!currentEntry) {
                 cache.timetable[index] = data[index];
+
+                toArchive.push(...data[index].days);
             } else {
                 const { mergedDays, added, changed } = mergeDays(newEntry.days as any, currentEntry.days as any);
 
-                const toArchive: (GroupDay | TeacherDay)[] = [...added, ...changed];
-                if (toArchive.length > 0) {
-                    archiveDays.push(...toArchive.map((day): ArchiveAppendDay => {
-                        return onParser<ArchiveAppendDay>(Parser, {
-                            type: 'group',
-                            group: index,
-                            day: day as GroupDay
-                        }, {
-                            type: 'teacher',
-                            teacher: index,
-                            day: day as TeacherDay
-                        });
-                    }));
-                }
+                toArchive = [...added, ...changed];
 
                 for (const day of changed) {
                     const dayIndex = DayIndex.fromStringDate(day.day);
@@ -455,19 +454,33 @@ export class ParserService implements AppService {
                 //test
                 if (config.dev) {
                     if (changed.length > 0) {
-                        console.log(`Для '${index}' были изменены дни:`, changed.map(day => {
-                            return day.day
-                        }))
+                        logger.log(`Для '${index}' были изменены дни:`, changed.map(day => {
+                            return day.day;
+                        }));
                     }
 
                     if (added.length > 0) {
-                        console.log(`Для '${index}' были добавлены дни:`, added.map(day => {
-                            return day.day
-                        }))
+                        logger.log(`Для '${index}' были добавлены дни:`, added.map(day => {
+                            return day.day;
+                        }));
                     }
                 }
 
                 currentEntry.days = mergedDays as any;
+            }
+
+            if (toArchive.length > 0) {
+                archiveLessons.push(...toArchive.map((day): ArchiveAppendDay => {
+                    return onParser<ArchiveAppendDay>(Parser, {
+                        type: 'group',
+                        group: index,
+                        day: day as GroupDay
+                    }, {
+                        type: 'teacher',
+                        teacher: index,
+                        day: day as TeacherDay
+                    });
+                }));
             }
         }
 
@@ -481,7 +494,7 @@ export class ParserService implements AppService {
                 const keep: boolean = (dayIndex.isNotPast() || dayIndex.valueOf() >= siteMinimalDayIndex);
 
                 if (!keep) {
-                    archiveDays.push(onParser<ArchiveAppendDay>(Parser, {
+                    archiveLessons.push(onParser<ArchiveAppendDay>(Parser, {
                         type: 'group',
                         group: index,
                         day: day as GroupDay
@@ -501,8 +514,8 @@ export class ParserService implements AppService {
             }
         }
 
-        this.app.getService('timetable').appendDays(archiveDays);
-        this.events.emit('flushCache', archiveDays);
+        await this.app.getService('timetable').appendDays(archiveLessons);
+        this.events.emit('flushCache', archiveLessons);
 
         // проверка на то, что добавлена новая неделя
         const maxWeekIndex = Math.max(...(Object.values(cache.timetable) as (Group | Teacher)[])
@@ -529,11 +542,13 @@ export class ParserService implements AppService {
 
     private _cacheTeamCleared: boolean = false; //костыль, чтобы два раза не чистилось
     private async parseTeam(pageIndex: number, url: string, cache: TeamCache): Promise<boolean> {
+        const logger = this.logger.extend(`Team:${pageIndex}`);
+
         let data: Team;
         if (config.parser.localMode) {
-            const file: any = JSON.parse(readFileSync(`./cache/rasp/team.json`, 'utf8'));
+            const file: TeamCache = JSON.parse(readFileSync(`./cache/rasp/team.json`, 'utf8'));
 
-            data = file.team;
+            data = file.names;
         } else {
             const jsdom = await this.getJSDOM(url);
 
@@ -549,10 +564,9 @@ export class ParserService implements AppService {
 
             cache.hash[pageIndex] = hash;
 
-            console.log(`[TeamParser: ${pageIndex}] Start parsing (newHash: ${hash})...`);
+            logger.log(`Парсинг данных (newHash: ${hash})...`);
             data = parser.run();
-
-            console.log(`[TeamParser: ${pageIndex}] Start data processing...`);
+            logger.log('Обработка данных...');
         }
 
         if (Object.keys(data).length == 0) return false;

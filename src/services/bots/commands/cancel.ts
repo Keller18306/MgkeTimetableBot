@@ -10,11 +10,11 @@ export default class extends AbstractCommand {
     };
 
     handler({ context, keyboard, chat }: CmdHandlerParams) {
-        context.cancelInput()
+        context.cancelInput();
         chat.scene = null;
 
         return context.send('Ввод был отменён', {
             keyboard: keyboard.MainMenu
-        })
+        });
     }
 }

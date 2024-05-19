@@ -1,4 +1,6 @@
+import { sequelize } from "./db";
 import { HttpService } from "./http";
+import { Logger } from "./logger";
 import { AliceApp } from "./services/alice";
 import { Api } from "./services/api";
 import { BotService } from "./services/bots";
@@ -11,7 +13,6 @@ import { ParserService } from './services/parser';
 import { Timetable } from "./services/timetable";
 import { VKApp } from './services/vk_app';
 
-type ServiceConstuctor<S extends Record<string, AppService>> = new (app: App) => AppService;
 export interface AppService {
     run(): Promise<any> | any;
 }
@@ -35,6 +36,8 @@ type Services = typeof services;
 export type AppServiceName = keyof Services;
 
 export class App {
+    public logger: Logger = new Logger('CORE');
+
     private services: Map<AppServiceName, AppService> = new Map();
     private init: boolean = false;
 
@@ -70,15 +73,24 @@ export class App {
     }
 
     public async runServices(): Promise<void> {
+        this.logger.log('Запуск...')
+
         const promises: Promise<any>[] = [];
 
         this.init = true;
+
+        this.logger.log('Подключение к БД...');
+        await sequelize.sync();
+        this.logger.log('Подключение к БД: Успешно!');
 
         for (const [serviceId, service] of this.services) {
             promises.push(service.run());
         }
 
         await Promise.all(promises);
+
+        this.logger.log('Проект успешно запущен');
+        this.logger.log('Загруженные сервисы:', this.getServiceList().join(', '));
     }
 
     public getServiceList(): Array<string> {

@@ -11,8 +11,8 @@ export default class extends AbstractCommand {
 
         chat.scene = null;
 
-        context.send(defines[`${service}.message.about`], {
+        return context.send(defines[`${service}.message.about`], {
             keyboard: keyboard.MainMenu
-        })
+        });
     }
 }

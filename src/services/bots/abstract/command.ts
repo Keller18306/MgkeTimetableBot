@@ -2,8 +2,9 @@ import { MessageContext as TgMessageContext } from 'puregram';
 import { TelegramBotCommand } from 'puregram/generated';
 import { ContextDefaultState, MessageContext as VkMessageContext } from 'vk-io';
 import { App, AppServiceName } from '../../../app';
-import { ScheduleFormatter } from '../../../utils/formatters/abstract';
+import { ScheduleFormatter } from '../../../formatter';
 import { raspCache } from '../../parser';
+import { AbstractServiceChat, BotChat } from '../chat';
 import { Keyboard, StaticKeyboard, withCancelButton } from '../keyboard';
 import { Storage } from '../storage';
 import { TgChat } from '../tg/chat';
@@ -13,7 +14,6 @@ import { ViberCommandContext, ViberContext } from '../viber/context';
 import { VkChat } from '../vk/chat';
 import { VkCommandContext } from '../vk/context';
 import { AbstractAction } from './action';
-import { AbstractChat } from './chat';
 import { AbstractCommandContext } from './context';
 import { KeyboardBuilder } from './keyboardBuilder';
 
@@ -22,28 +22,29 @@ export type BotServiceName = 'tg' | 'vk' | 'viber';
 export type CmdHandlerParams<C extends AbstractCommand = any> = {
     context: AbstractCommandContext,
     realContext: any,
-    chat: AbstractChat,
+    serviceChat: AbstractServiceChat,
+    chat: BotChat,
     regexp?: C['regexp'] extends RegExp ? 'index' : keyof C['regexp'],
     actions: AbstractAction,
     keyboard: Keyboard,
     service: BotServiceName,
-    scheduleFormatter: ScheduleFormatter,
+    formatter: ScheduleFormatter,
     cache: Storage
 } & ({
     service: 'vk',
     context: VkCommandContext,
     realContext: VkMessageContext<ContextDefaultState>,
-    chat: VkChat
+    serviceChat: VkChat
 } | {
     service: 'viber',
     context: ViberCommandContext,
     realContext: ViberContext,
-    chat: ViberChat
+    serviceChat: ViberChat
 } | {
     service: 'tg',
     context: TgCommandContext,
     realContext: TgMessageContext,
-    chat: TgChat
+    serviceChat: TgChat
 })
 
 export abstract class AbstractCommand {
@@ -104,12 +105,12 @@ export abstract class AbstractCommand {
 
     constructor(protected app: App) { }
 
-    public preHandle({ service, chat }: CmdHandlerParams) {
+    public preHandle({ service, serviceChat: chat }: CmdHandlerParams) {
         if (this.services && !this.services.includes(service)) {
             return false;
         }
 
-        if (this.adminOnly && !chat.isAdmin) {
+        if (this.adminOnly && !chat.isSuperAdmin()) {
             return false;
         }
 

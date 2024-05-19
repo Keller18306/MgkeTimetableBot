@@ -1,73 +1,79 @@
+import { CreationOptional, DataTypes, InferAttributes, InferCreationAttributes, Model } from "sequelize";
 import { config } from "../../../config";
-import { getApiKeyById, updateLastApiKeyUse } from "../../db";
-import { ApiKey } from "../key";
+import { sequelize } from "../../db";
+import { ApiKey } from "../../key";
+import { BotChat } from "../bots/chat";
 
-const keyTool = new ApiKey(config.encrypt_key)
+const keyTool = new ApiKey(config.encrypt_key);
 
-export type KeyData = {
-    id: number,
-    service: string | null,
-    fromId: bigint | null,
-    limitPerSec: number,
-    iv: string | null,
-    last_time: number | null
-}
-
-export class Key {
-    private _key: string;
-    private _id?: bigint;
-    private _iv?: string;
-
-    private _limitPerSecond?: number;
-
-    constructor(key: string) {
-        this._key = key
-
+class ApiKeyModel extends Model<InferAttributes<ApiKeyModel>, InferCreationAttributes<ApiKeyModel>> {
+    public static async fromKeyString(keyString: string): Promise<ApiKeyModel | null> {
         try {
-            const { id, iv } = keyTool.parseKey(this._key)
+            const { id, iv } = keyTool.parseKey(keyString);
 
-            this._id = id
-            this._iv = iv
-        } catch (e) { }
-    }
-
-    isValid(): boolean {
-        if (this._id == undefined || this._iv == undefined) return false;
-
-        const key = this.get()
-        this._limitPerSecond = key.limitPerSec
-
-        if (this._iv !== key.iv) return false;
-
-        return true
-    }
-
-    get(): KeyData {
-        if (this._id == null) {
-            throw new Error('key is not valid');
+            return this.findOne({ where: { id: Number(id), iv } });
+        } catch (e) {
+            return null;
         }
-        
-        const data: any = getApiKeyById(this._id);
-        if (!data) {
-            throw new Error('api key not found');
-        }
-
-        updateLastApiKeyUse(this._id, Date.now());
-
-        return data;
     }
 
-    get id(): bigint {
-        if (this._id == null) throw new Error('key is not valid')
+    declare id: CreationOptional<number>;
+    declare chatId: number;
+    declare limitPerSec: CreationOptional<number>;
+    declare iv: CreationOptional<Buffer>;
+    declare lastUsed: Date | null;
 
-        return this._id
+    public async renewIV() {
+        const iv = keyTool.createIV();
+
+        this.iv = iv;
+
+        await this.save();
     }
 
-    get limit() {
-        if (this._limitPerSecond == null) {
-            this._limitPerSecond = this.get().limitPerSec
-        }
-
-        return this._limitPerSecond
+    public getApiKey() {
+        return keyTool.getKey(this.id, this.iv);
     }
 }
+
+ApiKeyModel.init({
+    id: {
+        type: DataTypes.INTEGER,
+        primaryKey: true,
+        autoIncrement: true,
+        allowNull: true
+    },
+    chatId: {
+        type: DataTypes.INTEGER,
+        unique: true,
+        allowNull: false
+    },
+    limitPerSec: {
+        type: DataTypes.SMALLINT,
+        defaultValue: 2
+    },
+    iv: {
+        type: DataTypes.BLOB,
+        allowNull: false,
+        defaultValue: () => {
+            return keyTool.createIV();
+        }
+    },
+    lastUsed: {
+        type: DataTypes.DATE,
+        allowNull: true
+    }
+}, {
+    sequelize: sequelize,
+    tableName: 'api',
+    timestamps: true,
+    indexes: []
+});
+
+ApiKeyModel.belongsTo(BotChat, {
+    targetKey: 'id',
+    foreignKey: 'chatId'
+});
+
+export { ApiKeyModel };
+

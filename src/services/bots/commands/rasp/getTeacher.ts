@@ -69,7 +69,7 @@ export default class GetTeacherCommand extends AbstractCommand {
             break;
         }
 
-        chat.appendTeacherSearchHistory(teacher);
+        chat.appendTeacherHistory(teacher);
 
         if (regexp === 'day') {
             return this.sendDay(teacher, initiator, params);
@@ -86,9 +86,9 @@ export default class GetTeacherCommand extends AbstractCommand {
         throw new Error('unknown error');
     }
 
-    private async sendDay(teacher: string, initiator: InputInitiator, { context, keyboard, scheduleFormatter }: CmdHandlerParams) {
+    private async sendDay(teacher: string, initiator: InputInitiator, { context, keyboard, formatter }: CmdHandlerParams) {
         const teacherRasp = raspCache.teachers.timetable[teacher];
-        const message = scheduleFormatter.formatTeacherFull(teacher, {
+        const message = formatter.formatTeacherFull(teacher, {
             showHeader: true,
             days: getDayRasp(teacherRasp.days, true, 2)
         });
@@ -104,18 +104,18 @@ export default class GetTeacherCommand extends AbstractCommand {
         return context.send(message, options);
     }
 
-    private async sendWeek(teacher: string, initiator: InputInitiator, { context, keyboard, scheduleFormatter }: CmdHandlerParams) {
+    private async sendWeek(teacher: string, initiator: InputInitiator, { context, keyboard, formatter }: CmdHandlerParams) {
         const weekIndex = WeekIndex.getRelevant();
         const weekRange = weekIndex.getWeekDayIndexRange();
-        const days = this.app.getService('timetable').getTeacherDaysByRange(weekRange, teacher);
+        const days = await this.app.getService('timetable').getTeacherDaysByRange(weekRange, teacher);
 
-        const message = scheduleFormatter.formatTeacherFull(teacher, {
+        const message = formatter.formatTeacherFull(teacher, {
             showHeader: true,
             days: days
         });
 
         const options: MessageOptions = {
-            keyboard: keyboard.WeekControl('teacher', teacher, weekIndex.valueOf(), false)
+            keyboard: await keyboard.WeekControl('teacher', teacher, weekIndex.valueOf(), false)
         }
 
         if (initiator === 'callback') {
@@ -128,7 +128,7 @@ export default class GetTeacherCommand extends AbstractCommand {
     private async sendImage(teacher: string, initiator: InputInitiator, { context }: CmdHandlerParams) {
         const weekIndex = WeekIndex.getRelevant();
         const weekRange = weekIndex.getWeekDayIndexRange();
-        const days = this.app.getService('timetable').getTeacherDaysByRange(weekRange, teacher);
+        const days = await this.app.getService('timetable').getTeacherDaysByRange(weekRange, teacher);
 
         const image: ImageFile = await this.app.getService('image').builder.getTeacherImage(teacher, days);
 

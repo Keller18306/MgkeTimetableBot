@@ -6,7 +6,7 @@ import { ZodError } from 'zod';
 import { fromZodError } from 'zod-validation-error';
 import { config } from '../../../config';
 import { App, AppService } from '../../app';
-import { Key } from './key';
+import { ApiKeyModel } from './key';
 import ApiDefaultMethod, { HandlerParams } from './methods/_default';
 
 export class Api implements AppService {
@@ -56,24 +56,26 @@ export class Api implements AppService {
         return count
     }
 
-    private checkLimit(key: Key) {
-        if (key.limit === 0) return true;
+    private checkLimit(key: ApiKeyModel) {
+        if (key.limitPerSec === 0) return true;
 
         const id = key.id.toString()
 
         const limit = this.getLastRequests(id, 1e3) + 1
 
-        if (limit > key.limit) {
+        if (limit > key.limitPerSec) {
             return false
         }
 
         return true
     }
 
-    private applyRequest(key: Key, time: number) {
+    private async applyRequest(key: ApiKeyModel, time: number) {
         const id = key.id.toString()
 
-        if (this.requests[id] === undefined) this.requests[id] = {}
+        if (this.requests[id] === undefined) {
+            this.requests[id] = {}
+        }
 
         const reqId = `${time}-${Math.random()}`
 
@@ -87,6 +89,8 @@ export class Api implements AppService {
                 }
             }, 1e3)
         }
+
+        await key.update({ lastUsed: new Date() });
     }
 
     public loadMethods() {
@@ -129,8 +133,9 @@ export class Api implements AppService {
         const method = request.params.method;
 
         const _class = this.loaded[request.method.toUpperCase()]?.[method];
-
-        if (_class === undefined) return response.status(StatusCode.ClientErrorNotFound).send('Method not found');
+        if (_class === undefined) {
+            return response.status(StatusCode.ClientErrorNotFound).send('Method not found');
+        }
 
         let token = request.header('authorization')
         if (token) {
@@ -140,16 +145,18 @@ export class Api implements AppService {
             return this.notAuthorized({ app, request, response })
         }
 
-        const key = new Key(token);
-        if (!key.isValid()) return this.notAuthorized({ app, request, response });
-
-        if (!this.checkLimit(key)) {
-            return this.tooManyRequests({ app, request, response })
-        }
-
-        this.applyRequest(key, time);
-
         (async () => {
+            const key = await ApiKeyModel.fromKeyString(token);
+            if (!key) {
+                return this.notAuthorized({ app, request, response });
+            }
+
+            if (!this.checkLimit(key)) {
+                return this.tooManyRequests({ app, request, response })
+            }
+
+            await this.applyRequest(key, time);
+
             try {
                 let message = _class.handler({ app, request, response })
 

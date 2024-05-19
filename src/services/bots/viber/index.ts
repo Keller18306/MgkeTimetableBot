@@ -1,12 +1,14 @@
 import express from 'express';
+import { CreationAttributes } from 'sequelize';
 import { Bot, Events, ReceivedTextMessage, Response } from 'viber-bot';
 import { config } from '../../../../config';
 import { App, AppService } from '../../../app';
 import { defines } from '../../../defines';
-import { createScheduleFormatter } from '../../../utils';
-import { FromType, InputRequestKey } from '../../key/index';
+import { createScheduleFormatter } from '../../../formatter';
+import { FromType, InputRequestKey } from '../../../key/index';
 import { raspCache } from '../../parser';
 import { AbstractBot } from '../abstract';
+import { BotChat } from '../chat';
 import { AbstractBotEventListener } from '../events';
 import { Keyboard, StaticKeyboard } from '../keyboard';
 import { ViberAction } from './action';
@@ -67,56 +69,65 @@ export class ViberBot extends AbstractBot implements AppService {
         }, (err) => {
             console.error('[VIBER] Не удалось получить информацию о боте. Вероятно невалидный токен.', err)
         });
-        
+
         server.use(WEBHOOK_URL, this.bot.middleware());
         server.use(REDIRECT_URL, this.redirect.bind(this));
-        
+
         await this.setupWebhook();
     }
-    
-    public getChat(peerId: string): ViberChat {
-        return new ViberChat(peerId);
+
+    public async getChat(peerId: string, creationDefaults?: Partial<CreationAttributes<BotChat>>): Promise<BotChat<ViberChat>> {
+        return BotChat.findByServicePeerId(ViberChat, peerId, creationDefaults);
     }
 
     private async setupWebhook() {
         const URL = `https://${config.http.servername}${WEBHOOK_URL}`
 
         await this.bot.setWebhook(URL).then((res) => {
-            console.log(`[VIBER] Webhook set to ${URL}`)
+            console.log(`[VIBER] Вебхук установлен на ${URL}`)
         }, (err) => {
-            console.error(`[VIBER] Webhook set error`, err)
+            console.error(`[VIBER] Ошибка установки вебхука`, err)
         })
     }
 
     private async handleNewMessage(message: ReceivedTextMessage, response: Response) {
-        const chat = this.getChat(response.userProfile.id);
+        const chat = await this.getChat(response.userProfile.id, {
+            accepted: config.accept.private,
+            allowSendMess: true
+        });
+
         const context = new ViberCommandContext(this, message, response, chat);
 
-        if (chat.needUpdateDeviceInfo()) {
-            await this.bot.getUserDetails(response.userProfile).then((res) => {
-                chat.setDeviceInfo(res.name, res.primary_device_os, res.viber_version, res.device_type)
-            }).catch((err) => {
+        if (chat.serviceChat.needUpdateUserDetails()) {
+            const userDetails = await this.bot.getUserDetails(response.userProfile).catch((err) => {
                 console.error('[VIBER] Не удалось получить информацию о пользователе', err)
-            })
+            });
+
+            if (userDetails) {
+                await chat.serviceChat.setUserDetails(userDetails);
+            }
         }
 
         this.handleMessage({
             context: context,
             realContext: { message, response },
             chat: chat,
+            serviceChat: chat.serviceChat,
             actions: new ViberAction(context, chat),
-            keyboard: new Keyboard(this.app, chat.resync(), context),
+            keyboard: new Keyboard(this.app, chat, context),
             service: 'viber',
-            scheduleFormatter: createScheduleFormatter('viber', this.app, raspCache, chat),
+            formatter: createScheduleFormatter('viber', this.app, raspCache, chat),
             cache: this.cache
         });
     }
 
     private async handleConversationStarted(response: Response, subscribed: boolean, _context: string) {
-        const chat = this.getChat(response.userProfile.id);
-        const context = new ViberCommandContext(this, null, response, chat);
+        const chat = await this.getChat(response.userProfile.id, {
+            accepted: config.accept.private,
+            allowSendMess: subscribed
+        });
 
-        chat.resync();
+        const context = new ViberCommandContext(this, null, response, chat);
 
         chat.allowSendMess = subscribed;
 
@@ -124,25 +135,29 @@ export class ViberBot extends AbstractBot implements AppService {
             chat.ref = _context?.slice(0, 255) || 'none';
         }
 
+        await chat.save();
+
         return context.send(defines['viber.first.message'], {
             keyboard: StaticKeyboard.StartButton,
         });
     }
 
     private async handleSubscribe(response: Response) {
-        const chat = this.getChat(response.userProfile.id)
+        const chat = await this.getChat(response.userProfile.id, {
+            accepted: config.accept.private,
+            allowSendMess: true
+        });
 
-        chat.resync()
-
-        chat.allowSendMess = true
+        await chat.update({ allowSendMess: true });
     }
 
     private async handleUnsubscribe(userId: string) {
-        const chat = this.getChat(userId)
+        const chat = await this.getChat(userId, {
+            accepted: config.accept.private,
+            allowSendMess: false
+        });
 
-        chat.resync()
-
-        chat.allowSendMess = false
+        await chat.update({ allowSendMess: false });
     }
 
     protected _getAcceptKeyParams(context: ViberCommandContext): InputRequestKey {

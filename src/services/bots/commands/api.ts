@@ -1,9 +1,8 @@
 import { config } from "../../../../config";
 import { AppServiceName } from "../../../app";
-import db from "../../../db";
+import { ApiKey } from "../../../key";
 import { StringDate } from "../../../utils";
-import { KeyData } from "../../api/key";
-import { ApiKey } from "../../key";
+import { ApiKeyModel } from "../../api/key";
 import { AbstractCommand, CmdHandlerParams } from "../abstract";
 
 const keyTool = new ApiKey(config.encrypt_key);
@@ -13,32 +12,25 @@ export default class extends AbstractCommand {
     public payloadAction = null;
     public requireServices: AppServiceName[] = ['api'];
 
-    handler({ context, service }: CmdHandlerParams) {
-        if (context.isChat) return context.send('Команда недоступна в беседах');
-
-        let limit: number = 2;
-
-        let key: KeyData | null = db.prepare('SELECT * FROM `api` WHERE `service` = ? AND `fromId` = ?').get(service, context.peerId) as any;
-        if (!key) {
-            const res = db.prepare(
-                'INSERT INTO `api` (`service`, `fromId`, `limitPerSec`) VALUES (?, ?, ?)'
-            ).run(service, context.peerId, limit);
-
-            key = db.prepare('SELECT * FROM `api` WHERE `id` = ?').get(res.lastInsertRowid) as KeyData;
-        } else {
-            limit = key.limitPerSec;
+    async handler({ context, chat, formatter }: CmdHandlerParams) {
+        if (context.isChat) {
+            return context.send('Команда недоступна в беседах');
         }
 
-        if (!key.iv || context.text.endsWith('_new')) {
-            key.iv = keyTool.createStringIV();
-            db.prepare('UPDATE `api` SET `iv` = ? WHERE `id` = ?').run(key.iv, key.id);
+        const [key] = await ApiKeyModel.findOrCreate({
+            defaults: { chatId: chat.id },
+            where: { chatId: chat.id }
+        });
+
+        if (context.text.endsWith('_new')) {
+            await key.renewIV();
         }
 
         return context.send([
             `${context.text.endsWith('_new') ? 'Новый ' : ''}API токен #${key.id}:`,
-            keyTool.getKey(key.id, key.iv),
+            formatter.m(keyTool.getKey(key.id, key.iv)),
             `Запросов в сек: ${key.limitPerSec}`,
-            `Последнее использование: ${key.last_time ? StringDate.fromUnixTime(key.last_time).toStringDateTime() : 'нет'}`,
+            `Последнее использование: ${key.lastUsed ? StringDate.fromDate(key.lastUsed).toStringDateTime() : 'нет'}`,
 
             '\nДокументация: https://vk.com/@mgke_slave-api',
             'Создать новый: /api_new'

@@ -1,11 +1,12 @@
 import { APIError, getRandomId, VK } from "vk-io";
 import { App } from "../../../app";
 import { BotServiceName, MessageOptions } from "../abstract";
+import { BotChat } from "../chat";
 import { AbstractBotEventListener } from "../events";
-import { VkChat, VkDb } from './chat';
+import { VkChat } from './chat';
 
-export class VkEventListener extends AbstractBotEventListener<VkChat> {
-    protected _tableName: string = 'vk_bot_chats';
+export class VkEventListener extends AbstractBotEventListener {
+    protected _model = VkChat;
     public readonly service: BotServiceName = 'vk';
 
     private vk: VK;
@@ -15,13 +16,9 @@ export class VkEventListener extends AbstractBotEventListener<VkChat> {
         this.vk = vk
     }
 
-    protected createChat(chat: VkDb): VkChat {
-        return new VkChat(chat);
-    }
-
-    public async sendMessage(chat: VkChat, message: string, options: MessageOptions = {}) {
+    public async sendMessage(chat: BotChat<VkChat>, message: string, options: MessageOptions = {}) {
         return this.vk.api.messages.send({
-            peer_id: chat.peerId,
+            peer_id: chat.serviceChat.peerId,
             message,
             random_id: getRandomId()
         }).catch((err: APIError) => {

@@ -1,7 +1,7 @@
 import { defines } from "../../../../defines";
 import { randArray } from "../../../../utils";
 import { raspCache } from "../../../parser";
-import { AbstractCommand, CmdHandlerParams, MessageOptions } from "../../abstract";
+import { AbstractCommand, CmdHandlerParams } from "../../abstract";
 import { StaticKeyboard } from "../../keyboard";
 
 export default class extends AbstractCommand {
@@ -48,10 +48,8 @@ export default class extends AbstractCommand {
         chat.scene = null;
         chat.deactivateSecondaryCheck = false;
 
-        const options: MessageOptions = {
+        return context.send(defines[`${service}.message.about`], {
             keyboard: keyboard.MainMenu
-        }
-
-        return context.send(defines[`${service}.message.about`], options);
+        });
     }
 }

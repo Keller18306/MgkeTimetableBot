@@ -1,17 +1,8 @@
 import SQLite3 from 'better-sqlite3';
-import { existsSync, readFileSync } from 'fs';
+import { Sequelize } from 'sequelize';
+import { config } from '../../config';
 
-const db = new SQLite3('sqlite3.db');
+export const dbOld = new SQLite3('sqlite3.db');
+export const sequelize = new Sequelize(config.db);
 
-if (!existsSync('sqlite3.db')) {
-    db.exec(readFileSync('scheme.sqlite3', 'utf8'));
-}
-
-export * from './alice';
-export * from './api';
-export * from './bot';
 export * from './clean';
-export * from './common';
-export * from './storage';
-
-export default db;

@@ -6,7 +6,7 @@ import { readFile, writeFile } from "fs/promises";
 import path from "path";
 import { config } from "../../../config";
 import { StringDate } from "../../utils";
-import { GroupDay, GroupLessonExplain, TeacherDay } from "../timetable/types";
+import { GroupDay, GroupLessonExplain, TeacherDay } from "../parser/types";
 
 const groupColumns: IColumn[] = [
     {

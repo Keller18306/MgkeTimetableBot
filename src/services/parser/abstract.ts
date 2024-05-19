@@ -1,8 +1,8 @@
 import { createHash } from "crypto";
 import { DOMWindow } from "jsdom";
 import { StringDate } from "../../utils";
-import { GroupLesson, Groups } from "../timetable/types/group";
-import { TeacherLesson, Teachers } from "../timetable/types/teacher";
+import { GroupLesson, Groups } from "./types/group";
+import { TeacherLesson, Teachers } from "./types/teacher";
 
 export abstract class AbstractParser {
     protected readonly window: Window | DOMWindow;

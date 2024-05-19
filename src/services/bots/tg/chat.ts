@@ -1,80 +1,97 @@
 import { Chat, User } from "puregram";
+import { CreationOptional, DataTypes, InferAttributes, InferCreationAttributes } from "sequelize";
 import { config } from "../../../../config";
-import db from "../../../db";
-import { AbstractChat, BotServiceName, DbChat } from "../abstract";
+import { sequelize } from "../../../db";
+import { BotServiceName } from "../abstract";
+import { AbstractServiceChat, BotChat } from "../chat";
 
-export type TgDb = DbChat & {
-    peerId: number; //переопределение как число
-    
+class TgChat extends AbstractServiceChat<InferAttributes<TgChat>, InferCreationAttributes<TgChat>> {
+    public static service: BotServiceName = 'tg';
+
+    declare id: number;
+    declare peerId: number;
+
     /** Юзернейм */
-    domain: string | null;
+    declare domain: CreationOptional<string | null>;
 
     /** Отображаемое имя */
-    firstName: string;
+    declare firstName: CreationOptional<string | null>;
 
     /** Отображаемая фамилия */
-    lastName: string;
+    declare lastName: CreationOptional<string | null>;
 
     /** Язык пользователя в Telegram */
-    lang: string;
-}
+    declare lang: CreationOptional<string | null>;
 
-class TgChat extends AbstractChat {
-    public peerId: number;
-
-    public db_table: string = 'tg_bot_chats';
-    public readonly service: BotServiceName = 'tg';
-    protected columns: string[] = [
-        'domain', 'firstName', 'lastName', 'lang'
-    ];
-
-    constructor(peerId: number | TgDb) {
-        if (typeof peerId === 'object') {
-            super(peerId);
-            this.peerId = peerId.peerId;
-            this._initialized = true;
-            return;
-        }
-
-        super()
-        this.peerId = peerId;
-    }
-
-    public updateChat(chat: Chat, user?: User) {
-        let domain: string | null = null;
-        let firstName: string | null = null;
-        let lastName: string | null = null;
-        let lang: string | null = null;
-
+    public async updateChat(chat: Chat, user?: User) {
         if (chat.id === user?.id) {
-            domain = user.username || null
-            firstName = user.firstName || null
-            lastName = user.lastName || null
-            lang = user.languageCode || null
+            this.domain = user.username || null;
+            this.firstName = user.firstName || null;
+            this.lastName = user.lastName || null;
+            this.lang = user.languageCode || null;
         } else {
-            domain = chat.username || null
+            this.domain = chat.username || null;
         }
 
-        db.prepare(
-            'UPDATE ' + this.db_table + ' SET `domain` = ?, `firstName` = ?, `lastName` = ?, `lang` = ? WHERE `peerId` = ?',
-        ).run(
-            domain, firstName, lastName, lang, this.peerId
-        )
+        await this.save();
     }
 
-    public get isChat(): boolean {
-        //return this.peerId > 2e9
-        return false;
-    }
-
-    public get isAdmin(): boolean {
-        if (this.isChat) return false;
-
-        return config.telegram.admin_ids.includes(this.peerId)
+    public isSuperAdmin(): boolean {
+        return config.telegram.admin_ids.includes(this.peerId);
     }
 }
 
-interface TgChat extends TgDb { };
+TgChat.init({
+    id: {
+        type: DataTypes.INTEGER,
+        primaryKey: true,
+        autoIncrement: false
+    },
+    chatId: {
+        type: DataTypes.INTEGER,
+        unique: true,
+        allowNull: false
+    },
+    peerId: {
+        type: DataTypes.BIGINT,
+        unique: true,
+        allowNull: false,
+        
+        get(): number {
+            return Number(this.getDataValue('peerId'))
+        }
+    },
+    domain: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+    firstName: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+    lastName: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+    lang: {
+        type: DataTypes.STRING,
+        allowNull: true
+    }
+}, {
+    sequelize: sequelize,
+    tableName: 'bot_chats_tg'
+});
+
+TgChat.belongsTo(BotChat, {
+    foreignKey: 'chatId',
+    targetKey: 'id',
+    as: 'serviceChat'
+});
+
+BotChat.hasOne(TgChat, {
+    sourceKey: 'id',
+    foreignKey: 'chatId'
+});
 
 export { TgChat };
 

@@ -1,10 +1,11 @@
-import { App, AppServiceName } from "../../app";
-import { hints } from "../../defines";
-import { AbstractChat } from "../../services/bots/abstract/chat";
-import { RaspCache, RaspEntryCache } from "../../services/parser/raspCache";
-import { GroupDay, GroupLesson, GroupLessonExplain, Groups, TeacherDay, TeacherLesson, TeacherLessonExplain, Teachers } from "../../services/timetable/types";
-import { randArray } from "../rand";
-import { DayIndex, StringDate, formatSeconds } from "../time";
+import { App, AppServiceName } from "../app";
+import { hints } from "../defines";
+import { BotChat } from "../services/bots/chat";
+import { AliasRecords } from "../services/bots/chat/LessonAlias";
+import { RaspCache, RaspEntryCache } from "../services/parser/raspCache";
+import { GroupDay, GroupLesson, GroupLessonExplain, Groups, TeacherDay, TeacherLesson, TeacherLessonExplain, Teachers } from "../services/parser/types";
+import { randArray } from "../utils/rand";
+import { DayIndex, StringDate, formatSeconds } from "../utils/time";
 
 export type InputFormatGroupOptions = {
     showHeader?: boolean,
@@ -37,13 +38,15 @@ export type GroupLessonOptions = {
 }
 
 export abstract class ScheduleFormatter {
+    private _aliasCache: AliasRecords = {};
+
     public static readonly label: string;
 
     constructor(
         private service: AppServiceName,
         private app: App,
         protected raspCache: RaspCache,
-        protected chat?: AbstractChat
+        protected chat?: BotChat
     ) { }
 
     protected abstract formatGroupLesson(lesson: GroupLessonExplain, options: GroupLessonOptions): string;
@@ -241,9 +244,7 @@ export abstract class ScheduleFormatter {
             return lesson;
         }
 
-        const aliases = this.chat.getLesonAliases();
-
-        return aliases[lesson] ?? lesson;
+        return this._aliasCache[lesson] ?? lesson;
     }
 
     protected getFullTeacherName(shortName: string): string {
@@ -264,7 +265,7 @@ export abstract class ScheduleFormatter {
         return;
     }
 
-    protected b(text: string): string {
+    public b(text: string): string {
         if (this.service === 'tg') {
             return `<b>${text}</b>`;
         }
@@ -272,7 +273,7 @@ export abstract class ScheduleFormatter {
         return text;
     }
 
-    protected i(text: string): string {
+    public i(text: string): string {
         if (this.service === 'tg') {
             return `<i>${text}</i>`;
         }
@@ -280,7 +281,7 @@ export abstract class ScheduleFormatter {
         return text;
     }
 
-    protected u(text: string): string {
+    public u(text: string): string {
         if (this.service === 'tg') {
             return `<u>${text}</u>`;
         }
@@ -288,7 +289,7 @@ export abstract class ScheduleFormatter {
         return text;
     }
 
-    protected s(text: string): string {
+    public s(text: string): string {
         if (this.service === 'tg') {
             return `<s>${text}</s>`;
         }
@@ -296,7 +297,7 @@ export abstract class ScheduleFormatter {
         return text;
     }
 
-    protected m(text: string): string {
+    public m(text: string): string {
         if (this.service === 'tg') {
             return `<code>${text}</code>`;
         }

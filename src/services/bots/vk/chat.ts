@@ -1,46 +1,64 @@
+import { CreationOptional, DataTypes, InferAttributes, InferCreationAttributes } from "sequelize";
 import { config } from "../../../../config";
-import { AbstractChat, BotServiceName, DbChat } from "../abstract";
+import { sequelize } from "../../../db";
+import { BotServiceName } from "../abstract";
+import { AbstractServiceChat, BotChat } from "../chat";
 
-export type VkDb = DbChat & {
-    peerId: number; //переопределение как число
+class VkChat extends AbstractServiceChat<InferAttributes<VkChat>, InferCreationAttributes<VkChat>> {
+    public static service: BotServiceName = 'vk';
+
+    declare id: number;
+    declare peerId: number;
 
     /** Разрешено ли юзеру подтвердить себе приложение ВК, если оно не было подтверждено */
-    allowVkAppAccept: boolean;
-}
+    declare allowVkAppAccept: CreationOptional<boolean>;
 
-class VkChat extends AbstractChat {
-    public peerId: number;
-
-    public db_table: string = 'vk_bot_chats';
-    public readonly service: BotServiceName = 'vk';
-    protected columns: string[] = [
-        'allowVkAppAccept'
-    ];
-
-    constructor(peerId: number | VkDb) {
-        if (typeof peerId === 'object') {
-            super(peerId);
-            this.peerId = peerId.peerId;
-            this._initialized = true;
-            return;
-        }
-
-        super();
-        this.peerId = peerId;
-    }
-
-    public get isChat(): boolean {
-        return this.peerId > 2e9
-    }
-
-    public get isAdmin(): boolean {
-        if (this.isChat) return false;
+    public isSuperAdmin(): boolean {
+        if (this.peerId > 2e9) return false;
 
         return config.vk.admin_ids.includes(this.peerId)
     }
 }
 
-interface VkChat extends VkDb { };
+VkChat.init({
+    id: {
+        type: DataTypes.INTEGER,
+        primaryKey: true,
+        autoIncrement: false
+    },
+    chatId: {
+        type: DataTypes.INTEGER,
+        unique: true,
+        allowNull: false
+    },
+    peerId: {
+        type: DataTypes.BIGINT,
+        unique: true,
+        allowNull: false,
+
+        get(): number {
+            return Number(this.getDataValue('peerId'))
+        }
+    },
+    allowVkAppAccept: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: true
+    }
+}, {
+    sequelize: sequelize,
+    tableName: 'bot_chats_vk'
+});
+
+VkChat.belongsTo(BotChat, {
+    foreignKey: 'chatId',
+    targetKey: 'id',
+    as: 'serviceChat'
+});
+
+BotChat.hasOne(VkChat, {
+    sourceKey: 'id',
+    foreignKey: 'chatId'
+});
 
 export { VkChat };
 

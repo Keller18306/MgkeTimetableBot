@@ -12,8 +12,8 @@ export default class extends AbstractCommand {
     };
 
     async handler({ context }: CmdHandlerParams) {
-        const cacheTeachers = this.app.getService('timetable').getTeachers();
-        const teachers = sort(cacheTeachers).map(this.formatTeacher.bind(this, true));
+        const dbTeachers = await this.app.getService('timetable').getTeachers();
+        const teachers = sort(dbTeachers).map(this.formatTeacher.bind(this, true));
 
         return context.send([
             '__ Преподаватели в кэше __',

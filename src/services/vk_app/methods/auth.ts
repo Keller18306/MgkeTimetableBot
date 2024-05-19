@@ -1,7 +1,6 @@
 import { config } from "../../../../config";
-import db from "../../../db";
-import { raspCache } from "../../parser";
 import { StringDate, sort } from "../../../utils";
+import { raspCache } from "../../parser";
 import VKAppDefaultMethod, { HandlerParams } from "./_default";
 
 export default class VkAppAuthMethod extends VKAppDefaultMethod {
@@ -9,22 +8,20 @@ export default class VkAppAuthMethod extends VKAppDefaultMethod {
     public httpMethod: "GET" | "POST" = 'GET';
     public method: string = 'auth';
 
-    handler({ user, request, response }: HandlerParams) {
-        const cfg = user.get()
-
-        if (cfg.ref === null) {
+    async handler({ user, request }: HandlerParams) {
+        if (user.ref === null) {
             let ref = 'none'
             if (typeof request.query.ref === 'string') {
                 ref = request.query.ref.slice(0, 255)
             }
 
-            db.prepare('UPDATE `vk_app_users` SET `ref` = ? WHERE `user_id` = ?').run(ref, user.vk_id)
+            await user.update({ ref: ref });
         }
 
         return {
             rasp: {
                 student: {
-                    days: cfg.group != null ? (raspCache.groups.timetable[cfg.group]?.days.map(day => {
+                    days: user.group != null ? (raspCache.groups.timetable[user.group]?.days.map(day => {
                         return Object.assign({}, {
                             weekday: StringDate.fromStringDate(day.day).getWeekdayName()
                         }, day);
@@ -32,7 +29,7 @@ export default class VkAppAuthMethod extends VKAppDefaultMethod {
                     update: raspCache.groups.update
                 },
                 teacher: {
-                    days: cfg.teacher != null ? (raspCache.teachers.timetable[cfg.teacher]?.days.map(day => {
+                    days: user.teacher != null ? (raspCache.teachers.timetable[user.teacher]?.days.map(day => {
                         return Object.assign({}, {
                             weekday: StringDate.fromStringDate(day.day).getWeekdayName()
                         }, day);
@@ -42,16 +39,16 @@ export default class VkAppAuthMethod extends VKAppDefaultMethod {
                 lastSuccess: raspCache.successUpdate
             },
             selected: {
-                group: cfg.group,
-                teacher: cfg.teacher,
+                group: user.group,
+                teacher: user.teacher,
             },
             groups: sort(Object.keys(raspCache.groups.timetable)),
             teachers: sort(Object.keys(raspCache.teachers.timetable)),
             config: {
-                themeId: cfg.theme_id,
-                canActivateBot: user.allowBotAccept,
-                adblock: Boolean(cfg.adblock) || config.globalAdblock,
-                firstPage: cfg.firstPage
+                themeId: user.themeId,
+                canActivateBot: false,
+                adblock: Boolean(user.adblock) || config.globalAdblock,
+                firstPage: user.firstPage
             }
         }
     }

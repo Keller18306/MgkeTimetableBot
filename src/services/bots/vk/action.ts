@@ -1,15 +1,15 @@
 import { ContextDefaultState, MessageContext } from "vk-io";
 import { VkBot } from ".";
 import { AbstractAction, AbstractCommandContext } from "../abstract";
-import { VkChat } from "./chat";
+import { BotChat } from "../chat";
 import { VkCommandContext } from "./context";
 
 export class VkBotAction extends AbstractAction {
     protected context: MessageContext<ContextDefaultState>;
-    protected chat: VkChat;
+    protected chat: BotChat;
     protected _context: AbstractCommandContext;
 
-    constructor(bot: VkBot, context: MessageContext<ContextDefaultState>, chat: VkChat) {
+    constructor(bot: VkBot, context: MessageContext<ContextDefaultState>, chat: BotChat) {
         super();
 
         this.context = context;

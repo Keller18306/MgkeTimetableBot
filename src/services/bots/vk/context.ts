@@ -77,7 +77,7 @@ export class VkCommandContext extends AbstractCommandContext {
         let reply_to: number | string | undefined = options.reply_to;
         if (typeof reply_to === 'string') reply_to = Number(reply_to);
 
-        let attachment: string | null = this.cache.get(image.id);
+        let attachment: string | null = await this.cache.get(image.id);
         if (!attachment) {
             attachment = (await this.vk.upload.messagePhoto({
                 source: {
@@ -85,7 +85,7 @@ export class VkCommandContext extends AbstractCommandContext {
                 }
             })).toString();
 
-            this.cache.add(image.id, attachment);
+            await this.cache.add(image.id, attachment);
         }
 
         const res = await this.context.send('', {
@@ -207,7 +207,7 @@ export class VkCallbackContext extends AbstractCallbackContext {
         let reply_to: number | string | undefined = options.reply_to;
         if (typeof reply_to === 'string') reply_to = Number(reply_to);
 
-        let attachment: string | null = this.cache.get(image.id);
+        let attachment: string | null = await this.cache.get(image.id);
         if (!attachment) {
             attachment = (await this.vk.upload.messagePhoto({
                 source: {
@@ -215,7 +215,7 @@ export class VkCallbackContext extends AbstractCallbackContext {
                 }
             })).toString();
 
-            this.cache.add(image.id, attachment);
+            await this.cache.add(image.id, attachment);
         }
 
         const res = await this.vk.api.messages.send({

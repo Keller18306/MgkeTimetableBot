@@ -1,11 +1,14 @@
 import express, { Application, NextFunction, Request, Response } from 'express';
 import { config } from '../config';
 import { AppService } from './app';
+import { Logger } from './logger';
 import { getIp, getParams, replaceWithValueLength } from './utils';
 
 type ErrorWithStatus = Error & Partial<{ status: number; statusCode: number, code: any, type: any }>;
 
 export class HttpService implements AppService {
+    public logger: Logger = new Logger('HTTP');
+
     private http: Application;
 
     public ignoreJsonParserUrls: string[] = [];
@@ -31,7 +34,7 @@ export class HttpService implements AppService {
         this.http.use(this.errorHandler.bind(this));
         
         this.http.listen(config.http.port, () => {
-            console.log(`[HTTP] Server started on port ${config.http.port}`);
+            this.logger.log(`Сервер запущен на порту: ${config.http.port}`);
         });
     }
 
@@ -65,7 +68,7 @@ export class HttpService implements AppService {
 
     private logRoutes() {
         this.http.use((req, res, next) => {
-            console.log(getIp(req), req.path, replaceWithValueLength(getParams(req)));
+            this.logger.debug(getIp(req), req.path, replaceWithValueLength(getParams(req)));
             next();
         })
     }
@@ -103,7 +106,7 @@ export class HttpService implements AppService {
         });
 
         if (status >= 500) {
-            console.error(err);
+            this.logger.error(err);
         }
 
         return response.json(body)

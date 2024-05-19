@@ -3,8 +3,8 @@ import { ViberBot } from ".";
 import { ParsedPayload, parsePayload } from "../../../utils";
 import { ImageFile } from "../../image/builder";
 import { AbstractCommandContext, KeyboardBuilder, MessageOptions } from "../abstract";
+import { BotChat } from "../chat";
 import { Keyboard, StaticKeyboard } from "../keyboard";
-import { ViberChat } from "./chat";
 import { convertAbstractToViber } from "./keyboard";
 
 export type ViberContext = {
@@ -21,9 +21,9 @@ export class ViberCommandContext extends AbstractCommandContext {
     public messageId: undefined;
     
     private response: Response;
-    private chat: ViberChat;
+    private chat: BotChat;
 
-    constructor(bot: ViberBot, message: ReceivedTextMessage | null, response: Response, chat: ViberChat) {
+    constructor(bot: ViberBot, message: ReceivedTextMessage | null, response: Response, chat: BotChat) {
         super(bot);
 
         this.id = '';
@@ -51,7 +51,7 @@ export class ViberCommandContext extends AbstractCommandContext {
             if (keyboard && keyboard.withCancelButton) {
                 keyboard = StaticKeyboard.Cancel;
             } else { 
-                keyboard = new Keyboard(this.app, this.chat.resync(), this).MainMenu;
+                keyboard = new Keyboard(this.app, this.chat, this).MainMenu;
             }
         }
 
@@ -71,7 +71,7 @@ export class ViberCommandContext extends AbstractCommandContext {
     public async sendPhoto(image: ImageFile, options: MessageOptions = {}): Promise<string> {
         let keyboard: KeyboardBuilder | undefined = options.keyboard
         if (!keyboard || keyboard.isInline) {
-            keyboard = new Keyboard(this.app, this.chat.resync(), this).MainMenu
+            keyboard = new Keyboard(this.app, this.chat, this).MainMenu
         }
 
         const response = await this.response.send(new Message.Picture(

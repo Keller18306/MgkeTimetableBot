@@ -1,4 +1,4 @@
-import { GroupLessonExplain, TeacherLessonExplain } from "../../services/timetable/types";
+import { GroupLessonExplain, TeacherLessonExplain } from "../services/parser/types";
 import { GroupLessonOptions, ScheduleFormatter } from "./abstract";
 
 export class LitolaxScheduleFormatter extends ScheduleFormatter {

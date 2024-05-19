@@ -2,6 +2,7 @@ import { TelegramBotCommand } from 'puregram/generated';
 import { WeekIndex, randArray, removePastDays } from "../../../../utils";
 import { raspCache } from '../../../parser';
 import { AbstractCommand, CmdHandlerParams } from "../../abstract";
+import { StaticKeyboard } from '../../keyboard';
 
 export default class extends AbstractCommand {
     public regexp = /^((!|\/)(get)?(rasp)?week|(📑\s)?(расписание\s)?на неделю)$/i
@@ -12,7 +13,7 @@ export default class extends AbstractCommand {
     };
 
     async handler(params: CmdHandlerParams) {
-        const { context, chat, actions, scheduleFormatter, keyboard } = params;
+        const { context, chat } = params;
 
         if (Object.keys(raspCache.groups.timetable).length == 0 &&
             Object.keys(raspCache.teachers.timetable).length == 0) {
@@ -22,10 +23,12 @@ export default class extends AbstractCommand {
         if (chat.mode == 'student' || chat.mode == 'parent') return this.groupRasp(params);
         if (chat.mode == 'teacher') return this.teacherRasp(params);
 
-        return context.send('Первоначальная настройка ещё не была произведена');
+        return context.send('Первоначальная настройка ещё не была произведена', {
+            keyboard: StaticKeyboard.StartButton
+        });
     }
 
-    private async groupRasp({ context, chat, actions, scheduleFormatter, keyboard }: CmdHandlerParams) {
+    private async groupRasp({ context, chat, actions, formatter, keyboard }: CmdHandlerParams) {
         if (chat.group == null) {
             const randGroup = randArray(Object.keys(raspCache.groups.timetable));
 
@@ -43,14 +46,14 @@ export default class extends AbstractCommand {
         const weekIndex = WeekIndex.getRelevant();
         const weekRange = weekIndex.getWeekDayIndexRange();
 
-        let days = this.app.getService('timetable').getGroupDaysByRange(weekRange, chat.group);
+        let days = await this.app.getService('timetable').getGroupDaysByRange(weekRange, chat.group);
         if (chat.hidePastDays) {
             days = removePastDays(days);
         }
 
         actions.deleteLastMsg();
 
-        const message = scheduleFormatter.formatGroupFull(String(chat.group), {
+        const message = formatter.formatGroupFull(String(chat.group), {
             showHeader: false,
             days: days
         });
@@ -58,14 +61,14 @@ export default class extends AbstractCommand {
         actions.deleteUserMsg();
 
         return context.send(message, {
-            keyboard: keyboard.WeekControl('group', String(chat.group), weekIndex.valueOf(), chat.hidePastDays)
+            keyboard: await keyboard.WeekControl('group', String(chat.group), weekIndex.valueOf(), chat.hidePastDays)
         }).then(id => {
             actions.handlerLastMsgUpdate(context);
             return id;
         });
     }
 
-    private async teacherRasp({ context, chat, actions, scheduleFormatter, keyboard }: CmdHandlerParams) {
+    private async teacherRasp({ context, chat, actions, formatter, keyboard }: CmdHandlerParams) {
         if (chat.teacher == null) {
             const randTeacher = randArray(Object.keys(raspCache.teachers.timetable));
 
@@ -83,14 +86,14 @@ export default class extends AbstractCommand {
         const weekIndex = WeekIndex.getRelevant();
         const weekRange = weekIndex.getWeekDayIndexRange();
 
-        let days = this.app.getService('timetable').getTeacherDaysByRange(weekRange, chat.teacher);
+        let days = await this.app.getService('timetable').getTeacherDaysByRange(weekRange, chat.teacher);
         if (chat.hidePastDays) {
             days = removePastDays(days);
         }
 
         actions.deleteLastMsg();
 
-        const message = scheduleFormatter.formatTeacherFull(chat.teacher, {
+        const message = formatter.formatTeacherFull(chat.teacher, {
             showHeader: false,
             days: days
         });
@@ -98,7 +101,7 @@ export default class extends AbstractCommand {
         actions.deleteUserMsg();
 
         return context.send(message, {
-            keyboard: keyboard.WeekControl('teacher', chat.teacher, weekIndex.valueOf(), chat.hidePastDays)
+            keyboard: await keyboard.WeekControl('teacher', chat.teacher, weekIndex.valueOf(), chat.hidePastDays)
         }).then(context => actions.handlerLastMsgUpdate(context));
     }
 }

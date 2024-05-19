@@ -3,6 +3,10 @@ import { ConfigScheme } from "./config.scheme";
 export const config: ConfigScheme = {
     dev: true,
     services: ['http', 'api', 'timetable', 'parser'],
+    db: {
+        dialect: 'sqlite',
+        storage: 'sqlite3.db'
+    },
     http: {
         servername: 'localhost',
         port: 8081

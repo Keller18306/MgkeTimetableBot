@@ -1,12 +1,14 @@
 import { NextMiddleware } from 'middleware-io';
+import { CreationAttributes } from 'sequelize';
 import { ContextDefaultState, MessageContext, MessageEventContext, MessageSubscriptionContext, VK } from 'vk-io';
 import { config } from '../../../../config';
 import { App, AppService } from '../../../app';
 import { defines } from '../../../defines';
-import { createScheduleFormatter } from '../../../utils';
-import { FromType, InputRequestKey } from '../../key';
+import { createScheduleFormatter } from '../../../formatter';
+import { FromType, InputRequestKey } from '../../../key';
 import { raspCache } from '../../parser';
 import { AbstractBot } from '../abstract';
+import { BotChat } from '../chat';
 import { AbstractBotEventListener } from '../events';
 import { Keyboard } from '../keyboard';
 import { VkBotAction } from './action';
@@ -55,7 +57,7 @@ export class VkBot extends AbstractBot implements AppService {
 
         if (config.vk.bot.noticer) {
             this.getBotService().events.registerListener(this.event);
-        }        
+        }
 
         await this.getBotService().init();
 
@@ -65,9 +67,9 @@ export class VkBot extends AbstractBot implements AppService {
             console.error('polling error', err)
         });
     }
-    
-    public getChat(peerId: number): VkChat {
-        return new VkChat(peerId);
+
+    public async getChat(peerId: number, creationDefaults?: Partial<CreationAttributes<BotChat>>): Promise<BotChat<VkChat>> {
+        return BotChat.findByServicePeerId(VkChat, peerId, creationDefaults);
     }
 
     private parseMessage(text?: string) {
@@ -89,12 +91,13 @@ export class VkBot extends AbstractBot implements AppService {
         return { text: outText, selfMention };
     }
 
-    private messageHandler(context: MessageContext<ContextDefaultState>, next: NextMiddleware) {
+    private async messageHandler(context: MessageContext<ContextDefaultState>, next: NextMiddleware) {
         if (context.isFromGroup) return;
 
         const { text, selfMention } = this.parseMessage(context.text);
         const _context = new VkCommandContext(this, context, text);
-        const chat = this.getChat(context.peerId);
+
+        const chat = await this.getChat(context.peerId, this._defaultCreationParams(_context));
 
         if (chat.ref === null) {
             chat.ref = context.referralValue?.slice(0, 255) || 'none';
@@ -104,10 +107,11 @@ export class VkBot extends AbstractBot implements AppService {
             service: 'vk',
             context: _context,
             chat: chat,
+            serviceChat: chat.serviceChat,
             actions: new VkBotAction(this, context, chat),
-            keyboard: new Keyboard(this.app, chat.resync(), _context),
+            keyboard: new Keyboard(this.app, chat, _context),
             realContext: context,
-            scheduleFormatter: createScheduleFormatter('vk', this.app, raspCache, chat),
+            formatter: createScheduleFormatter('vk', this.app, raspCache, chat),
             cache: this.cache
         }, {
             selfMention: selfMention
@@ -123,30 +127,38 @@ export class VkBot extends AbstractBot implements AppService {
         }
     }
 
-    private eventHandler(context: MessageEventContext<ContextDefaultState>, next: NextMiddleware) {
+    protected _defaultCreationParams(context: VkCommandContext | VkCallbackContext): Partial<CreationAttributes<BotChat>> {
+        return {
+            accepted: context.isChat ? config.accept.room : config.accept.private
+        }
+    }
+
+    private async eventHandler(context: MessageEventContext<ContextDefaultState>, next: NextMiddleware) {
         if (!context.eventPayload) return;
 
-        const chat = this.getChat(context.peerId);
         const _context = new VkCallbackContext(this, context);
+        const chat = await this.getChat(context.peerId, this._defaultCreationParams(_context));
 
         return this.handleCallback({
             service: 'vk',
             context: _context,
             realContext: context,
             chat: chat,
+            serviceChat: chat.serviceChat,
             keyboard: new Keyboard(this.app, chat, _context),
             scheduleFormatter: createScheduleFormatter('vk', this.app, raspCache, chat),
             cache: this.cache
         });
     }
 
-    private inviteUser(context: MessageContext<ContextDefaultState>, next: NextMiddleware) {
+    private async inviteUser(context: MessageContext<ContextDefaultState>, next: NextMiddleware) {
         if (context.eventMemberId != -config.vk.bot.id) return next();
 
-        const chat = this.getChat(context.peerId);
-
         const _context = new VkCommandContext(this, context);
-        const keyboard = new Keyboard(this.app, chat.resync(), _context);
+        const chat = await this.getChat(context.peerId, this._defaultCreationParams(_context));
+        const keyboard = new Keyboard(this.app, chat, _context);
+
+        await chat.save();
 
         return _context.send(defines['vk.message.about'], {
             keyboard: keyboard.MainMenu,
@@ -154,9 +166,12 @@ export class VkBot extends AbstractBot implements AppService {
         });
     }
 
-    private setAllowSendMess(context: MessageSubscriptionContext<ContextDefaultState>, next: NextMiddleware, status: boolean) {
-        const chat = this.getChat(context.userId);
+    private async setAllowSendMess(context: MessageSubscriptionContext<ContextDefaultState>, next: NextMiddleware, status: boolean) {
+        const chat = await this.getChat(context.userId, {
+            accepted: config.accept.private,
+            allowSendMess: status
+        });
 
-        chat.allowSendMess = status;
+        await chat.update({ allowSendMess: status });
     }
 }
