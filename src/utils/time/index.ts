@@ -1,3 +1,5 @@
+import { config } from '../../../config';
+
 export function seconds2times(seconds: number, values: number = 3) {
     let times = [];
     let count_zero = false;
@@ -56,6 +58,69 @@ export function nowInTime(includedDays: number[], timeFrom: string, timeTo: stri
     } else {
         return false;
     }
+}
+
+export interface DelayObject {
+    promise: Promise<void>,
+    resolve: () => void
+}
+
+function createDelayPromise(ms: number): DelayObject {
+    let resolveFunc: (() => void) | undefined;
+
+    const promise = new Promise<void>((resolve) => {
+        const timeout = setTimeout(resolve, ms);
+
+        resolveFunc = () => {
+            clearTimeout(timeout);
+            resolve()
+        }
+    });
+
+    if (!resolveFunc) {
+        throw new Error('something went wrong')
+    };
+
+    return {
+        promise,
+        resolve: resolveFunc
+    }
+}
+
+export function getDelayTime(error: boolean = false): DelayObject {
+    if (error) return createDelayPromise(config.parser.update_interval.error * 1e3)
+
+    // во время локального тестирования - 3 секунды
+    if (config.parser.localMode) {
+        return createDelayPromise(3e3);
+    }
+
+    const date = new Date()
+    const hour = date.getHours()
+
+    //в воскресенье не нужно часто
+    if (date.getDay() !== 0 && config.parser.activity[0] <= hour && hour <= config.parser.activity[1]) {
+        return createDelayPromise(config.parser.update_interval.activity * 1e3)
+    }
+
+    //фикс для убирания задержки во время активности
+    const startHour = (config.parser.activity[0] - Math.ceil(config.parser.update_interval.default / (1 * 60 * 60)))
+    if (hour >= startHour && hour <= config.parser.activity[0]) {
+        const endTime = new Date(date.getTime() + config.parser.update_interval.default * 1e3)
+
+        if (endTime.getHours() >= config.parser.activity[0]) {
+            endTime.setHours(config.parser.activity[0])
+            endTime.setMinutes(0)
+            endTime.setSeconds(0)
+            endTime.setMilliseconds(0)
+
+            return createDelayPromise(
+                Math.max(0, endTime.getTime() - date.getTime())
+            )
+        }
+    }
+
+    return createDelayPromise(config.parser.update_interval.default * 1e3)
 }
 
 export * from './DayIndex';

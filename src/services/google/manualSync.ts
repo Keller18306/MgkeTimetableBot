@@ -39,7 +39,7 @@ const main = async () => {
 
     const [calendar] = await CalendarItem.getOrCreateCalendar('group', '63');
 
-    await controller.resync(calendar, true);
+    await controller.resync(calendar, { forceFullResync: true, firstlyRelevant: true });
 }
 
 main();

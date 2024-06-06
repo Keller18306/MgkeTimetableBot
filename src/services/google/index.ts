@@ -7,6 +7,7 @@ import { config } from '../../../config';
 import { App, AppService } from '../../app';
 import { unserialize } from '../../utils';
 import { AbstractBot, BotServiceName } from '../bots/abstract';
+import { GoogleKeyboard } from '../bots/callbacks/google';
 import { BotChat } from '../bots/chat';
 import { GoogleServiceApi, GoogleUserApi } from './api';
 import { GoogleCalendarController } from './controller';
@@ -120,7 +121,9 @@ export class GoogleService implements AppService {
             const chat: BotChat = await service.getChat(state.peerId);
 
             await chat.update({ googleEmail: info.email });
-            await service.event.sendMessage(chat, `Гугл аккаунт '${chat.googleEmail}' успешно привязан!`);
+            await service.event.sendMessage(chat, `Гугл аккаунт '${chat.googleEmail}' успешно привязан!`, {
+                keyboard: GoogleKeyboard.ControlCalendar
+            });
 
             response.send('Аккаунт успешно привязан, можете вернуться обратно в чат');
 

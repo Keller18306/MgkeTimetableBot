@@ -2,16 +2,23 @@ import { Op } from "sequelize";
 import { config } from "../../../config";
 import { App } from "../../app";
 import { Logger } from "../../logger";
-import { DayIndex, StringDate } from "../../utils";
+import { DayIndex, StringDate, WeekIndex } from "../../utils";
 import { GroupDayEvent, TeacherDayEvent } from "../parser";
 import { GroupDay, GroupLessonExplain, TeacherDay, TeacherLessonExplain } from "../parser/types";
 import { ArchiveAppendDay } from "../timetable";
 import { CalendarItem, CalendarLessonInfo, CalendarType } from "./models/calendar";
 
+interface SyncOptions {
+    forceFullResync: boolean,
+    firstlyRelevant: boolean
+}
+
 export class GoogleCalendarController {
     public logger: Logger = new Logger('GoogleCalendar');
 
     private app: App;
+
+    //TODO QUEUE DAYS
 
     constructor(app: App) {
         this.app = app;
@@ -177,7 +184,7 @@ export class GoogleCalendarController {
         const promises: Promise<void>[] = [];
 
         for (const [type, grouped] of Object.entries(records)) {
-            for (const [value, days] of Object.entries(grouped)) {   
+            for (const [value, days] of Object.entries(grouped)) {
                 const calendar = calendars[type as CalendarType][value];
                 if (!calendar) {
                     continue;
@@ -186,30 +193,32 @@ export class GoogleCalendarController {
                 const promise = (async () => {
                     for (const appendDay of days) {
                         const dayIndex = DayIndex.fromStringDate(appendDay.day.day).valueOf();
-    
+
                         switch (appendDay.type) {
                             case 'group':
                                 await this.groupDay(calendar, {
                                     group: appendDay.value,
                                     day: appendDay.day
                                 });
-    
+
                                 break;
                             case 'teacher':
                                 await this.teacherDay(calendar, {
                                     teacher: appendDay.value,
                                     day: appendDay.day
                                 });
-    
+
                                 break;
                         }
-    
+
                         await calendar.update({ lastManualSyncedDay: dayIndex });
                     }
+
+                    await calendar.update({ lastManualSyncedDay: null });
                 })();
-    
+
                 promise.catch(console.error);
-    
+
                 promises.push(promise);
             }
         }
@@ -217,7 +226,11 @@ export class GoogleCalendarController {
         await Promise.all(promises);
     }
 
-    public async resync(calendar: CalendarItem, forceFullResync: boolean = false) {
+    public async resync(calendar: CalendarItem, { forceFullResync, firstlyRelevant }: Partial<SyncOptions> = {}) {
+        const logger = this.logger.extend(`${calendar.type}:${calendar.value}`);
+
+        logger.debug('Start sync', calendar.calendarId);
+
         let fromDay: number | undefined;
         if (!forceFullResync && calendar.lastManualSyncedDay !== null) {
             fromDay = calendar.lastManualSyncedDay;
@@ -237,6 +250,27 @@ export class GoogleCalendarController {
                 break;
         }
 
+        let weekStartingDayIndex: number | undefined;
+        if (firstlyRelevant) {
+            weekStartingDayIndex = WeekIndex.getRelevant().getWeekDayIndexRange()[0];
+
+            const currentDays: any = days.filter(({ day }) => {
+                const dayIndex = DayIndex.fromStringDate(day).valueOf();
+
+                return dayIndex >= weekStartingDayIndex!;
+            });
+
+            const anotherDays: any = days.filter(({ day }) => {
+                const dayIndex = DayIndex.fromStringDate(day).valueOf();
+
+                return dayIndex < weekStartingDayIndex!;
+            });
+
+            days = [...currentDays, ...anotherDays];
+        }
+
+        let useUpdate: boolean = !weekStartingDayIndex;
+
         for (const day of days) {
             switch (calendar.type) {
                 case 'group':
@@ -255,10 +289,18 @@ export class GoogleCalendarController {
 
             const dayIndex = DayIndex.fromStringDate(day.day).valueOf();
 
-            await calendar.update({ lastManualSyncedDay: dayIndex });
+            if (weekStartingDayIndex && dayIndex < weekStartingDayIndex) {
+                useUpdate = true;
+            }
+
+            if (useUpdate) {
+                await calendar.update({ lastManualSyncedDay: dayIndex });
+            }
         }
 
         await calendar.update({ lastManualSyncedDay: null });
+
+        logger.debug('Calendar fully synced', calendar.calendarId);
     }
 
     public async resyncAll(forceFullResync?: boolean) {
@@ -294,7 +336,7 @@ export class GoogleCalendarController {
                 break;
             }
 
-            promises.push(this.resync(calendar, forceFullResync));
+            promises.push(this.resync(calendar, { forceFullResync }));
         }
 
         await Promise.all(promises);

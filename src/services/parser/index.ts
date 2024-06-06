@@ -4,7 +4,7 @@ import { JSDOM } from "jsdom"
 import { config } from "../../../config"
 import { App, AppService } from "../../app"
 import { Logger } from "../../logger"
-import { DayIndex, WeekIndex, mergeDays } from "../../utils"
+import { DayIndex, DelayObject, WeekIndex, getDelayTime, mergeDays } from "../../utils"
 import { TypedEventEmitter } from "../../utils/events"
 import { ChatMode } from "../bots/chat"
 import { clearOldImages } from "../image/clear"
@@ -17,33 +17,6 @@ import { Group, GroupDay, Groups, Teacher, TeacherDay, Teachers, Team } from './
 
 const MAX_LOG_LIMIT: number = 10;
 const LOG_COUNT_SEND: number = 3;
-
-type Delay = {
-    promise: Promise<void>,
-    resolve: () => void
-}
-
-function createDelayPromise(ms: number): Delay {
-    let resolveFunc: (() => void) | undefined;
-
-    const promise = new Promise<void>((resolve) => {
-        const timeout = setTimeout(resolve, ms);
-
-        resolveFunc = () => {
-            clearTimeout(timeout);
-            resolve()
-        }
-    });
-
-    if (!resolveFunc) {
-        throw new Error('something went wrong')
-    };
-
-    return {
-        promise,
-        resolve: resolveFunc
-    }
-}
 
 function onParser<T>(Parser: typeof StudentParser | typeof TeacherParser, onStudent: T, onTeacher: T): T {
     if (Parser === StudentParser) {
@@ -79,7 +52,7 @@ export class ParserService implements AppService {
     public logger: Logger = new Logger('Parser');
 
     private logs: { date: Date, result: string | Error }[] = [];
-    private delayPromise?: Delay;
+    private delayPromise?: DelayObject;
 
     private _forceParse: boolean = false;
     private _clearKeys: boolean = false;
@@ -147,42 +120,6 @@ export class ParserService implements AppService {
         this.delayPromise?.resolve();
     }
 
-    private getDelayTime(error: boolean = false): Delay {
-        if (error) return createDelayPromise(config.parser.update_interval.error * 1e3)
-
-        // во время локального тестирования - 3 секунды
-        if (config.parser.localMode) {
-            return createDelayPromise(3e3);
-        }
-
-        const date = new Date()
-        const hour = date.getHours()
-
-        //в воскресенье не нужно часто
-        if (date.getDay() !== 0 && config.parser.activity[0] <= hour && hour <= config.parser.activity[1]) {
-            return createDelayPromise(config.parser.update_interval.activity * 1e3)
-        }
-
-        //фикс для убирания задержки во время активности
-        const startHour = (config.parser.activity[0] - Math.ceil(config.parser.update_interval.default / (1 * 60 * 60)))
-        if (hour >= startHour && hour <= config.parser.activity[0]) {
-            const endTime = new Date(date.getTime() + config.parser.update_interval.default * 1e3)
-
-            if (endTime.getHours() >= config.parser.activity[0]) {
-                endTime.setHours(config.parser.activity[0])
-                endTime.setMinutes(0)
-                endTime.setSeconds(0)
-                endTime.setMilliseconds(0)
-
-                return createDelayPromise(
-                    Math.max(0, endTime.getTime() - date.getTime())
-                )
-            }
-        }
-
-        return createDelayPromise(config.parser.update_interval.default * 1e3)
-    }
-
     private log(log: string | Error) {
         this.logs.unshift({
             date: new Date(),
@@ -231,7 +168,7 @@ export class ParserService implements AppService {
         while (true) {
             const { error } = await this.parse();
 
-            this.delayPromise = this.getDelayTime(error);
+            this.delayPromise = getDelayTime(error);
             await this.delayPromise.promise;
         }
     }
@@ -260,6 +197,32 @@ export class ParserService implements AppService {
         this.removeOldLogs();
 
         return { error }
+    }
+
+    public async flushCache() {
+        const flushLessons: ArchiveAppendDay[] = [];
+
+        for (const [group, { days }] of Object.entries(raspCache.groups.timetable)) {
+            flushLessons.push(...days.map((day): ArchiveAppendDay => {
+                return {
+                    type: 'group',
+                    value: group,
+                    day: day
+                }
+            }));
+        }
+
+        for (const [teacher, { days }] of Object.entries(raspCache.teachers.timetable)) {
+            flushLessons.push(...days.map((day): ArchiveAppendDay => {
+                return {
+                    type: 'teacher',
+                    value: teacher,
+                    day: day
+                }
+            }));
+        }
+
+        await this.events.emitAsync('flushCache', flushLessons);
     }
 
     private async runActionsWithTimeout() {

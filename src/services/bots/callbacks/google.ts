@@ -14,7 +14,7 @@ enum GoogleMenu {
     DeleteCalendar = 3
 }
 
-class GoogleKeyboard {
+export class GoogleKeyboard {
     public static Auth(url: string) {
         return new KeyboardBuilder('GoogleAuth', true).add({
             type: ButtonType.Url,
@@ -66,7 +66,17 @@ class GoogleKeyboard {
             payload: payloadAction + JSON.stringify([GoogleMenu.MainMenu])
         });
     }
+
+    public static get ControlCalendar() {
+        return new KeyboardBuilder('ControlCalendarGoogleCalendar', true).add({
+            type: ButtonType.Callback,
+            text: 'Настроить календарь',
+            payload: payloadAction + JSON.stringify([GoogleMenu.MainMenu])
+        });
+    }
 }
+
+type BotHandlerParams = CbHandlerParams | CmdHandlerParams;
 
 export default class GoogleCalendarCallback extends AbstractCallback {
     public payloadAction: string = payloadAction;
@@ -99,7 +109,7 @@ export default class GoogleCalendarCallback extends AbstractCallback {
         }
     }
 
-    private _auth({ context, service }: CbHandlerParams) {
+    private _auth({ context, service }: CbHandlerParams | CmdHandlerParams) {
         const google = this.app.getService('google');
 
         const url = google.getAuthUrl({
@@ -112,7 +122,13 @@ export default class GoogleCalendarCallback extends AbstractCallback {
         });
     }
 
-    public _menu({ context, chat }: CbHandlerParams | CmdHandlerParams) {
+    public _menu(params: CbHandlerParams | CmdHandlerParams) {
+        const { context, chat } = params;
+
+        if (!chat.googleEmail) {
+            return this._auth(params);
+        }
+
         return context.editOrSend([
             `Привязанный гугл аккаунт: ${chat.googleEmail}.`,
             'Действие с календарями:'
@@ -139,19 +155,20 @@ export default class GoogleCalendarCallback extends AbstractCallback {
         });
 
         const list = timetableCalendars.map((calendar, i) => {
-            let syncText: string | undefined;
+            let progress: number;
 
             if (calendar.lastManualSyncedDay) {
                 const current = Math.max(0, calendar.lastManualSyncedDay! - dayIndex.min);
                 const max = (dayIndex.max - dayIndex.min);
 
-                const progress = current * 100 / max;
-
-                syncText = ` (Синхронизация: ${progress.toFixed(2)}%)`;
+                progress = current * 100 / max;
+            } else {
+                progress = 100;
             }
             
-            return `${i + 1}. ${calendar.type}, ${calendar.value}` +
-                (syncText ? syncText : '');
+            const syncText = `(Синхронизация: ${progress.toFixed(2)}%)`;
+
+            return `${i + 1}. ${calendar.type}, ${calendar.value} ${syncText}`;
         });
 
         return context.editOrSend(list.length > 0 ? [
@@ -167,12 +184,19 @@ export default class GoogleCalendarCallback extends AbstractCallback {
 
         let result: [CalendarItem, boolean];
 
+        const creating = async () => {
+            await context.answer();
+            await context.editOrSend('Ожидайте... Идёт создание календаря...');
+        }
+
         switch (chat.mode) {
             case 'parent':
             case 'student':
                 if (!chat.group) {
                     return context.answer('Вы ещё не выбрали группу');
                 }
+
+                await creating();
 
                 result = await CalendarItem.getOrCreateCalendar('group', chat.group);
                 break;
@@ -181,6 +205,8 @@ export default class GoogleCalendarCallback extends AbstractCallback {
                 if (!chat.teacher) {
                     return context.answer('Вы ещё не выбрали преподавателя');
                 }
+
+                await creating();
 
                 result = await CalendarItem.getOrCreateCalendar('teacher', chat.teacher);
                 break;
@@ -192,7 +218,7 @@ export default class GoogleCalendarCallback extends AbstractCallback {
         const [calendar, created] = result;
 
         if (created) {
-            google.calendarController.resync(calendar).catch((err) => {
+            google.calendarController.resync(calendar, { firstlyRelevant: true }).catch((err) => {
                 console.error('bot creation sync error', calendar.calendarId, err);
                 context.send('Ошибка синхронизации календаря. Сообщите разработчику!').catch(() => { });
             });
