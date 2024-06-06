@@ -20,12 +20,6 @@ export class GoogleCalendarController {
     public run() {
         const { events } = this.app.getService('parser');
 
-        events.on('addGroupDay', this.onGroupDay.bind(this));
-        events.on('updateGroupDay', this.onGroupDay.bind(this));
-
-        events.on('addTeacherDay', this.onTeacherDay.bind(this));
-        events.on('updateTeacherDay', this.onTeacherDay.bind(this));
-
         events.on('flushCache', this.onFlushCache.bind(this));
 
         this.resumeSync().catch((err) => {
@@ -55,24 +49,6 @@ export class GoogleCalendarController {
 
     private getTimetable() {
         return this.app.getService('timetable');
-    }
-
-    private async onGroupDay(event: GroupDayEvent) {
-        const calendar = await CalendarItem.getCalendar('group', event.group);
-        if (!calendar) {
-            return;
-        }
-
-        await this.groupDay(calendar, event);
-    }
-
-    public async onTeacherDay(event: TeacherDayEvent) {
-        const calendar = await CalendarItem.getCalendar('teacher', event.teacher);
-        if (!calendar) {
-            return;
-        }
-
-        await this.teacherDay(calendar, event);
     }
 
     private async groupDay(calendar: CalendarItem, { group, day }: GroupDayEvent) {
@@ -147,69 +123,98 @@ export class GoogleCalendarController {
     }
 
     private async onFlushCache(days: ArchiveAppendDay[]) {
-        const ordered = days.slice().sort((_a, _b) => {
+        const records = days.slice().sort((_a, _b) => {
             const a = DayIndex.fromStringDate(_a.day.day).valueOf();
             const b = DayIndex.fromStringDate(_b.day.day).valueOf();
 
             return a - b;
-        }).reduce<{ [key: string]: ArchiveAppendDay[] }>((acc, appendDay) => {
-            let value: string;
+        }).reduce<Record<CalendarType, { [key: string]: ArchiveAppendDay[] }>>((acc, appendDay) => {
+            const type: CalendarType = appendDay.type;
+            const value: string = appendDay.value;
 
-            switch (appendDay.type) {
-                case 'group':
-                    value = appendDay.group;
-                    break;
-                case 'teacher':
-                    value = appendDay.teacher;
-                    break;
+            if (!acc[type][value]) {
+                acc[type][value] = [];
             }
 
-            if (!acc[`${appendDay.type}_${value}`]) {
-                acc[`${appendDay.type}_${value}`] = [];
-            }
-
-            acc[`${appendDay.type}_${value}`].push(appendDay);
+            acc[type][value].push(appendDay);
 
             return acc;
-        }, {});
+        }, {
+            group: {},
+            teacher: {}
+        });
+
+        const calendars = await Promise.all([
+            CalendarItem.findAll({
+                where: {
+                    type: 'group',
+                    value: {
+                        [Op.in]: Object.keys(records.group)
+                    }
+                }
+            }),
+            CalendarItem.findAll({
+                where: {
+                    type: 'teacher',
+                    value: {
+                        [Op.in]: Object.keys(records.teacher)
+                    }
+                }
+            })
+        ]).then(([groups, teachers]) => {
+            const reducer = (entries: any, calendar: CalendarItem) => {
+                entries[calendar.value] = calendar;
+
+                return entries;
+            }
+
+            return {
+                group: groups.reduce<Record<string, CalendarItem>>(reducer, {}),
+                teacher: teachers.reduce<Record<string, CalendarItem>>(reducer, {}),
+            }
+        })
 
         const promises: Promise<void>[] = [];
 
-        for (const key in ordered) {
-            const days = ordered[key];
+        for (const [type, grouped] of Object.entries(records)) {
+            for (const [value, days] of Object.entries(grouped)) {   
+                const calendar = calendars[type as CalendarType][value];
+                if (!calendar) {
+                    continue;
+                }
 
-            const promise = (async () => {
-                for (const appendDay of days) {
-                    const dayIndex = DayIndex.fromStringDate(appendDay.day.day).valueOf();
-
-                    let calendar: CalendarItem | null;
-                    switch (appendDay.type) {
-                        case 'group':
-                            calendar = await CalendarItem.getCalendar('group', appendDay.group);
-                            if (calendar) {
-                                await this.groupDay(calendar, appendDay);
-                            }
-                            break;
-                        case 'teacher':
-                            calendar = await CalendarItem.getCalendar('teacher', appendDay.teacher);
-                            if (calendar) {
-                                await this.teacherDay(calendar, appendDay);
-                            }
-                            break;
-                    }
-
-                    if (calendar) {
+                const promise = (async () => {
+                    for (const appendDay of days) {
+                        const dayIndex = DayIndex.fromStringDate(appendDay.day.day).valueOf();
+    
+                        switch (appendDay.type) {
+                            case 'group':
+                                await this.groupDay(calendar, {
+                                    group: appendDay.value,
+                                    day: appendDay.day
+                                });
+    
+                                break;
+                            case 'teacher':
+                                await this.teacherDay(calendar, {
+                                    teacher: appendDay.value,
+                                    day: appendDay.day
+                                });
+    
+                                break;
+                        }
+    
                         await calendar.update({ lastManualSyncedDay: dayIndex });
                     }
-                }
-            })();
-
-            promise.catch(console.error);
-
-            promises.push(promise);
+                })();
+    
+                promise.catch(console.error);
+    
+                promises.push(promise);
+            }
         }
 
-        await Promise.all(promises)
+        await Promise.all(promises);
     }
 
     public async resync(calendar: CalendarItem, forceFullResync: boolean = false) {
@@ -377,7 +382,7 @@ export class GoogleCalendarController {
         }
 
         if (lesson.group) {
-            line.push(`<b>Группа:</b> ${lesson.group}`);
+            line.push(`<b>Группа:</b> ${lesson.subgroup ? `${lesson.subgroup}. ` : ''}${lesson.group}`);
         }
 
         line.push(`<b>Кабинет:</b> ${lesson.cabinet || '-'}`);
@@ -387,7 +392,7 @@ export class GoogleCalendarController {
         }
 
         return {
-            title: `${lesson.group}-${lesson.lesson}`,
+            title: `${lesson.subgroup ? `${lesson.subgroup}. ` : ''}${lesson.group}-${lesson.lesson}`,
             description: line.join('\n'),
             location: lesson.cabinet || undefined
         }
