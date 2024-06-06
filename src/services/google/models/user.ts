@@ -47,9 +47,9 @@ class GoogleUser extends Model<InferAttributes<GoogleUser>, InferCreationAttribu
     }
 
     private async updateCredentials(credentials: Credentials) {
-        this.refreshToken = credentials.refresh_token || null;
-        this.accessToken = credentials.access_token || null;
-        this.accessTokenExpires = credentials.expiry_date || null;
+        this.refreshToken = credentials.refresh_token ?? this.refreshToken ?? null;
+        this.accessToken = credentials.access_token ?? null;
+        this.accessTokenExpires = credentials.expiry_date ?? null;
 
         await this.save();
     }
