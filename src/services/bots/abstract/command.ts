@@ -21,7 +21,7 @@ export type BotServiceName = 'tg' | 'vk' | 'viber';
 
 export type CmdHandlerParams<C extends AbstractCommand = any> = {
     context: AbstractCommandContext,
-    realContext: any,
+    realContext: VkMessageContext<ContextDefaultState> | ViberContext | TgMessageContext,
     serviceChat: AbstractServiceChat,
     chat: BotChat,
     regexp?: C['regexp'] extends RegExp ? 'index' : keyof C['regexp'],

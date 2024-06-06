@@ -22,6 +22,7 @@
     "gaxios": "^6.3.0",
     "googleapis": "^129.0.0",
     "got": "^11.8.5",
+    "iconv-lite": "^0.6.3",
     "jsdom": "^23.0.1",
     "lodash": "^4.17.21",
     "natural": "^6.2.0",

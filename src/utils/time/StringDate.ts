@@ -109,6 +109,14 @@ export class StringDate {
             `${date.getFullYear()}`;
     }
 
+
+    public toStringDateNoYear(): string {
+        const date = this.date;
+
+        return `${date.getDate().toString().padStart(2, '0')}.` +
+            `${(date.getMonth() + 1).toString().padStart(2, '0')}`;
+    }
+
     public toStringTime(microtime: boolean = false): string {
         const date = this.date;
 
