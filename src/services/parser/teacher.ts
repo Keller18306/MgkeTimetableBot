@@ -122,12 +122,29 @@ export default class TeacherParser extends AbstractParser {
             .filter(_ => _.nodeType === _.TEXT_NODE)
             .map(_ => _.textContent!);
         const type = data[1]?.match(/\((.+)\)/)?.slice(1)[0];
-        const group = data[0].split('-', 2)[0];
+    
+        
+        const groupParts = data[0]
+            .split('-', 2)[0]
+            .replace(/\s/ig, '')
+            .split('.', 2);
+
+        let subgroup: number | undefined;
+        let group: string;
+
+        if (groupParts.length >= 2) {
+            subgroup = Number(groupParts[0]);
+            group = groupParts[1].trim();
+        } else {
+            group = groupParts[0].trim();
+        }
+
         const lesson = data[0].split('-', 2)[1];
 
         return {
             lesson: getShortSubjectName(lesson),
             type: type || null,
+            subgroup: subgroup,
             group: group,
             cabinet: cabinet,
             comment: null
@@ -150,7 +167,8 @@ export default class TeacherParser extends AbstractParser {
                     if (
                         lesson.type === fLesson.type &&
                         lesson.lesson === fLesson.lesson &&
-                        lesson.group === fLesson.group
+                        lesson.group === fLesson.group &&
+                        lesson.subgroup === fLesson.subgroup
                     ) {
                         simmilarIndex = j;
                         break;

@@ -253,7 +253,7 @@ export class ImageBuilder {
                     lesson: lesson.lesson,
                     type: lesson.type,
                     cabinet: lesson.cabinet || '-',
-                    group: lesson.group
+                    group: (lesson.subgroup ? `${lesson.subgroup}. ` : '') + lesson.group
                 }]);
             }
 

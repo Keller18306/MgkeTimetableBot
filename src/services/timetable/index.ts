@@ -1,5 +1,5 @@
 import { Op } from "sequelize";
-import { AppService } from "../../app";
+import { App, AppService } from "../../app";
 import { sequelize } from "../../db";
 import { DayIndex, StringDate, WeekIndex } from "../../utils";
 import { loadCache } from "../parser/raspCache";
@@ -8,11 +8,11 @@ import { TimetableArchive } from "./models/timetable";
 
 export type ArchiveAppendDay = {
     type: 'group',
-    group: string,
+    value: string,
     day: GroupDay
 } | {
     type: 'teacher',
-    teacher: string,
+    value: string,
     day: TeacherDay
 }
 
@@ -24,9 +24,15 @@ function dbEntryToDayObject(entry: TimetableArchive): any {
 }
 
 export class Timetable implements AppService {
-    constructor() { }
+    constructor(private app: App) { }
 
     public run() {
+        if (this.app.isServiceRegistered('parser')) {
+            const parser = this.app.getService('parser');
+
+            parser.events.on('flushCache', this.appendDays.bind(this));
+        }
+
         loadCache();
     }
 
@@ -120,7 +126,8 @@ export class Timetable implements AppService {
                 day: {
                     [Op.between]: dayBounds
                 }
-            }
+            },
+            order: [['day', 'ASC']]
         });
 
         return days.map(dbEntryToDayObject);
@@ -134,7 +141,8 @@ export class Timetable implements AppService {
                 day: {
                     [Op.between]: dayBounds
                 }
-            }
+            },
+            order: [['day', 'ASC']]
         });
 
         return days.map(dbEntryToDayObject);
@@ -150,7 +158,8 @@ export class Timetable implements AppService {
                         [Op.gte]: fromDay
                     }
                 } : {})
-            }
+            },
+            order: [['day', 'ASC']]
         });
 
         return days.map(dbEntryToDayObject);
@@ -166,7 +175,8 @@ export class Timetable implements AppService {
                         [Op.gte]: fromDay
                     }
                 } : {})
-            }
+            },
+            order: [['day', 'ASC']]
         });
 
         return days.map(dbEntryToDayObject);
@@ -188,10 +198,11 @@ export class Timetable implements AppService {
 
                 return {
                     day: dayIndex,
-                    group: (entry as any).group,
+                    group: entry.value,
                     data: data
                 }
             }), {
+                transaction,
                 returning: false,
                 updateOnDuplicate: ['data'],
                 conflictAttributes: ['day', 'group']
@@ -207,41 +218,15 @@ export class Timetable implements AppService {
 
                 return {
                     day: dayIndex,
-                    teacher: (entry as any).teacher,
+                    teacher: entry.value,
                     data: data
                 }
             }), {
+                transaction,
                 returning: false,
                 updateOnDuplicate: ['data'],
                 conflictAttributes: ['day', 'teacher']
             });
-
-            // for (const entry of entries) {
-            //     const { day } = entry;
-
-            //     const dayIndex: number = DayIndex.fromStringDate(day.day).valueOf();
-            //     const data: string = JSON.stringify(day.lessons);
-
-            //     switch (entry.type) {
-            //         case 'group':
-            //             await TimetableArchive.upsert({
-            //                 day: dayIndex,
-            //                 group: entry.group,
-            //                 data: data
-            //             }, { transaction });
-
-            //             break;
-
-            //         case 'teacher':
-            //             await TimetableArchive.upsert({
-            //                 day: dayIndex,
-            //                 teacher: entry.teacher,
-            //                 data: data
-            //             }, { transaction });
-
-            //             break;
-            //     }
-            // }
         });
     }
 }

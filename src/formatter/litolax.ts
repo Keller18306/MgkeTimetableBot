@@ -31,6 +31,10 @@ export class LitolaxScheduleFormatter extends ScheduleFormatter {
     protected formatTeacherLesson(lesson: TeacherLessonExplain): string {
         const line: string[] = [];
 
+        if (lesson.subgroup != null) {
+            line.push(this.Subgroup(`${lesson.subgroup}`));
+        }
+
         line.push(
             `${this.Group(lesson.group)}${this.Lesson(this.getLessonAlias(lesson.lesson))}`
         );

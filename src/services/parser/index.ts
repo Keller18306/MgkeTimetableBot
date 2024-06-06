@@ -390,7 +390,7 @@ export class ParserService implements AppService {
             }
         }
 
-        const archiveLessons: ArchiveAppendDay[] = [];
+        const flushLessons: ArchiveAppendDay[] = [];
 
         // добавление новых данных
         for (const index in data) {
@@ -470,14 +470,14 @@ export class ParserService implements AppService {
             }
 
             if (toArchive.length > 0) {
-                archiveLessons.push(...toArchive.map((day): ArchiveAppendDay => {
+                flushLessons.push(...toArchive.map((day): ArchiveAppendDay => {
                     return onParser<ArchiveAppendDay>(Parser, {
                         type: 'group',
-                        group: index,
+                        value: index,
                         day: day as GroupDay
                     }, {
                         type: 'teacher',
-                        teacher: index,
+                        value: index,
                         day: day as TeacherDay
                     });
                 }));
@@ -494,13 +494,13 @@ export class ParserService implements AppService {
                 const keep: boolean = (dayIndex.isNotPast() || dayIndex.valueOf() >= siteMinimalDayIndex);
 
                 if (!keep) {
-                    archiveLessons.push(onParser<ArchiveAppendDay>(Parser, {
+                    flushLessons.push(onParser<ArchiveAppendDay>(Parser, {
                         type: 'group',
-                        group: index,
+                        value: index,
                         day: day as GroupDay
                     }, {
                         type: 'teacher',
-                        teacher: index,
+                        value: index,
                         day: day as TeacherDay
                     }));
                 }
@@ -514,8 +514,7 @@ export class ParserService implements AppService {
             }
         }
 
-        await this.app.getService('timetable').appendDays(archiveLessons);
-        this.events.emit('flushCache', archiveLessons);
+        await this.events.emitAsync('flushCache', flushLessons);
 
         // проверка на то, что добавлена новая неделя
         const maxWeekIndex = Math.max(...(Object.values(cache.timetable) as (Group | Teacher)[])

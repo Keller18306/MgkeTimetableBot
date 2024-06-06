@@ -107,7 +107,7 @@ export default class extends AbstractCommand {
             let value: string[] = [];
 
             if (explain.group) {
-                value.push(`${explain.group}.`);
+                value.push(`${explain.subgroup ? `${explain.subgroup}-` : ''}${explain.group}.`);
             }
 
             value.push(explain.lesson);

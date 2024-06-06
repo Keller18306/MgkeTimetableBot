@@ -1,23 +1,24 @@
-export type Teachers = {
+export interface Teachers {
     [teacher: string]: Teacher
 }
 
-export type Teacher = {
+export interface Teacher {
     teacher: string,
     days: TeacherDay[],
     lastNoticedDay?: number
 }
 
-export type TeacherDay = {
+export interface TeacherDay {
     day: string,
     lessons: TeacherLesson[]
 }
 
 export type TeacherLesson = TeacherLessonExplain | null
 
-export type TeacherLessonExplain = {
+export interface TeacherLessonExplain {
     lesson: string,
     type: string | null,
+    subgroup?: number,
     group: string,
     cabinet: string | null,
     comment: string | null

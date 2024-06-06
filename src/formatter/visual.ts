@@ -33,6 +33,10 @@ export class VisualScheduleFormatter extends ScheduleFormatter {
     protected formatTeacherLesson(lesson: TeacherLessonExplain): string {
         const line: string[] = [];
 
+        if (lesson.subgroup != null) {
+            line.push(this.Subgroup(`${lesson.subgroup}`));
+        }
+
         line.push(
             `${this.Lesson(this.Group(lesson.group) + this.getLessonAlias(lesson.lesson)) + (lesson.type ? this.Type(lesson.type) : '')}`
         );

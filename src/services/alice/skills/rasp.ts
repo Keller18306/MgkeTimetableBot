@@ -187,7 +187,14 @@ export default class extends AliceSkill {
 
             tts.push(`${+i + 1}-ая пара:`)
 
-            tts.push(`${lesson.group}-я группа ` + getFullSubjectName(lesson.lesson))
+            let value: string;
+            if (lesson.subgroup) {
+                value = `Группа ${lesson.group}. ${lesson.subgroup}-я подгруппа`;
+            } else {
+                value = `${lesson.group}-я группа`;
+            }
+
+            tts.push(value + ' ' + getFullSubjectName(lesson.lesson))
         }
 
         if (!day.lessons.length) {

@@ -7,6 +7,7 @@ import { StorageModel } from './src/services/bots/storage/model';
 import { TgChat } from './src/services/bots/tg/chat';
 import { ViberChat } from './src/services/bots/viber/chat';
 import { VkChat } from './src/services/bots/vk/chat';
+import { TeacherLesson } from './src/services/timetable';
 import { TimetableArchive } from './src/services/timetable/models/timetable';
 import { VKAppUser } from './src/services/vk_app/user';
 
@@ -104,9 +105,38 @@ const main = async () => {
 
     rows = dbOld.prepare('SELECT * FROM timetable_archive').all();
     await TimetableArchive.bulkCreate(rows.map((row: any) => {
-        return Object.assign(row, {
+        const data = Object.assign(row, {
             id: null
         });
+
+        if (data.teacher !== null) {
+            const lessons: TeacherLesson[] = JSON.parse(data.data);
+
+            for (const lesson of lessons) {
+                if (!lesson) {
+                    continue;
+                }
+
+                const b = lesson.group.split('.', 2);
+
+                let subgroup: number | undefined;
+                let group: string;
+
+                if (b.length >= 2) {
+                    subgroup = Number(b[0]);
+                    group = b[1].trim();
+                } else {
+                    group = b[0].trim();
+                }
+
+                lesson.group = group;
+                lesson.subgroup = subgroup;
+            }
+
+            data.data = JSON.stringify(lessons);
+        }
+
+        return data;
     }))
 
     rows = dbOld.prepare('SELECT * FROM vk_app_users').all();

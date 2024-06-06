@@ -1,3 +1,3 @@
-export type Team = {
+export interface Team {
     [short: string]: string
 }

@@ -1,21 +1,21 @@
-export type Groups = {
+export interface Groups {
     [group: string]: Group
 }
 
-export type Group = {
+export interface Group {
     group: string,
     days: GroupDay[],
     lastNoticedDay?: number
 }
 
-export type GroupDay = {
+export interface GroupDay {
     day: string,
     lessons: GroupLesson[]
 }
 
 export type GroupLesson = GroupLessonExplain | GroupLessonExplain[] | null
 
-export type GroupLessonExplain = {
+export interface GroupLessonExplain {
     subgroup?: number,
     lesson: string,
     type: string | null,

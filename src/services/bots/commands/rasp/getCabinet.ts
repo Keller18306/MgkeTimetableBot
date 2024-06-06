@@ -78,7 +78,7 @@ export default class extends AbstractCommand {
                 dayMessage.push(`${StringDate.fromStringDate(day).getWeekdayName()}, ${day}`);
 
                 for (const lesson of lessons) {
-                    dayMessage.push(`${lesson.index + 1}. ${lesson.lesson} (${lesson.type}), ${lesson.group}, ${lesson.teacher}`);
+                    dayMessage.push(`${lesson.index + 1}. ${lesson.lesson} (${lesson.type}), ${lesson.subgroup ? `${lesson.subgroup}. ` : ''}${lesson.group}, ${lesson.teacher}`);
                 }
 
                 cabinetMessage.push(dayMessage.join('\n'));
