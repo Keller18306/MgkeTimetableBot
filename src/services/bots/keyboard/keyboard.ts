@@ -351,25 +351,4 @@ export class Keyboard {
 
         return keyboard;
     }
-
-    public GetWeekTimetable(type: string, value: string | number): KeyboardBuilder | undefined {
-        const keyboard: KeyboardBuilder = new KeyboardBuilder('GenerateImage', true);
-
-        if (!isNaN(+value)) {
-            value = Number(value)
-        }
-
-        if (type === 'group' || type === 'teacher') {
-            type = type[0]; //first letter of type
-        }
-
-        return keyboard.add({
-            type: ButtonType.Callback,
-            text: 'На неделю',
-            payload: 'timetable' + JSON.stringify([
-                type, value, null, 0, 1
-            ]),
-            color: KeyboardColor.PRIMARY_COLOR
-        });
-    }
 }

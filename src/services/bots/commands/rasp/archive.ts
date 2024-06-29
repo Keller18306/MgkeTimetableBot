@@ -1,7 +1,8 @@
 import { TelegramBotCommand } from "puregram/generated";
-import { DayIndex, StringDate } from "../../../../utils";
+import { DayIndex, StringDate, WeekIndex } from "../../../../utils";
 import { GroupDay, TeacherDay } from "../../../parser/types";
 import { AbstractCommand, CmdHandlerParams } from "../../abstract";
+import { StaticKeyboard } from "../../keyboard";
 
 export default class extends AbstractCommand {
     public regexp = /^((!|\/)archive)(\b|$|\s)/i;
@@ -22,29 +23,47 @@ export default class extends AbstractCommand {
         const dayIndex: number = DayIndex.fromStringDate(day).valueOf();
 
         let entry: GroupDay | TeacherDay | null = null;
-        let text: string;
+        let text: string | undefined;
+        let type: 'group' | 'teacher';
+        let value: string;
         if (chat.mode === 'student' || chat.mode === 'parent') {
             if (chat.group == null) {
                 return context.send(`Для данного чата группа не была выбрана.`);
             }
 
+            type = 'group';
+            value = chat.group;
+
             entry = await archive.getGroupDay(dayIndex, chat.group);
-            text = formatter.formatGroupLessons(entry?.lessons);
+            if (entry) {
+                text = formatter.formatGroupFull(chat.group, {
+                    showHeader: true,
+                    days: [entry]
+                });
+            }
         } else if (chat.mode === 'teacher') {
             if (chat.teacher == null) {
                 return context.send(`Для данного чата учитель не был выбран.`);
             }
 
+            type = 'teacher';
+            value = chat.teacher;
+
             entry = await archive.getTeacherDay(dayIndex, chat.teacher);
-            text = formatter.formatTeacherLessons(entry?.lessons);
+            if (entry) {
+                text = formatter.formatTeacherFull(chat.teacher, {
+                    showHeader: true,
+                    days: [entry]
+                });
+            }
         } else {
             //todo get from args
             return context.send(`Для данного режима чата (${chat.mode}) нельзя автоматически получить группу или учителя.`);
         }
 
-        if (!entry) {
+        if (!entry || !text) {
             const { min: minDayIndex, max: maxDayIndex } = await archive.getDayIndexBounds();
-            
+
             if (dayIndex < minDayIndex || dayIndex > maxDayIndex) {
                 const fromDay = StringDate.fromDayIndex(minDayIndex).toString();
                 const toDay = StringDate.fromDayIndex(maxDayIndex).toString();
@@ -59,8 +78,10 @@ export default class extends AbstractCommand {
             return context.send('Ничего не найдено на данный день');
         }
 
-        text = formatter.formatDayHeader(entry.day) + '\n' + text;
+        const weekIndex = WeekIndex.fromStringDate(entry.day);
 
-        return context.send(text);
+        return context.send(text, {
+            keyboard: StaticKeyboard.GetWeekTimetable({ type, value, weekIndex: weekIndex.valueOf() })
+        });
     }
 }

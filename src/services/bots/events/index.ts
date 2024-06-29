@@ -9,6 +9,7 @@ import { GroupDay, TeacherDay } from "../../parser/types";
 import { MessageOptions } from "../abstract";
 import { BotServiceName } from "../abstract/command";
 import { AbstractServiceChat, BotChat, ChatMode } from "../chat";
+import { StaticKeyboard } from "../keyboard";
 
 function getDayPhrase(day: string, nextDayPhrase: string = 'день'): string {
     if (WeekIndex.fromStringDate(day).isFutureWeek()) {
@@ -349,41 +350,67 @@ export abstract class AbstractBotEventListener {
 
         let chats: BotChat[] | undefined;
 
-        if (chatMode === 'student') {
-            const groups: string[] = Object.entries(raspCache.groups.timetable).map(([group, { days }]): [string, GroupDay[]] => {
-                const daysOfWeek = days.filter((day) => {
-                    return StringDate.fromStringDate(day.day).toDate() >= firstWeekDay && day.lessons.length > 0;
+        const message: string = '🆕 Доступно расписание на следующую неделю';
+
+        switch (chatMode) {
+            case 'student': {
+                const groups: string[] = Object.entries(raspCache.groups.timetable).map(([group, { days }]): [string, GroupDay[]] => {
+                    const daysOfWeek = days.filter((day) => {
+                        return StringDate.fromStringDate(day.day).toDate() >= firstWeekDay && day.lessons.length > 0;
+                    });
+
+                    return [group, daysOfWeek];
+                }).filter(([, days]): boolean => {
+                    return days.length > 0;
+                }).map(([group]): string => {
+                    return group;
                 });
 
-                return [group, daysOfWeek];
-            }).filter(([, days]): boolean => {
-                return days.length > 0;
-            }).map(([group]): string => {
-                return group;
-            });
+                chats = await this.getGroupsChats(groups, { noticeNextWeek: true });
 
-            chats = await this.getGroupsChats(groups, { noticeNextWeek: true });
-        }
+                for (const chat of chats) {
+                    await this.sendMessage(chat, message, {
+                        keyboard: chat.group ? StaticKeyboard.GetWeekTimetable({
+                            type: 'group',
+                            value: chat.group,
+                            label: 'Показать',
+                            weekIndex
+                        }) : undefined
+                    });
+                }
 
-        if (chatMode === 'teacher') {
-            const teachers: string[] = Object.entries(raspCache.teachers.timetable).map(([group, { days }]): [string, TeacherDay[]] => {
-                const daysOfWeek = days.filter((day) => {
-                    return StringDate.fromStringDate(day.day).toDate() >= firstWeekDay && day.lessons.length > 0;
+                return;
+            }
+
+            case 'teacher': {
+                const teachers: string[] = Object.entries(raspCache.teachers.timetable).map(([group, { days }]): [string, TeacherDay[]] => {
+                    const daysOfWeek = days.filter((day) => {
+                        return StringDate.fromStringDate(day.day).toDate() >= firstWeekDay && day.lessons.length > 0;
+                    });
+
+                    return [group, daysOfWeek];
+                }).filter(([, days]): boolean => {
+                    return days.length > 0;
+                }).map(([teacher]): string => {
+                    return teacher;
                 });
 
-                return [group, daysOfWeek];
-            }).filter(([, days]): boolean => {
-                return days.length > 0;
-            }).map(([teacher]): string => {
-                return teacher;
-            });
+                chats = await this.getTeachersChats(teachers, { noticeNextWeek: true });
 
-            chats = await this.getTeachersChats(teachers, { noticeNextWeek: true });
+                for (const chat of chats) {
+                    await this.sendMessage(chat, message, {
+                        keyboard: chat.teacher ? StaticKeyboard.GetWeekTimetable({
+                            type: 'teacher',
+                            value: chat.teacher,
+                            label: 'Показать',
+                            weekIndex
+                        }) : undefined
+                    });
+                }
+
+                return;
+            }
         }
-
-        if (!chats || chats.length === 0) return;
-
-        return this.sendMessages(chats, '🆕 Доступно расписание на следующую неделю');
     }
 
     public async sendDistribution(message: string, cb?: ProgressCallback) {

@@ -27,7 +27,7 @@ class BotChat<T extends AbstractServiceChat = any> extends Model<InferAttributes
         const chat = await this.findOne<BotChat<T>>(findOptions);
         if (!chat && creationDefaults) {
             await this._createChat(model, peerId, creationDefaults);
-            
+
             return this.findByServicePeerId(model, peerId);
         } else if (!chat) {
             throw new Error('Chat not found')
@@ -184,6 +184,33 @@ class BotChat<T extends AbstractServiceChat = any> extends Model<InferAttributes
 
         this.historyTeacher = history;
     }
+
+    // public getTimetableConditions() {
+    //     switch (this.mode) {
+    //         case 'parent':
+    //         case 'student':
+    //             if (!this.group) {
+    //                 throw new Error('group not selected');
+    //             }
+
+    //             return {
+    //                 type: 'group',
+    //                 value: this.group
+    //             }
+
+    //         case 'teacher':
+    //             if (!this.teacher) {
+    //                 throw new Error('teacher not selected');
+    //             }
+
+    //             return {
+    //                 type: 'teacher',
+    //                 value: this.teacher
+    //             }
+    //         default:
+    //             throw new Error('Chat mode does not support this function');
+    //     }
+    // }
 }
 
 BotChat.init({

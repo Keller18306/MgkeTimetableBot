@@ -1,4 +1,11 @@
-import { KeyboardBuilder, KeyboardColor } from '../abstract';
+import { ButtonType, KeyboardBuilder, KeyboardColor } from '../abstract';
+
+interface WeekTimetableOptions {
+    type: 'group' | 'teacher'
+    value: string | number
+    weekIndex?: number | null
+    label?: string
+}
 
 export class StaticKeyboard {
     public static get NeedAccept() {
@@ -68,6 +75,27 @@ export class StaticKeyboard {
             payload: 'cancel',
             text: 'Отмена',
             color: KeyboardColor.NEGATIVE_COLOR
+        });
+    }
+
+    public static GetWeekTimetable({ type, value, weekIndex, label }: WeekTimetableOptions): KeyboardBuilder | undefined {
+        const keyboard: KeyboardBuilder = new KeyboardBuilder('GenerateImage', true);
+
+        if (!isNaN(+value)) {
+            value = Number(value)
+        }
+
+        if (type === 'group' || type === 'teacher') {
+            type = type[0] as any; //first letter of type
+        }
+
+        return keyboard.add({
+            type: ButtonType.Callback,
+            text: label ?? 'На неделю',
+            payload: 'timetable' + JSON.stringify([
+                type, value, weekIndex ?? null, 0, 1
+            ]),
+            color: KeyboardColor.PRIMARY_COLOR
         });
     }
 }

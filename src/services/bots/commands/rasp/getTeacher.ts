@@ -4,7 +4,7 @@ import { ImageFile } from "../../../image/builder";
 import { raspCache } from "../../../parser";
 import { AbstractCommand, CmdHandlerParams, MessageOptions } from "../../abstract";
 import { InputInitiator } from "../../input";
-import { withCancelButton } from "../../keyboard";
+import { StaticKeyboard, withCancelButton } from "../../keyboard";
 
 export default class GetTeacherCommand extends AbstractCommand {
     public regexp = {
@@ -86,7 +86,7 @@ export default class GetTeacherCommand extends AbstractCommand {
         throw new Error('unknown error');
     }
 
-    private async sendDay(teacher: string, initiator: InputInitiator, { context, keyboard, formatter }: CmdHandlerParams) {
+    private async sendDay(teacher: string, initiator: InputInitiator, { context, formatter }: CmdHandlerParams) {
         const teacherRasp = raspCache.teachers.timetable[teacher];
         const message = formatter.formatTeacherFull(teacher, {
             showHeader: true,
@@ -94,7 +94,7 @@ export default class GetTeacherCommand extends AbstractCommand {
         });
 
         const options: MessageOptions = {
-            keyboard: keyboard.GetWeekTimetable('teacher', teacher)
+            keyboard: StaticKeyboard.GetWeekTimetable({ type: 'teacher', value: teacher })
         }
 
         if (initiator === 'callback') {
