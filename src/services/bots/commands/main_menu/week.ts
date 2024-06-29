@@ -43,12 +43,19 @@ export default class extends AbstractCommand {
         const group = raspCache.groups.timetable[chat.group];
         if (group === undefined) return context.send('Данной учебной группы не существует');
 
-        const weekIndex = WeekIndex.getRelevant();
-        const weekRange = weekIndex.getWeekDayIndexRange();
+        let weekIndex = WeekIndex.getRelevant();
+        let weekRange = weekIndex.getWeekDayIndexRange();
 
         let days = await this.app.getService('timetable').getGroupDaysByRange(weekRange, chat.group);
         if (chat.hidePastDays) {
             days = removePastDays(days);
+        }
+
+        if (days.length === 0) {
+            weekIndex = weekIndex.getNextWeekIndex();
+            weekRange = weekIndex.getWeekDayIndexRange();
+
+            days = await this.app.getService('timetable').getGroupDaysByRange(weekRange, chat.group);
         }
 
         actions.deleteLastMsg();

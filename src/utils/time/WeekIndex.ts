@@ -92,4 +92,8 @@ export class WeekIndex {
 
         return this.value > todayIndex;
     }
+
+    public getNextWeekIndex(): WeekIndex {
+        return WeekIndex.fromWeekIndexNumber(this.value + 1);
+    }
 }
