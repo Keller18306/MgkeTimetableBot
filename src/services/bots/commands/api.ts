@@ -1,3 +1,4 @@
+import { TelegramBotCommand } from "puregram/generated";
 import { config } from "../../../../config";
 import { AppServiceName } from "../../../app";
 import { ApiKey } from "../../../key";
@@ -11,6 +12,11 @@ export default class extends AbstractCommand {
     public regexp = /^(!|\/)api(_new)?$/i
     public payloadAction = null;
     public requireServices: AppServiceName[] = ['api'];
+
+    public tgCommand: TelegramBotCommand = {
+        command: 'api',
+        description: 'Просмотр API ключа'
+    };
 
     async handler({ context, chat, formatter }: CmdHandlerParams) {
         if (context.isChat) {
