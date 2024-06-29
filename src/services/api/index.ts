@@ -158,7 +158,7 @@ export class Api implements AppService {
             await this.applyRequest(key, time);
 
             try {
-                let message = _class.handler({ app, request, response })
+                let message = await _class.handler({ app, request, response })
 
                 if (message === undefined) return;
 
