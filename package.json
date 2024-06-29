@@ -12,7 +12,6 @@
   "dependencies": {
     "@keller18306/table2canvas": "^0.0.3",
     "@keller18306/yandex-dialogs-sdk": "^1.0.2",
-    "better-sqlite3": "^8.2.0",
     "canvas": "^2.11.2",
     "cbor-x": "^1.5.8",
     "chokidar": "^3.5.3",
