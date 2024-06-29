@@ -38,24 +38,10 @@ export default class CallsCallback extends AbstractCallback {
         }
 
         message.push('__ ЗВОНКИ (будни) __')
-        for (let i = 0; i < maxLessons; i++) {
-            const lesson = config.timetable.weekdays[i];
-            if (!lesson) break;
-
-            const lineStr: string = `${i + 1}. ${lesson[0][0]} - ${lesson[0][1]} | ${lesson[1][0]} - ${lesson[1][1]}`
-
-            message.push(this.setSelected(lineStr, nowInTime([1, 2, 3, 4, 5], lesson[0][0], lesson[1][1])))
-        }
+        message.push(this._getMessage([1, 2, 3, 4, 5], maxLessons));
 
         message.push('\n__ ЗВОНКИ (суббота) __')
-        for (let i = 0; i < maxLessons; i++) {
-            const lesson = config.timetable.saturday[i];
-            if (!lesson) break;
-
-            const lineStr: string = `${i + 1}. ${lesson[0][0]} - ${lesson[0][1]} | ${lesson[1][0]} - ${lesson[1][1]}`
-
-            message.push(this.setSelected(lineStr, nowInTime([6], lesson[0][0], lesson[1][1])))
-        }
+        message.push(this._getMessage([6], maxLessons));
 
         if (current && current >= maxLessons) {
             showFull = true;
@@ -78,5 +64,18 @@ export default class CallsCallback extends AbstractCallback {
         }
 
         return `👉 ${text} 👈`;
+    }
+
+    private _getMessage(includedDays: number[], maxLessons: number) {
+        for (let i = 0; i < maxLessons; i++) {
+            const lesson = config.timetable.weekdays[i];
+            if (!lesson) break;
+
+            const lineStr: string = `${i + 1}. ${lesson[0][0]} - ${lesson[0][1]} | ${lesson[1][0]} - ${lesson[1][1]}`;
+
+            return this.setSelected(lineStr, nowInTime(includedDays, lesson[0][0], lesson[1][1]));
+        }
+
+        throw new Error('The are no message');
     }
 }

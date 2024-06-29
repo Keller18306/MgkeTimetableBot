@@ -93,7 +93,7 @@ export type ConfigScheme = {
     timetable: {
         weekdays: DayCall[],
         saturday: DayCall[],
-        shortened: DayCallShort[]
+        shortened_1h: DayCallShort[]
     },
     encrypt_key: Buffer,
     globalNoticer: boolean,
