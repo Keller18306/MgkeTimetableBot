@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { config } from "../../../../config";
-import { nowInTime } from "../../../utils";
+import { nowInTime, WeekIndex } from "../../../utils";
 import { raspCache } from "../../parser";
 import { AbstractCallback, ButtonType, CbHandlerParams, CmdHandlerParams } from "../abstract";
 
@@ -33,15 +33,19 @@ export default class CallsCallback extends AbstractCallback {
             );
         }
 
-        if (!showFull && current) {
-            maxLessons = current;
-        }
+        let userMaxLessons: number;
 
+        if (!showFull && current) {
+            userMaxLessons = current;
+        } else {
+            userMaxLessons = maxLessons;
+        }
+        
         message.push('__ ЗВОНКИ (будни) __')
-        message.push(this._getMessage([1, 2, 3, 4, 5], maxLessons));
+        message.push(this._getMessage([1, 2, 3, 4, 5], userMaxLessons, showFull));
 
         message.push('\n__ ЗВОНКИ (суббота) __')
-        message.push(this._getMessage([6], maxLessons));
+        message.push(this._getMessage([6], userMaxLessons, showFull));
 
         if (current && current >= maxLessons) {
             showFull = true;
@@ -66,16 +70,18 @@ export default class CallsCallback extends AbstractCallback {
         return `👉 ${text} 👈`;
     }
 
-    private _getMessage(includedDays: number[], maxLessons: number) {
+    private _getMessage(includedDays: number[], maxLessons: number, showFull: boolean) {
+        const text: string[] = [];
+
         for (let i = 0; i < maxLessons; i++) {
             const lesson = config.timetable.weekdays[i];
             if (!lesson) break;
 
             const lineStr: string = `${i + 1}. ${lesson[0][0]} - ${lesson[0][1]} | ${lesson[1][0]} - ${lesson[1][1]}`;
 
-            return this.setSelected(lineStr, nowInTime(includedDays, lesson[0][0], lesson[1][1]));
+            text.push(this.setSelected(lineStr, !showFull && nowInTime(includedDays, lesson[0][0], lesson[1][1])));
         }
 
-        throw new Error('The are no message');
+        return text.join('\n');
     }
 }
