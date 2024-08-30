@@ -1,11 +1,11 @@
 import {
     Attributes, CreationAttributes, CreationOptional, DataTypes, InferAttributes,
-    InferCreationAttributes, Model, ModelStatic, NonAttribute, NonNullFindOptions
+    InferCreationAttributes, Model, ModelDefined, ModelStatic, NonAttribute, NonNullFindOptions
 } from 'sequelize';
 import { sequelize } from '../../../db';
 import { arrayUnique } from '../../../utils';
 import { BotServiceName } from '../abstract';
-import { AbstractServiceChat } from './Abstract';
+import { AbstractServiceChat, IAbstractServiceChatAttributes, IAbstractServiceChatCreationAttributes } from './Abstract';
 import { AliasRecords, LessonAlias } from './LessonAlias';
 
 export type ChatMode = 'student' | 'teacher' | 'parent' | 'guest';
@@ -26,9 +26,9 @@ class BotChat<T extends AbstractServiceChat = any> extends Model<InferAttributes
 
         const chat = await this.findOne<BotChat<T>>(findOptions);
         if (!chat && creationDefaults) {
-            await this._createChat(model, peerId, creationDefaults);
+            const createdChat = await this._createChat(model, peerId, creationDefaults);
 
-            return this.findByServicePeerId(model, peerId);
+            return createdChat;
         } else if (!chat) {
             throw new Error('Chat not found')
         }
@@ -38,16 +38,25 @@ class BotChat<T extends AbstractServiceChat = any> extends Model<InferAttributes
         return chat;
     }
 
-    private static _createChat<T extends AbstractServiceChat = any>(model: ModelStatic<T>, peerId: string | number, creationDefaults: Partial<CreationAttributes<BotChat>>) {
-        return this.create({
-            ...creationDefaults,
-            service: (model as any).service,
-            [model.name]: {
+    private static _createChat<T extends AbstractServiceChat = any>(model: ModelDefined<IAbstractServiceChatAttributes, IAbstractServiceChatCreationAttributes>, peerId: string | number, creationDefaults: Partial<CreationAttributes<BotChat>>): Promise<BotChat<T>> {
+        return sequelize.transaction(async (transaction) => {
+            const chat = await this.create({
+                ...creationDefaults,
+                service: (model as any).service
+            }, {
+                transaction
+            });
+
+            const serviceChat = await model.create({
+                chatId: chat.id,
                 peerId: peerId
-            }
-        }, {
-            include: BotChat.associations[model.name],
-            returning: false
+            }, {
+                transaction
+            });
+
+            chat.serviceChat = serviceChat as any;
+
+            return chat as any;
         });
     }
 

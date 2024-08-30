@@ -11,7 +11,6 @@ const updateDITime: number = 12 * 60 * 60 * 1000;
 class ViberChat extends AbstractServiceChat<InferAttributes<ViberChat>, InferCreationAttributes<ViberChat>> {
     public static service: BotServiceName = 'viber';
 
-    declare id: number;
     declare peerId: string;
 
     /** Тема кнопок в Viber (цвет: бело-розовые, тёмно-синие, серо-чёрные) */
@@ -57,7 +56,7 @@ ViberChat.init({
     id: {
         type: DataTypes.INTEGER,
         primaryKey: true,
-        autoIncrement: false
+        autoIncrement: true
     },
     chatId: {
         type: DataTypes.INTEGER,

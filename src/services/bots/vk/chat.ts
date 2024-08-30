@@ -7,7 +7,6 @@ import { AbstractServiceChat, BotChat } from "../chat";
 class VkChat extends AbstractServiceChat<InferAttributes<VkChat>, InferCreationAttributes<VkChat>> {
     public static service: BotServiceName = 'vk';
 
-    declare id: number;
     declare peerId: number;
 
     /** Разрешено ли юзеру подтвердить себе приложение ВК, если оно не было подтверждено */
@@ -24,7 +23,7 @@ VkChat.init({
     id: {
         type: DataTypes.INTEGER,
         primaryKey: true,
-        autoIncrement: false
+        autoIncrement: true
     },
     chatId: {
         type: DataTypes.INTEGER,

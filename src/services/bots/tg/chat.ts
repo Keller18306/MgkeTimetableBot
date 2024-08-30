@@ -7,8 +7,6 @@ import { AbstractServiceChat, BotChat } from "../chat";
 
 class TgChat extends AbstractServiceChat<InferAttributes<TgChat>, InferCreationAttributes<TgChat>> {
     public static service: BotServiceName = 'tg';
-
-    declare id: number;
     declare peerId: number;
 
     /** Юзернейм */
@@ -45,7 +43,7 @@ TgChat.init({
     id: {
         type: DataTypes.INTEGER,
         primaryKey: true,
-        autoIncrement: false
+        autoIncrement: true
     },
     chatId: {
         type: DataTypes.INTEGER,
