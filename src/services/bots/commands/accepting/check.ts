@@ -30,7 +30,7 @@ export default class extends AbstractCommand {
                 })
             ), {
                 disable_mentions: true,
-                keyboard: StaticKeyboard.NeedAccept
+                keyboard: StaticKeyboard.NeedAccept(service)
             })
         }
 

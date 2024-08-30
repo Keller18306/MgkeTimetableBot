@@ -1,4 +1,4 @@
-import { ButtonType, KeyboardBuilder, KeyboardColor } from '../abstract';
+import { BotServiceName, ButtonType, KeyboardBuilder, KeyboardColor } from '../abstract';
 
 interface WeekTimetableOptions {
     type: 'group' | 'teacher'
@@ -8,7 +8,9 @@ interface WeekTimetableOptions {
 }
 
 export class StaticKeyboard {
-    public static get NeedAccept() {
+    public static NeedAccept(service: BotServiceName) {
+        if (service !== 'vk') return;
+
         return new KeyboardBuilder('NeedAccept', true)
             .add({
                 text: 'Проверить',

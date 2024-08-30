@@ -85,7 +85,7 @@ export abstract class AbstractBot {
 
                         return this.notFound(chat, context, keyboard.MainMenu, selfMention);
                     } else {
-                        return this.notAccepted(context);
+                        return this.notAccepted(handlerParams);
                     }
                 }
 
@@ -98,7 +98,7 @@ export abstract class AbstractBot {
             if (cmd.acceptRequired && !chat.accepted) {
                 if (context.isChat && !selfMention) return;
 
-                return this.notAccepted(context);
+                return this.notAccepted(handlerParams);
             }
 
             chat.lastMsgTime = Date.now();
@@ -202,12 +202,12 @@ export abstract class AbstractBot {
         });
     }
 
-    protected notAccepted(context: AbstractCommandContext) {
+    protected notAccepted({ context, service }: CmdHandlerParams) {
         return context.send(format(defines['need.accept'],
             this.acceptTool.getKey(this._getAcceptKeyParams(context))
         ), {
             disable_mentions: true,
-            keyboard: StaticKeyboard.NeedAccept
+            keyboard: StaticKeyboard.NeedAccept(service)
         });
     }
 }
