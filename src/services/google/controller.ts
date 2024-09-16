@@ -2,7 +2,7 @@ import { Op } from "sequelize";
 import { config } from "../../../config";
 import { App } from "../../app";
 import { Logger } from "../../logger";
-import { DayIndex, StringDate, WeekIndex } from "../../utils";
+import { DayIndex, KeyedQueue, StringDate, WeekIndex } from "../../utils";
 import { GroupDayEvent, TeacherDayEvent } from "../parser";
 import { GroupDay, GroupLessonExplain, TeacherDay, TeacherLessonExplain } from "../parser/types";
 import { ArchiveAppendDay } from "../timetable";
@@ -17,8 +17,7 @@ export class GoogleCalendarController {
     public logger: Logger = new Logger('GoogleCalendar');
 
     private app: App;
-
-    //TODO QUEUE DAYS
+    private queue: KeyedQueue = new KeyedQueue();
 
     constructor(app: App) {
         this.app = app;
@@ -151,24 +150,26 @@ export class GoogleCalendarController {
             teacher: {}
         });
 
-        const calendars = await Promise.all([
-            CalendarItem.findAll({
-                where: {
-                    type: 'group',
-                    value: {
-                        [Op.in]: Object.keys(records.group)
+        const calendars = await this.queue.execute('onFlushCache:getCalendars', () => {
+            return Promise.all([
+                CalendarItem.findAll({
+                    where: {
+                        type: 'group',
+                        value: {
+                            [Op.in]: Object.keys(records.group)
+                        }
                     }
-                }
-            }),
-            CalendarItem.findAll({
-                where: {
-                    type: 'teacher',
-                    value: {
-                        [Op.in]: Object.keys(records.teacher)
+                }),
+                CalendarItem.findAll({
+                    where: {
+                        type: 'teacher',
+                        value: {
+                            [Op.in]: Object.keys(records.teacher)
+                        }
                     }
-                }
-            })
-        ]).then(([groups, teachers]) => {
+                })
+            ]);
+        }).then(([groups, teachers]) => {
             const reducer = (entries: any, calendar: CalendarItem) => {
                 entries[calendar.value] = calendar;
 
@@ -179,7 +180,7 @@ export class GoogleCalendarController {
                 group: groups.reduce<Record<string, CalendarItem>>(reducer, {}),
                 teacher: teachers.reduce<Record<string, CalendarItem>>(reducer, {}),
             }
-        })
+        });
 
         const promises: Promise<void>[] = [];
 
@@ -190,7 +191,7 @@ export class GoogleCalendarController {
                     continue;
                 }
 
-                const promise = (async () => {
+                const promise = this.queue.execute(calendar.calendarId, async () => {
                     for (const appendDay of days) {
                         const dayIndex = DayIndex.fromStringDate(appendDay.day.day).valueOf();
 
@@ -215,7 +216,7 @@ export class GoogleCalendarController {
                     }
 
                     await calendar.update({ lastManualSyncedDay: null });
-                })();
+                });
 
                 promise.catch(console.error);
 
@@ -229,8 +230,6 @@ export class GoogleCalendarController {
     public async resync(calendar: CalendarItem, { forceFullResync, firstlyRelevant }: Partial<SyncOptions> = {}) {
         const logger = this.logger.extend(`${calendar.type}:${calendar.value}`);
 
-        logger.debug('Start sync', calendar.calendarId);
-
         let fromDay: number | undefined;
         if (!forceFullResync && calendar.lastManualSyncedDay !== null) {
             fromDay = calendar.lastManualSyncedDay;
@@ -240,67 +239,71 @@ export class GoogleCalendarController {
             }
         }
 
-        let days: GroupDay[] | TeacherDay[];
-        switch (calendar.type) {
-            case 'group':
-                days = await this.getTimetable().getGroupDays(calendar.value, fromDay);
-                break;
-            case 'teacher':
-                days = await this.getTimetable().getTeacherDays(calendar.value, fromDay);
-                break;
-        }
+        return this.queue.execute(calendar.calendarId, async () => {
+            logger.debug('Start sync', calendar.calendarId);
 
-        let weekStartingDayIndex: number | undefined;
-        if (firstlyRelevant) {
-            weekStartingDayIndex = WeekIndex.getRelevant().getWeekDayIndexRange()[0];
-
-            const currentDays: any = days.filter(({ day }) => {
-                const dayIndex = DayIndex.fromStringDate(day).valueOf();
-
-                return dayIndex >= weekStartingDayIndex!;
-            });
-
-            const anotherDays: any = days.filter(({ day }) => {
-                const dayIndex = DayIndex.fromStringDate(day).valueOf();
-
-                return dayIndex < weekStartingDayIndex!;
-            });
-
-            days = [...currentDays, ...anotherDays];
-        }
-
-        let useUpdate: boolean = !weekStartingDayIndex;
-
-        for (const day of days) {
+            let days: GroupDay[] | TeacherDay[];
             switch (calendar.type) {
                 case 'group':
-                    await this.groupDay(calendar, {
-                        group: calendar.value,
-                        day: day as GroupDay
-                    });
+                    days = await this.getTimetable().getGroupDays(calendar.value, fromDay);
                     break;
                 case 'teacher':
-                    await this.teacherDay(calendar, {
-                        teacher: calendar.value,
-                        day: day as TeacherDay
-                    });
+                    days = await this.getTimetable().getTeacherDays(calendar.value, fromDay);
                     break;
             }
 
-            const dayIndex = DayIndex.fromStringDate(day.day).valueOf();
+            let weekStartingDayIndex: number | undefined;
+            if (firstlyRelevant) {
+                weekStartingDayIndex = WeekIndex.getRelevant().getWeekDayIndexRange()[0];
 
-            if (weekStartingDayIndex && dayIndex < weekStartingDayIndex) {
-                useUpdate = true;
+                const currentDays: any = days.filter(({ day }) => {
+                    const dayIndex = DayIndex.fromStringDate(day).valueOf();
+
+                    return dayIndex >= weekStartingDayIndex!;
+                });
+
+                const anotherDays: any = days.filter(({ day }) => {
+                    const dayIndex = DayIndex.fromStringDate(day).valueOf();
+
+                    return dayIndex < weekStartingDayIndex!;
+                });
+
+                days = [...currentDays, ...anotherDays];
             }
 
-            if (useUpdate) {
-                await calendar.update({ lastManualSyncedDay: dayIndex });
+            let useUpdate: boolean = !weekStartingDayIndex;
+
+            for (const day of days) {
+                switch (calendar.type) {
+                    case 'group':
+                        await this.groupDay(calendar, {
+                            group: calendar.value,
+                            day: day as GroupDay
+                        });
+                        break;
+                    case 'teacher':
+                        await this.teacherDay(calendar, {
+                            teacher: calendar.value,
+                            day: day as TeacherDay
+                        });
+                        break;
+                }
+
+                const dayIndex = DayIndex.fromStringDate(day.day).valueOf();
+
+                if (weekStartingDayIndex && dayIndex < weekStartingDayIndex) {
+                    useUpdate = true;
+                }
+
+                if (useUpdate) {
+                    await calendar.update({ lastManualSyncedDay: dayIndex });
+                }
             }
-        }
 
-        await calendar.update({ lastManualSyncedDay: null });
+            await calendar.update({ lastManualSyncedDay: null });
 
-        logger.debug('Calendar fully synced', calendar.calendarId);
+            logger.debug('Calendar fully synced', calendar.calendarId);
+        });
     }
 
     public async resyncAll(forceFullResync?: boolean) {

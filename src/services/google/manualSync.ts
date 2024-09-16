@@ -1,10 +1,10 @@
 import { App } from "../../app";
 import { CalendarItem } from "./models/calendar";
 
-const app = new App(['timetable', 'google', 'parser']);
+const app = new App(['timetable', 'google_calendar', 'parser']);
 
-const api = app.getService('google').api.calendar.api;
-const { calendarController: controller } = app.getService('google');
+const api = app.getService('google_calendar').api.calendar.api;
+const { calendarController: controller } = app.getService('google_calendar');
 
 const main = async () => {
     const ids: string[] = [];

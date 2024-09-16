@@ -76,17 +76,17 @@
     **ВАЖНО!** По умолчанию в конфиге включены следующие сервисы: `http`, `api`, `timetable`, `parser`. Для того, чтобы запустить бота/ботов необходимо указать сервис `bot`, а также сервис соц-сети (например `tg`, `vk`, `viber`).
 
     Некоторые сервисы требуют наличия других сервисов, например:
-    | Сервис | Обязательные сервисы | Второстепенные |
-    |:------:|----------------------|----------------|
-    | tg     | bot, timetable       | image, google  |
-    | vk     | bot, timetable       | image, google  |
-    | viber  | bot, http, timetable | image, google  |
-    | vkApp  | http, timetable      |                |
-    | api    | http, timetable      |                |
-    | alice  | http, timetable      |                |
-    | google | timetable            | bot, http      |   
-    | parser | timetable            | bot            |   
-    | image  |                      | http           |   
+    |      Сервис     | Обязательные сервисы | Второстепенные |
+    |:---------------:|----------------------|----------------|
+    | tg              | bot, timetable       | image, google  |
+    | vk              | bot, timetable       | image, google  |
+    | viber           | bot, http, timetable | image, google  |
+    | vkApp           | http, timetable      |                |
+    | api             | http, timetable      |                |
+    | alice           | http, timetable      |                |
+    | google_calendar | timetable            | bot, http      |   
+    | parser          | timetable            | bot            |   
+    | image           |                      | http           |   
 
     Пример для запуска телеграм (без апи, но с генерацией изображения):
     ```typescript

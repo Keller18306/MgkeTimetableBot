@@ -5,7 +5,7 @@ import GoogleCalendarCallback from "../../callbacks/google";
 export default class extends AbstractCommand {
     public regexp = /^(!|\/)(g(oogle)?)?calendar$/i
     public payloadAction = null;
-    public requireServices: AppServiceName[] = ['google'];
+    public requireServices: AppServiceName[] = ['google_calendar'];
 
     async handler(params: CmdHandlerParams) {
         const callback: GoogleCalendarCallback = this.app.getService('bot').getCallbackById('google');

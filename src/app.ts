@@ -29,7 +29,7 @@ const services = {
     api: Api,
     alice: AliceApp,
     parser: ParserService,
-    google: GoogleService
+    google_calendar: GoogleService
 } as const;
 
 type Services = typeof services;

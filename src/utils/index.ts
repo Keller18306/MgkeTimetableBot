@@ -8,6 +8,7 @@ export * from './error';
 export * from './events';
 export * from './http';
 export * from './natural';
+export * from './queue';
 export * from './rand';
 export * from './regexp';
 export * from './serialize';

@@ -80,7 +80,7 @@ type BotHandlerParams = CbHandlerParams | CmdHandlerParams;
 
 export default class GoogleCalendarCallback extends AbstractCallback {
     public payloadAction: string = payloadAction;
-    public requireServices: AppServiceName[] = ['google'];
+    public requireServices: AppServiceName[] = ['google_calendar'];
 
     async handler(params: CbHandlerParams) {
         const { context, chat } = params;
@@ -93,7 +93,7 @@ export default class GoogleCalendarCallback extends AbstractCallback {
             z.nativeEnum(GoogleMenu)
         ]).parse(context.payload);
 
-        const google = this.app.getService('google');
+        const google = this.app.getService('google_calendar');
         const user = await google.getByEmail(chat.googleEmail);
 
         //recheck account
@@ -110,7 +110,7 @@ export default class GoogleCalendarCallback extends AbstractCallback {
     }
 
     private _auth({ context, service }: CbHandlerParams | CmdHandlerParams) {
-        const google = this.app.getService('google');
+        const google = this.app.getService('google_calendar');
 
         const url = google.getAuthUrl({
             service: service,
@@ -180,7 +180,7 @@ export default class GoogleCalendarCallback extends AbstractCallback {
     }
 
     private async _add({ context, chat }: CbHandlerParams, user: GoogleUser) {
-        const google = this.app.getService('google');
+        const google = this.app.getService('google_calendar');
 
         let result: [CalendarItem, boolean];
 
