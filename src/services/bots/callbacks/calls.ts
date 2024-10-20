@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { config } from "../../../../config";
-import { nowInTime, WeekIndex } from "../../../utils";
+import { DayCall } from "../../../../config.scheme";
+import { nowInTime } from "../../../utils";
 import { raspCache } from "../../parser";
 import { AbstractCallback, ButtonType, CbHandlerParams, CmdHandlerParams } from "../abstract";
 
@@ -42,10 +43,10 @@ export default class CallsCallback extends AbstractCallback {
         }
         
         message.push('__ ЗВОНКИ (будни) __')
-        message.push(this._getMessage([1, 2, 3, 4, 5], userMaxLessons, showFull));
+        message.push(this._getMessage(config.timetable.weekdays, [1, 2, 3, 4, 5], userMaxLessons, showFull));
 
         message.push('\n__ ЗВОНКИ (суббота) __')
-        message.push(this._getMessage([6], userMaxLessons, showFull));
+        message.push(this._getMessage(config.timetable.saturday, [6], userMaxLessons, showFull));
 
         if (current && current >= maxLessons) {
             showFull = true;
@@ -70,11 +71,11 @@ export default class CallsCallback extends AbstractCallback {
         return `👉 ${text} 👈`;
     }
 
-    private _getMessage(includedDays: number[], maxLessons: number, showFull: boolean) {
+    private _getMessage(calls: DayCall[], includedDays: number[], maxLessons: number, showFull: boolean) {
         const text: string[] = [];
 
         for (let i = 0; i < maxLessons; i++) {
-            const lesson = config.timetable.weekdays[i];
+            const lesson = calls[i];
             if (!lesson) break;
 
             const lineStr: string = `${i + 1}. ${lesson[0][0]} - ${lesson[0][1]} | ${lesson[1][0]} - ${lesson[1][1]}`;

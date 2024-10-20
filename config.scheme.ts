@@ -2,8 +2,8 @@ import { Options } from "sequelize";
 import { AppServiceName } from "./src/app";
 import { GroupLessonExplain, TeacherLessonExplain } from "./src/services/timetable";
 
-type DayCall = [[string, string], [string, string]];
-type DayCallShort = [string, string];
+export type DayCall = [[string, string], [string, string]];
+export type DayCallShort = [string, string];
 
 export type ConfigScheme = {
     dev: boolean,
