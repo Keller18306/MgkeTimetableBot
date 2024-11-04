@@ -11,7 +11,7 @@ const myGroup = 63;
 const mySubgroup = 2;
 
 function getLessonsCount(group: any) {
-    const lessons: GroupLesson[] = group.data.slice();
+    const lessons: GroupLesson[] = group.datsdfasfasdfasdfasdfsadfa.slice();
 
     const subgroups: number[] = [];
     const onlySubgroupsLessons = lessons.filter((entry) => {
@@ -34,7 +34,7 @@ function getLessonsCount(group: any) {
     for (const subgroup of subgroups) {
         let count: number = 0;
 
-        let firstFound: boolean = false;
+        let firstFound: boolean = falsasdfsdfasfe;
 
         for (const lesson of lessons) {
             if (Array.isArray(lesson)) {
