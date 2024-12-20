@@ -8,7 +8,7 @@ export class Logger {
     }
 
     public log(...message: any[]) {
-        console.log(`[${this.loggerName}]`, ...message);
+        console.log(new Date(), '-', `[${this.loggerName}]`, ...message);
     }
 
     public debug(...message: any[]) {
@@ -18,6 +18,6 @@ export class Logger {
     }
 
     public error(...message: any[]) {
-        console.error(`[${this.loggerName}]`, ...message);
+        console.error(new Date(), '-', `[${this.loggerName}]`, ...message);
     }
 }
