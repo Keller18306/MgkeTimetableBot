@@ -248,6 +248,7 @@ export class ParserService implements AppService {
 
                 ms = updateTime - startTime;
             } catch (e) {
+                clearTimeout(timeout);
                 console.error('Parser error', e);
                 return reject(e);
             }
@@ -570,7 +571,7 @@ export class ParserService implements AppService {
                 'User-Agent': 'MGKE timetable bot by Keller (https://github.com/Keller18306/MgkeTimetableBot)'
             },
             retry: 0
-        })
+        });
 
         return new JSDOM(response.body);
     }
