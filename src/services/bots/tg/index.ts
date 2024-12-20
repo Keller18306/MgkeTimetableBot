@@ -45,10 +45,12 @@ export class TgBot extends AbstractBot implements AppService {
         await this.tg.updates.startPolling().then(() => {
             console.log('[Telegram Bot] Start polling...')
         }).catch(err => {
-            console.error('polling error', err)
+            console.error('Tg polling error', err)
         });
 
-        await this.setBotCommands();
+        await this.setBotCommands().catch((e) => {
+            console.error('Cannot set tg commands', e);
+        });
     }
 
     public async getChat(peerId: number, creationDefaults?: Partial<CreationAttributes<BotChat>>): Promise<BotChat<TgChat>> {
