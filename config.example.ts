@@ -90,9 +90,9 @@ export const config: ConfigScheme = {
             timetableTeacher: 'https://mgkct.minskedu.gov.by/персоналии/преподавателям/расписание-занятий-на-неделю',
             team: [
                 'https://mgkct.minskedu.gov.by/о-колледже/администрация-колледжа',
-                'https://mgkct.minskedu.gov.by/о-колледже/портфолио/педагогический-коллектив',
-                'https://mgkct.minskedu.gov.by/о-колледже/портфолио/cлужащие',
-                'https://mgkct.minskedu.gov.by/о-колледже/портфолио/cлужащие-ахч'
+                'https://mgkct.minskedu.gov.by/о-колледже/педагогический-коллектив',
+                'https://mgkct.minskedu.gov.by/о-колледже/cлужащие',
+                'https://mgkct.minskedu.gov.by/о-колледже/cлужащие-ахч'
             ]
         },
         proxy: null
