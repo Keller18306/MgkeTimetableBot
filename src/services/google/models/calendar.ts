@@ -3,7 +3,7 @@ import { CreationOptional, DataTypes, InferAttributes, InferCreationAttributes, 
 import { sequelize } from "../../../db";
 import { StringDate } from "../../../utils";
 import { GroupDay, TeacherDay } from "../../timetable";
-import { GoogleCalendarApi } from "../api";
+import { GoogleCalendarApi, OnDeleteGoogleEvent } from "../api";
 
 export type CalendarType = 'group' | 'teacher';
 
@@ -75,11 +75,11 @@ class CalendarItem extends Model<InferAttributes<CalendarItem>, InferCreationAtt
     declare calendarId: string;
     declare lastManualSyncedDay: CreationOptional<number | null>;
 
-    public async clearDay({ day }: GroupDay | TeacherDay) {
+    public async clearDay({ day }: GroupDay | TeacherDay, onDelete?: OnDeleteGoogleEvent) {
         const dayDate = StringDate.fromStringDate(day).toDate();
 
         try {
-            await CalendarItem.api.clearDayEvents(this.calendarId, dayDate);
+            await CalendarItem.api.clearDayEvents(this.calendarId, dayDate, onDelete);
         } catch (e) {
             if (e instanceof GaxiosError) {
                 if (e.status === 410) {

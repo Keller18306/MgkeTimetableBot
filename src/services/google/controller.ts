@@ -62,12 +62,9 @@ export class GoogleCalendarController {
 
         logger.debug(`Sync ${day.day}`, calendar.calendarId);
 
-        try {
-            await calendar.clearDay(day);
-        } catch (e) {
-            console.error(e);
-            return;
-        }
+        await calendar.clearDay(day, (event) => {
+            logger.debug(`EventDeleted`, event.summary, event.id);
+        });
 
         const promises: Promise<any>[] = [];
 
@@ -98,12 +95,9 @@ export class GoogleCalendarController {
 
         logger.debug(`Sync ${day.day}`, calendar.calendarId);
 
-        try {
-            calendar.clearDay(day);
-        } catch (e) {
-            console.error(e);
-            return;
-        }
+        await calendar.clearDay(day, (event) => {
+            logger.debug(`EventDeleted`, event.summary, event.id);
+        });
 
         const promises: Promise<any>[] = [];
 

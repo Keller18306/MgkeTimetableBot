@@ -1,7 +1,9 @@
 import { GoogleAuth, OAuth2Client } from 'google-auth-library';
-import { google } from 'googleapis';
+import { calendar_v3, google } from 'googleapis';
 import throttledQueue from 'throttled-queue';
 import { config } from '../../../../config';
+
+export type OnDeleteGoogleEvent = (event: calendar_v3.Schema$Event) => void;
 
 type EventData = {
     id?: string,
@@ -15,6 +17,7 @@ type EventData = {
 export class GoogleCalendarApi {
     private auth: OAuth2Client | GoogleAuth;
     private queue: <Return = unknown>(fn: () => Return | Promise<Return>) => Promise<Return>;
+    private queueDeleteEvent: <Return = unknown>(fn: () => Return | Promise<Return>) => Promise<Return>;
     private queueCreateCalendar: <Return = unknown>(fn: () => Return | Promise<Return>) => Promise<Return>;
 
     constructor(auth: OAuth2Client | GoogleAuth) {
@@ -22,7 +25,8 @@ export class GoogleCalendarApi {
 
         this.auth = auth;
 
-        this.queue = throttledQueue(maxRequestsPerInterval, interval, true); //не более запросов
+        this.queue = throttledQueue(Math.ceil(maxRequestsPerInterval * 0.9), interval, true); //не более запросов
+        this.queueDeleteEvent = throttledQueue(80, 60 * 1000, true); // За 1 мин не более 80 удалений событий, иначе гугл ругается хз почему
         this.queueCreateCalendar = throttledQueue(20, 2 * 60 * 60 * 1e3); //не более 20 календарей в 2 часа
     }
 
@@ -82,7 +86,7 @@ export class GoogleCalendarApi {
         return id;
     }
 
-    public async clearDayEvents(calendarId: string, day: Date) {
+    public async clearDayEvents(calendarId: string, day: Date, onDelete?: OnDeleteGoogleEvent) {
         const api = this.api;
         const queue = this.queue;
 
@@ -111,10 +115,16 @@ export class GoogleCalendarApi {
                 continue;
             }
 
-            promises.push(queue(() => {
-                return api.events.delete({
-                    calendarId: calendarId,
-                    eventId: event.id!
+            promises.push(this.queueDeleteEvent(() => {
+                return queue(() => {
+                    if (onDelete) {
+                        onDelete(event);
+                    }
+
+                    return api.events.delete({
+                        calendarId: calendarId,
+                        eventId: event.id!
+                    });
                 });
             }));
         }
