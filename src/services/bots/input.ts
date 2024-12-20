@@ -21,18 +21,21 @@ export class BotInput {
     } = {};
 
     public async create(peerId: string): Promise<InputResolvedValue> {
-        const that = this;
+        if (this.has(peerId)) {
+            // Если уже был какой-то "запрос на ввод", то отменяем его.
+            this.cancel(peerId, true);
+        }
 
         const promise = new Promise<InputResolvedValue>((resolve, reject) => {
-            function cancel() {
-                that.delete(peerId);
+            const cancel = () => {
+                this.delete(peerId);
                 reject(new InputCancel())
             }
 
-            that.add(peerId, resolve, cancel)
-        })
+            this.add(peerId, resolve, cancel)
+        });
 
-        return promise
+        return promise;
     }
 
     private add(peerId: string, resolve: ResolveFunction, cancel: CancelFunction) {
