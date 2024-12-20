@@ -12,56 +12,83 @@ export type InputResolvedValue = { text: string | undefined, initiator: InputIni
 type ResolveFunction = (value: InputResolvedValue | PromiseLike<InputResolvedValue>) => void;
 type CancelFunction = () => void;
 
+interface InputPromiseElement {
+    answer: ResolveFunction;
+    cancel: CancelFunction;
+    timeout: NodeJS.Timeout;
+}
+
 export class BotInput {
     private promises: {
-        [peerId: string]: {
-            resolve: ResolveFunction,
-            cancel: CancelFunction
-        }
+        [peerId: string]: InputPromiseElement
     } = {};
+
+    constructor(
+        private readonly msTimeout: number = 10 * 60 * 1e3 // 10min
+    ) { }
 
     public async create(peerId: string): Promise<InputResolvedValue> {
         if (this.has(peerId)) {
             // Если уже был какой-то "запрос на ввод", то отменяем его.
-            this.cancel(peerId, true);
+            this.cancel(peerId);
         }
 
         const promise = new Promise<InputResolvedValue>((resolve, reject) => {
-            const cancel = () => {
+            const element: Partial<InputPromiseElement> = {};
+
+            element.answer = (value: InputResolvedValue | PromiseLike<InputResolvedValue>) => {
                 this.delete(peerId);
-                reject(new InputCancel())
+
+                clearTimeout(element.timeout);
+                resolve(value);
             }
 
-            this.add(peerId, resolve, cancel)
+            element.cancel = () => {
+                this.delete(peerId);
+
+                clearTimeout(element.timeout);
+                reject(new InputCancel());
+            }
+
+            element.timeout = setTimeout(() => {
+                if (!element.cancel) {
+                    throw new Error('Cancel function not available');
+                }
+
+                element.cancel();
+            }, this.msTimeout)
+
+            this.add(peerId, element as InputPromiseElement);
         });
 
         return promise;
     }
 
-    private add(peerId: string, resolve: ResolveFunction, cancel: CancelFunction) {
-        this.promises[peerId] = { resolve, cancel }
-    }
-
     public resolve(peerId: string, text?: string, initiator?: InputInitiator) {
-        this.promises[peerId].resolve({ text, initiator });
-        this.delete(peerId);
+        if (!this.has(peerId)) return;
+
+        this.promises[peerId].answer({ text, initiator });
     }
 
-    public cancel(peerId: string, reject: boolean = true) {
-        if (!this.promises[peerId]) return;
+    public cancel(peerId: string) {
+        if (!this.has(peerId)) return;
 
-        if (reject) {
-            this.promises[peerId].cancel();
-        }
-
-        this.delete(peerId);
+        this.promises[peerId].cancel();
     }
 
     public has(peerId: string) {
-        return Object.keys(this.promises).includes(peerId);
+        return this.promises[peerId] !== undefined;
     }
 
-    public delete(peerId: string) {
+    private add(peerId: string, element: InputPromiseElement) {
+        if (this.has(peerId)) {
+            throw new Error('Uncompleted promise already exists')
+        }
+
+        this.promises[peerId] = element;
+    }
+
+    private delete(peerId: string) {
         delete this.promises[peerId];
     }
 }
