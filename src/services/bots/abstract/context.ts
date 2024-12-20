@@ -45,9 +45,10 @@ export abstract class AbstractContext {
     }
 
     public async input(text: string, options?: MessageOptions | undefined): Promise<InputResolvedValue> {
-        const answer = this.waitInput();
-
-        await this.send(text, options);
+        const [answer, messageId] = await Promise.all([
+            this.waitInput(),
+            this.send(text, options)
+        ]);
 
         return answer;
     }
