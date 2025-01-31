@@ -3,6 +3,8 @@
         "target": "ESNext",
         "moduleResolution": "Node",
         "module": "CommonJS",
+        "incremental": true,
+        "tsBuildInfoFile": ".tsbuildinfo",
         "strict": true,
         "strictNullChecks": true,
         "esModuleInterop": true,
@@ -22,7 +24,8 @@
         ]
     },
     "ts-node": {
-        "files": true
+        "files": true,
+        // "transpileOnly": true // skip type check, but faster compile
     },
     "exclude": [
         "build",

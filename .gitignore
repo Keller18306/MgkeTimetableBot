@@ -19,3 +19,7 @@ node_modules
 .vscode/sftp.json
 
 errors.txt
+
+# build
+.tsbuildinfo
+build
