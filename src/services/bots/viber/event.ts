@@ -19,10 +19,8 @@ export class ViberEventListener extends AbstractBotEventListener {
     }
 
     public async sendMessage(chat: BotChat<ViberChat>, message: string, options: MessageOptions = {}) {
-        const keyboard = new Keyboard(this.app, chat)
-
         return this.bot.sendMessage({ id: chat.serviceChat.peerId }, [
-            new Message.Text(message, convertAbstractToViber(keyboard.MainMenu))
+            new Message.Text(message, convertAbstractToViber(options.keyboard ? options.keyboard : new Keyboard(this.app, chat).MainMenu))
         ]).catch((err) => {
             if (err.status == 6) {
                 chat.allowSendMess = false;

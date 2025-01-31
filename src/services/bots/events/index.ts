@@ -373,7 +373,7 @@ export abstract class AbstractBotEventListener {
                         keyboard: chat.group ? StaticKeyboard.GetWeekTimetable({
                             type: 'group',
                             value: chat.group,
-                            label: 'Показать',
+                            label: '📃 Показать',
                             weekIndex
                         }) : undefined
                     });
@@ -402,7 +402,7 @@ export abstract class AbstractBotEventListener {
                         keyboard: chat.teacher ? StaticKeyboard.GetWeekTimetable({
                             type: 'teacher',
                             value: chat.teacher,
-                            label: 'Показать',
+                            label: '📃 Показать',
                             weekIndex
                         }) : undefined
                     });

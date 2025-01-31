@@ -20,15 +20,13 @@ export class TgEventListener extends AbstractBotEventListener {
     }
 
     public async sendMessage(chat: BotChat<TgChat>, message: string, options: MessageOptions = {}) {
-        const keyboard = new Keyboard(this.app, chat)
-
         return this.tg.api.sendMessage({
             text: message,
             chat_id: chat.serviceChat.peerId,
             ...(!options.disableHtmlParser ? {
                 parse_mode: 'HTML',
             } : {}),
-            reply_markup: convertAbstractToTg(keyboard.MainMenu)
+            reply_markup: convertAbstractToTg(options.keyboard ? options.keyboard : new Keyboard(this.app, chat).MainMenu)
         }).catch((err: APIError) => {
             if (err.code === StatusCode.ClientErrorForbidden) {
                 chat.allowSendMess = false;
