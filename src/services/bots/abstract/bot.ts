@@ -109,8 +109,6 @@ export abstract class AbstractBot {
                 }
 
                 await cmd.handler(handlerParams);
-
-                await this.saveChanges(handlerParams);
             } catch (err: any) {
                 if (err instanceof InputCancel) return;
                 console.error(cmd.id, context.peerId, err);
@@ -119,6 +117,10 @@ export abstract class AbstractBot {
             }
         } catch (err: any) {
             console.error('sys send error', context.peerId, err);
+        } finally {
+            await this.saveChanges(handlerParams).catch((err) => {
+                console.error('DB SAVE CHANGES ERROR:', err);
+            });
         }
     }
 
@@ -158,8 +160,6 @@ export abstract class AbstractBot {
                 }
 
                 await cb.handler(handlerParams);
-
-                await this.saveChanges(handlerParams);
             } catch (err: any) {
                 if (err instanceof InputCancel) return;
                 console.error(cb.id, context.peerId, err);
@@ -172,13 +172,23 @@ export abstract class AbstractBot {
             }
         } catch (err: any) {
             console.error('sys send error', context.peerId, err);
+        } finally {
+            await this.saveChanges(handlerParams).catch((err) => {
+                console.error('DB SAVE CHANGES ERROR:', err);
+            });
         }
     }
 
     private async saveChanges({ chat, serviceChat }: CbHandlerParams | CmdHandlerParams): Promise<void> {
-        await sequelize.transaction(async (transaction) => {
-            await serviceChat.save({ transaction });
-            await chat.save({ transaction });
+        if (!serviceChat.changed() && !chat.changed()) {
+            return;
+        }
+
+        await sequelize.transaction((transaction) => {
+            return Promise.all([
+                serviceChat.save({ transaction }),
+                chat.save({ transaction })
+            ]);
         });
     }
 
