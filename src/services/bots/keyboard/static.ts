@@ -1,10 +1,11 @@
 import { BotServiceName, ButtonType, KeyboardBuilder, KeyboardColor } from '../abstract';
 
 interface WeekTimetableOptions {
-    type: 'group' | 'teacher'
-    value: string | number
-    weekIndex?: number | null
-    label?: string
+    type: 'group' | 'teacher';
+    value: string | number;
+    weekIndex?: number | null;
+    label?: string;
+    showHeader?: boolean;
 }
 
 export class StaticKeyboard {
@@ -80,7 +81,7 @@ export class StaticKeyboard {
         });
     }
 
-    public static GetWeekTimetable({ type, value, weekIndex, label }: WeekTimetableOptions): KeyboardBuilder | undefined {
+    public static GetWeekTimetable({ type, value, weekIndex, label, showHeader = true }: WeekTimetableOptions): KeyboardBuilder | undefined {
         const keyboard: KeyboardBuilder = new KeyboardBuilder('GenerateImage', true);
 
         if (!isNaN(+value)) {
@@ -95,7 +96,7 @@ export class StaticKeyboard {
             type: ButtonType.Callback,
             text: label ?? 'На неделю',
             payload: 'timetable' + JSON.stringify([
-                type, value, weekIndex ?? null, 0, 1
+                type, value, weekIndex ?? null, 0, showHeader ? 1 : 0
             ]),
             color: KeyboardColor.PRIMARY_COLOR
         });
