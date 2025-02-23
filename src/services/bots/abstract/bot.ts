@@ -108,6 +108,10 @@ export abstract class AbstractBot {
                     return this.notFound(chat, context, keyboard.MainMenu, selfMention);
                 }
 
+                if (this.input.has(String(context.peerId))) {
+                    this.input.cancel(String(context.peerId));
+                }
+
                 await cmd.handler(handlerParams);
             } catch (err: any) {
                 if (err instanceof InputCancel) return;
