@@ -66,8 +66,9 @@
     cd MgkeTimetableBot
     ```
 
-4. Установите зависимости проекта с помощью Yarn:
+4. Установите зависимости проекта:
     ```bash
+    npm i -g yarn ts-node
     yarn
     ```
 
