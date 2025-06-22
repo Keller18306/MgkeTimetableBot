@@ -121,6 +121,10 @@ export class ParserService implements AppService {
     }
 
     private log(log: string | Error) {
+        if (config.dev) {
+            this.logger.error(log);
+        }
+
         this.logs.unshift({
             date: new Date(),
             result: log
@@ -478,7 +482,9 @@ export class ParserService implements AppService {
             }
         }
 
-        await this.events.emitAsync('flushCache', flushLessons);
+        if (flushLessons.length > 0) {
+            await this.events.emitAsync('flushCache', flushLessons);
+        }
 
         // проверка на то, что добавлена новая неделя
         const maxWeekIndex = Math.max(...(Object.values(cache.timetable) as (Group | Teacher)[])
@@ -499,6 +505,7 @@ export class ParserService implements AppService {
 
         cache.lastWeekIndex = maxWeekIndex;
         cache.update = Date.now();
+        logger.log('Успех');
 
         return true;
     }
@@ -553,6 +560,7 @@ export class ParserService implements AppService {
         );
 
         cache.update = Date.now();
+        logger.log('Успех');
 
         return true;
     }

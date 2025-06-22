@@ -8,7 +8,11 @@ export class AsyncEventEmitter extends EventEmitter {
         (...args: any[]) => void
     >();
 
-    emitAsync(eventName: string | symbol, ...args: any[]): Promise<void> {
+    emitAsync(eventName: string | symbol, ...args: any[]): Promise<void> | void {
+        if (!this.listenerCount(eventName)) {
+            return;
+        }
+
         return new Promise(async resolve => {
             if (!resolve.prototype) {
                 resolve.prototype = {};
@@ -33,7 +37,7 @@ export class AsyncEventEmitter extends EventEmitter {
                     // } catch (e) { }
 
                     await listener(...args);
-                    
+
                     return await resolver();
                 }
             }
