@@ -3,7 +3,14 @@ import { AbstractParser } from "./abstract";
 import { GroupDay, GroupLesson, GroupLessonExplain, Groups } from './types/group';
 
 export default class StudentParser extends AbstractParser {
-    protected groups: Groups = {}
+    protected groups: Groups = {};
+
+    /** 
+     * Метод в который заносятся текущие данные работы парсера,
+     * чтобы можно было дебаггером (по условным брейкпоинтам)
+     * ловить внутри методов по текущим данным 
+     **/
+    private _debugState: any = {};
 
     public run(): Groups {
         for (const table of this.parseBodyTables()) {
@@ -37,6 +44,8 @@ export default class StudentParser extends AbstractParser {
             }
         }
 
+        this._debugState = {};
+
         return this.groups
     }
 
@@ -53,6 +62,9 @@ export default class StudentParser extends AbstractParser {
         if (!group || !groupNumber) {
             throw new Error('Невозможно получить номер группы');
         }
+
+        this._debugState.groupNumber = groupNumber;
+        this._debugState.group = group;
 
         const rows = Array.from(table.rows)
 
@@ -105,10 +117,12 @@ export default class StudentParser extends AbstractParser {
             const row = rows[row_i]
             const cells = row.cells
 
-            const lessonIndex = cells[0].textContent ? Number(cells[0].textContent) : null;
+            const lessonNumber = cells[0].textContent ? Number(cells[0].textContent) : null;
+            this._debugState.lessonNumber = lessonNumber;
 
             for (let cell_i: number = 1; cell_i < Math.ceil(cells.length / 2); cell_i++) {
                 const day = cell_i - 1;
+                this._debugState.dayIndex = day;
 
                 const lessonCell = cells[cell_i * 2 - 1];
                 const cabinetCell = cells[cell_i * 2];
@@ -116,8 +130,8 @@ export default class StudentParser extends AbstractParser {
                 const lesson = this.parseLesson(lessonCell, cabinetCell);
 
                 //appending null
-                if (lessonIndex && lessonIndex > days[day].lessons.length + 1) {
-                    const removedLines = lessonIndex - days[day].lessons.length - 1
+                if (lessonNumber && lessonNumber > days[day].lessons.length + 1) {
+                    const removedLines = lessonNumber - days[day].lessons.length - 1
 
                     for (let i = 0; i < removedLines; i++) {
                         days[day].lessons.push(null);
@@ -211,12 +225,14 @@ export default class StudentParser extends AbstractParser {
     }
 
     protected parseSubGroupLesson(subGroups: string[][], cabinets: string[]): GroupLessonExplain[] | null {
-        let isSubGroups: boolean = false;
+        let isSubGroups: boolean = subGroups.length > 1 && cabinets.length > 1;
 
-        for (const subgroup of subGroups) {
-            if (/^\d+\./.test(subgroup[0])) {
-                isSubGroups = true;
-                break;
+        if (!isSubGroups) {
+            for (const subgroup of subGroups) {
+                if (/^\d+\./.test(subgroup[0])) {
+                    isSubGroups = true;
+                    break;
+                }
             }
         }
 
@@ -232,13 +248,14 @@ export default class StudentParser extends AbstractParser {
         for (const i in subGroups) {
             const subGroup = subGroups[i];
 
-            const matchName = subGroup[0].match(/(\d+)\.\s?(.+)/)?.slice(1)
+            const matchName = subGroup[0].match(/(?:(\d+)\.\s?)?(.+)/)?.slice(1)
             const matchType = subGroup[1].match(/\((.+)\)/)?.slice(1)[0]
             if (!matchName || !matchType) {
                 throw new Error('Название урока или тип урока не были получены для подгруппы')
             }
 
-            const sgNumber: number = Number(matchName[0]);
+            // Если номер подгруппы не указан в предмете, то берём порядковый номер
+            const sgNumber: number = Number(matchName[0] ?? (+i + 1));
 
             let cabinet: string | null;
             if (cabinets.length === 1) {
