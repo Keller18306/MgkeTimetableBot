@@ -171,6 +171,24 @@ export default class StudentParser extends AbstractParser {
                         .map(_ => (_.textContent || '').trim())
                         .filter(value => Boolean(value))
                 });
+
+                for (const i in lessonsChunk) {
+                    const chunk = lessonsChunk[i];
+
+                    if (chunk.length !== 3) {
+                        const reparsed = chunk[0].match(/^(.+?)\s*(\(.+\))\s*(.+?)$/);
+                        if (!reparsed) {
+                            throw new Error('Невозможно пофиксить параграф после модификации человеком (1)');
+                        }
+
+                        const newChunk = Array.from(reparsed.slice(1));
+                        if (!newChunk[0] || !newChunk[1] || !newChunk[2]) {
+                            throw new Error('Невозможно пофиксить параграф после модификации человеком (2)');
+                        }
+
+                        lessonsChunk[i] = newChunk;
+                    }
+                }
             } else {
                 lessonsChunk = chunkArray(
                     Array
