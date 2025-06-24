@@ -127,7 +127,7 @@ export class VKApp implements AppService {
                     silent: true
                 });
 
-                const message = _class.handler({ user, request, response });
+                const message = await _class.handler({ user, request, response });
                 if (message === undefined) {
                     return;
                 }
